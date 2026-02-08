@@ -30,7 +30,6 @@
 - Use present tense: "add feature" not "added feature"
 - Be specific and descriptive
 - Keep the subject line under 50 characters
-- Reference issue numbers when applicable: `feat: add login endpoint (#12)`
 - Use lowercase for the subject line
 
 ❌ **DON'T:**
