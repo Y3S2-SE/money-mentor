@@ -58,8 +58,8 @@ MoneyMentor/
 ### Backend Setup
 1. Clone the repository
 ```bash
-   git clone https://github.com/your-org/MoneyMentor.git
-   cd MoneyMentor/backend
+   git clone https://github.com/Y3S2-SE/money-mentor.git
+   cd money-mentor/backend
 ```
 
 2. Install dependencies
