@@ -5,7 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
-import userRoutes from './routes/auth.route.js';
+import authRoutes from './routes/auth.route.js';
 
 const app = express();
 
@@ -26,7 +26,7 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
-app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 
 // Error handling 
 app.use(notFound);
