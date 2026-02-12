@@ -114,3 +114,107 @@ export const getProfile = async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to fetch profile' });
     }
 };
+
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
+// @access  Private
+export const updateProfile = async (req, res) => {
+    try {
+        const { username, email } = req.body;
+
+        // Check if username/email taken by another user
+        if (email || username) {
+            const exisitingUser = await User.findOne({
+                _id: { $ne: req.user._id},
+                $or: [
+                    ...(email ? [{ email }] : []),
+                    ...(username ? [{ username }] : [])
+                ]  
+            });
+
+            if (exisitingUser) {
+                return res.status(400).json({
+                    success: false,
+                    message: exisitingUser.email === email ? 'Email already in use' : 'Username already taken'
+                });
+            }
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            { 
+                ...(username && { username }),
+                ...(email && { email })
+            },
+            { new: true, runValidators: true }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile updated successfully',
+            data: user
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update profile',
+            error: error.message
+        });
+    }
+};
+
+
+// @desc    Change password
+// @route   PUT /api/auth/change-password
+// @access  Private
+export const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        const user = await User.findById(req.user._id).select('+password');
+
+        if (!(await user.comparePassword(currentPassword))) {
+            return res.status(401).json({
+                success: false,
+                message: 'Current password is incorrect'
+            });
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        // Generate new token for automatic re-login
+        const token = generateToken(user._id);
+
+        res.status(200).json({
+            success: true,
+            message: 'Password changed successfully',
+            data: { user: user.toAuthJSON(), token }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false, 
+            message: 'Failed to change password',
+            error: error.message
+        });
+    }
+};
+
+
+// @desc    Logout user
+// @route   PUT /api/auth/logout
+// @access  Private
+export const logout = async (req, res) => {
+    try {
+        res.status(200).json({
+            success: true,
+            message: 'Logout successfully'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Logout failed',
+            error: error.message
+        });
+    }
+};
