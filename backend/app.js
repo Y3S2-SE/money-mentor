@@ -5,6 +5,8 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
+import groupRoutes from "./routes/group.route.js";
+
 
 const app = express();
 
@@ -25,6 +27,7 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
+app.use("/api/groups", groupRoutes);
 
 
 // Error handling 
