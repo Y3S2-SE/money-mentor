@@ -21,17 +21,34 @@ Project Structure and File naming convetion
 ```
 MoneyMentor/
 ├── backend/
-│   ├── controllers/
-│   │   └── userController.js
 │   ├── config/
-│   ├── models/
-│   │   └── User.js
-│   ├── routes/
-│   │   └── user.js
+│   │   └── database.js
+│   ├── controllers/
+│   │   └── user.controller.js
 │   ├── middleware/
+│   │   └── auth.middleware.js
+│   ├── models/
+│   │   └── user.model.js
+│   ├── routes/
+│   │   └── user.route.js
 │   ├── utils/
+│   │   └── logger.js
+│   ├── validations/
+│   │   └── user.validations.js
+│   ├── tests/
+│   │   ├── setup/
+│   │   │    └── testSetup.js
+│   │   ├── unit/
+│   │   │    ├── middleware/
+│   │   │    │     └── validations.middleware.test.js
+│   │   │    └── models/
+│   │   │         └── user.model.test.js
+│   │   └── integration/
+│   │        └── auth.integration.test.js
+│   ├── jest.config.js 
 │   ├── server.js 
-│   └── app.js
+│   ├── app.js
+│   └── .env.example
 └── frontend/
 │   ├── src/
 │   │   ├── components/
