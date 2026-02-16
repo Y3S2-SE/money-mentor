@@ -15,6 +15,6 @@ router.use(protect);
 router.get('/profile', getProfile);
 router.put('/profile', updateProfileRules, validate, updateProfile);
 router.put('/change-password', changePasswordRules, validate, changePassword);
-router.post('logout', logout);
+router.post('/logout', logout);
 
 export default router;
