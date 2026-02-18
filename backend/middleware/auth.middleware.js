@@ -40,10 +40,10 @@ export const protect = async (req, res, next) => {
 
         next();
     } catch (error) {
-        if (error.name === 'jsonWebTokenError') {
+        if (error.name === 'JsonWebTokenError') {
             return res.status(401).json({
                 success: false,
-                messgae: 'Invalid token'
+                message: 'Invalid token'
             });
         }
         if (error.name === 'TokenExpiredError') {
