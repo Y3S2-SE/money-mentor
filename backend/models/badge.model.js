@@ -53,7 +53,7 @@ const badgeDefinitionSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-badgeDefinitionSchema.index({ key: 1 });
+// badgeDefinitionSchema.index({ key: 1 });
 badgeDefinitionSchema.index({ category: 1, isActive: 1 });
 
 const BadgeDefinition = mongoose.model('BadgeDefinition', badgeDefinitionSchema);
