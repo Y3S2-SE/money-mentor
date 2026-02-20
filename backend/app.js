@@ -1,12 +1,17 @@
 import dotenv from 'dotenv';
-dotenv.config();
+
+if (process.env.NODE_ENV !== 'test') {
+    dotenv.config();
+}
 
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
-import groupRoutes from "./routes/group.route.js";
 
+import groupRoutes from "./routes/group.route.js";
+import authRoutes from './routes/auth.route.js';
+import userRoutes from './routes/user.route.js';
 
 const app = express();
 
@@ -28,7 +33,8 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use("/api/groups", groupRoutes);
-
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // Error handling 
 app.use(notFound);
