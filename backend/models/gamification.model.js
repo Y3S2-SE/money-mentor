@@ -76,7 +76,7 @@ const gamificationSchema = new mongoose.Schema(
             type: Number,
             default: 0
         },
-        logestStreak: {
+        longestStreak: {
             type: Number,
             default: 0
         },
@@ -96,7 +96,7 @@ const gamificationSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-gamificationSchema.index({ user: 1 }, { unique: true });
+// gamificationSchema.index({ user: 1 }, { unique: true });
 gamificationSchema.index({ totalXP: -1 });
 
 gamificationSchema.statics.getLevelFromXP = function (xp) {
