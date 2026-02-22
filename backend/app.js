@@ -11,6 +11,8 @@ import { errorHandler, notFound } from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.route.js';
 import userRoutes from './routes/user.route.js';
 import courseRoutes from './routes/course.route.js';
+import chatRoutes from './routes/chat.route.js';
+import youtubeRoutes from './routes/youtube.route.js';
 
 const app = express();
 
@@ -34,6 +36,8 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/course', courseRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/youtube', youtubeRoutes);
 
 // Error handling 
 app.use(notFound);
