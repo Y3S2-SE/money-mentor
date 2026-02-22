@@ -2,18 +2,31 @@ import express from "express";
 import {
   createGroup,
   joinGroup,
+  leaveGroup,
   getUserGroups,
-  leaveGroup
+  getGroupById,
+  deleteGroup,
+  removeMember,
+  updateGroup,
+  regenerateInviteCode,
 } from "../controllers/group.controller.js";
+
+import { protect } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-// create group
+router.use(protect);
+// Core Membership
 router.post("/create", createGroup);
-// join group
 router.post("/join", joinGroup);
-// get user groups
-router.get("/getUserGroups", getUserGroups);
-//leave group
-router.patch("/leaveGroup", leaveGroup);
+router.post("/leave", leaveGroup);
+router.get("/user-groups", getUserGroups);
+router.get("/get-group", getGroupById);
+
+// Admin Controls
+router.delete("/delete", deleteGroup);
+router.post("/remove-member", removeMember);
+router.put("/update", updateGroup);
+router.post("/regenerate-invite", regenerateInviteCode);
+
 export default router;
