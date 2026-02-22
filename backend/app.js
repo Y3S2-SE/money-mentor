@@ -10,6 +10,7 @@ import mongoose from 'mongoose';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.route.js';
 import userRoutes from './routes/user.route.js';
+import transactionRoutes from "./routes/transaction.routes.js";
 
 const app = express();
 
@@ -36,5 +37,6 @@ app.use('/api/users', userRoutes);
 // Error handling 
 app.use(notFound);
 app.use(errorHandler);
+app.use("/api/transactions", transactionRoutes);
 
 export default app;
