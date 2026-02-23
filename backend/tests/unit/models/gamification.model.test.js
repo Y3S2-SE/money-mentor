@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import mongoose from 'mongoose';
-import {setupTestDB, teardownTestDB } from '../../setup/testSetup.js';
+import { setupTestDB, teardownTestDB } from '../../setup/testSetup.js';
 import GamificationProfile from '../../../models/gamification.model.js';
 
 describe('GamificationProfile Model - Unit Tests', () => {
@@ -13,55 +13,33 @@ describe('GamificationProfile Model - Unit Tests', () => {
         it('getLevelFromXP returns level 1 for 0 XP', () => {
             expect(GamificationProfile.getLevelFromXP(0)).toBe(1);
         });
+
         it('getLevelFromXP returns level 2 for 100 XP', () => {
             expect(GamificationProfile.getLevelFromXP(100)).toBe(2);
         });
+
         it('getLevelFromXP returns level 11 for 1000 XP', () => {
             expect(GamificationProfile.getLevelFromXP(1000)).toBe(11);
         });
+
         it('getTitleForLevel returns Money Newbie for level 1', () => {
             expect(GamificationProfile.getTitleForLevel(1)).toBe('Money Newbie');
         });
+
         it('getTitleForLevel returns Smart Saver for level 6', () => {
-            expect(GamificationProfile.getTitleForLevel(1)).toBe('Smart Saver');
+            expect(GamificationProfile.getTitleForLevel(6)).toBe('Smart Saver');
         });
+
         it('getTitleForLevel returns Budget Master for level 11', () => {
-            expect(GamificationProfile.getTitleForLevel(1)).toBe('Budget Master');
+            expect(GamificationProfile.getTitleForLevel(11)).toBe('Budget Master');
         });
+
         it('getTitleForLevel returns Pro Saver for level 16', () => {
-            expect(GamificationProfile.getTitleForLevel(1)).toBe('Pro Saver');
-        });
-        it('getTitleForLevel returns Ultimate Saver for level 20+', () => {
-            expect(GamificationProfile.getTitleForLevel(1)).toBe('Ultimate Saver');
-        });
-    });
-
-    describe('awardXP instance method', () => {
-        it('increases totalXP and updates level', () => {
-            const profile = new GamificationProfile({ user: mockUserId });
-            const result = profile.awardXP(100, 'test', 'Test XP');
-
-            expect(profile.totalXP).toBe(100);
-            expect(profile.level).toBe(2);
-            expect(result.leveledUp).toBe(true);
+            expect(GamificationProfile.getTitleForLevel(16)).toBe('Pro Saver');
         });
 
-        it('append to xpHistory', () => {
-            const profile = new GamificationProfile({ user: mockUserId });
-            profile.awardXP(5, 'daily_login', 'Daily login');
-
-            expect(profile.xpHistory).toHaveLength(1);
-            expect(profile.xpHistory[0].source).toBe('daily_login');
-            expect(profile.xpHistory[0].source).toBe(5);
-        });
-
-        it('caps xpHistory at 100 entries', () => {
-            const profile = new GamificationProfile({ user: mockUserId });
-            for (let i = 0; i < 105; i++) {
-                profile.awardXP(1, 'test');
-            }
-
-            expect(profile.xpHistory).toHaveLength(100);
+        it('getTitleForLevel returns Ultimate Saver for level 21+', () => {
+            expect(GamificationProfile.getTitleForLevel(21)).toBe('Ultimate Saver');
         });
     });
 
@@ -75,13 +53,13 @@ describe('GamificationProfile Model - Unit Tests', () => {
             expect(result.leveledUp).toBe(true);
         });
 
-        it('append to xpHistory', () => {
+        it('appends to xpHistory', () => {
             const profile = new GamificationProfile({ user: mockUserId });
             profile.awardXP(5, 'daily_login', 'Daily login');
 
             expect(profile.xpHistory).toHaveLength(1);
             expect(profile.xpHistory[0].source).toBe('daily_login');
-            expect(profile.xpHistory[0].source).toBe(5);
+            expect(profile.xpHistory[0].amount).toBe(5);
         });
 
         it('caps xpHistory at 100 entries', () => {
@@ -118,17 +96,17 @@ describe('GamificationProfile Model - Unit Tests', () => {
             profile.currentStreak = 5;
             const threeDaysAgo = new Date();
             threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-            profile.lastActiveDate = threeDaysAgo;
+            profile.lastActivityDate = threeDaysAgo;
 
             const result = profile.updateStreak();
-            
+
             expect(result.streakUpdated).toBe(true);
             expect(profile.currentStreak).toBe(1);
         });
     });
 
     describe('awardBadge instance method', () => {
-        it('award a badge and returns true', () => {
+        it('awards a badge and returns true', () => {
             const profile = new GamificationProfile({ user: mockUserId });
             const badgeId = new mongoose.Types.ObjectId();
             const result = profile.awardBadge(badgeId);
@@ -137,7 +115,7 @@ describe('GamificationProfile Model - Unit Tests', () => {
             expect(profile.earnedBadges).toHaveLength(1);
         });
 
-        it('return false if badge already earned', () => {
+        it('returns false if badge already earned (idempotent)', () => {
             const profile = new GamificationProfile({ user: mockUserId });
             const badgeId = new mongoose.Types.ObjectId();
             profile.awardBadge(badgeId);
@@ -150,10 +128,10 @@ describe('GamificationProfile Model - Unit Tests', () => {
 
     describe('levelProgress virtual', () => {
         it('returns correct percentage', () => {
-            const profile = new GamificationProfile({ user: mockUserId }); 
+            const profile = new GamificationProfile({ user: mockUserId });
             profile.awardXP(50, 'test');
 
             expect(profile.levelProgress.percentage).toBe(50);
-        })
-    })
-})
+        });
+    });
+});
