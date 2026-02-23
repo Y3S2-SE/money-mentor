@@ -1,7 +1,7 @@
 import express from 'express';
 import { authorize, protect } from '../middleware/auth.middleware.js';
 import { validate } from '../middleware/validation.middleware.js'
-import { awardXP, dailyLogin, getAdminStats, getAllBadges, getLeaderboard, getMyProfile, getXPHistory } from '../controllers/gamification.controller.js';
+import { awardXP, dailyLogin, getAdminStats, getAllBadges, getLeaderboard, getMyProfile, getXPHistory, seedBadges } from '../controllers/gamification.controller.js';
 import { awardXPValidation, badgesQueryValidation, leaderboardQueryValidation, xpHistoryQueryValidation } from '../validations/game.validation.js';
 
 
@@ -18,6 +18,7 @@ router.get('/badges', badgesQueryValidation, validate, getAllBadges);
 router.get('/xp-history', xpHistoryQueryValidation, validate, getXPHistory);
 
 // Admin routes
-router.post('/admin/stats', authorize('admin'), getAdminStats);
+router.post('/admin/seed-badges', authorize('admin'), seedBadges);
+router.get('/admin/stats', authorize('admin'), getAdminStats);
 
 export default router;
