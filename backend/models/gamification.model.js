@@ -39,13 +39,13 @@ const xpHistorySchema = new mongoose.Schema(
     { _id: false }
 );
 
-// Level configuration
+// Level configuration - 5 tiers
 const LEVEL_TIERS = [
-    { min: 1, max: 5, title: 'Money Newbie' },
-    { min: 6, max: 10, title: 'Smart Saver' },
+    { min: 1,  max: 5,  title: 'Money Newbie' },
+    { min: 6,  max: 10, title: 'Smart Saver' },
     { min: 11, max: 15, title: 'Budget Master' },
     { min: 16, max: 20, title: 'Pro Saver' },
-    { min: 20, max: Infinity, title: 'Ultimate Saver' }
+    { min: 21, max: Infinity, title: 'Ultimate Saver' }
 ];
 
 const XP_PER_LEVEL = 100;
@@ -80,7 +80,7 @@ const gamificationSchema = new mongoose.Schema(
             type: Number,
             default: 0
         },
-        lastActiveDate: {
+        lastActivityDate: {
             type: Date,
             default: null
         },
@@ -96,7 +96,7 @@ const gamificationSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// gamificationSchema.index({ user: 1 }, { unique: true });
+//gamificationSchema.index({ user: 1 }, { unique: true });
 gamificationSchema.index({ totalXP: -1 });
 
 gamificationSchema.statics.getLevelFromXP = function (xp) {
@@ -112,12 +112,11 @@ gamificationSchema.statics.xpForLevel = function (level) {
     return Math.max(0, (level - 1) * XP_PER_LEVEL);
 };
 
-
 gamificationSchema.methods.awardXP = function (amount, source, description = '') {
     this.totalXP += amount;
 
     const newLevel = this.constructor.getLevelFromXP(this.totalXP);
-    const levelUp = newLevel > this.level;
+    const leveledUp = newLevel > this.level;
     this.level = newLevel;
     this.levelTitle = this.constructor.getTitleForLevel(newLevel);
 
@@ -126,23 +125,23 @@ gamificationSchema.methods.awardXP = function (amount, source, description = '')
         this.xpHistory = this.xpHistory.slice(-100);
     }
 
-    return { levelUp, newLevel, levelTitle: this.levelTitle };
+    return { leveledUp, newLevel, levelTitle: this.levelTitle };
 };
 
 gamificationSchema.methods.updateStreak = function () {
     const today = new Date();
     const todayStr = today.toDateString();
 
-    if (!this.lastActiveDate) {
+    if (!this.lastActivityDate) {
         this.currentStreak = 1;
-        this.lastActiveDate = today;
+        this.lastActivityDate = today;
         if (this.currentStreak > this.longestStreak) {
             this.longestStreak = this.currentStreak;
         }
         return { streakUpdated: true, currentStreak: this.currentStreak };
     }
 
-    const lastStr = new Date(this.lastActiveDate).toDateString();
+    const lastStr = new Date(this.lastActivityDate).toDateString();
 
     if (lastStr === todayStr) {
         return { streakUpdated: false, currentStreak: this.currentStreak };
@@ -151,7 +150,7 @@ gamificationSchema.methods.updateStreak = function () {
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (new Date(this.lastActiveDate).toDateString() === yesterday.toDateString()) {
+    if (new Date(this.lastActivityDate).toDateString() === yesterday.toDateString()) {
         this.currentStreak += 1;
     } else {
         this.currentStreak = 1;
@@ -161,7 +160,7 @@ gamificationSchema.methods.updateStreak = function () {
         this.longestStreak = this.currentStreak;
     }
 
-    this.lastActiveDate = today;
+    this.lastActivityDate = today;
     return { streakUpdated: true, currentStreak: this.currentStreak };
 };
 
@@ -171,6 +170,7 @@ gamificationSchema.methods.awardBadge = function (badgeId) {
     );
     if (alreadyEarned) return false;
     this.earnedBadges.push({ badge: badgeId, earnedAt: new Date() });
+    return true;
 };
 
 gamificationSchema.methods.hasBadge = function (badgeId) {
