@@ -46,7 +46,7 @@ export const dailyLogin = async (req, res) => {
 
         const { profile, streakResult, xpResult, newlyEarnedBadges } = result;
 
-        if (streakResult.streak) {
+        if (streakResult.streakUpdated) {
             if (profile.currentStreak === 7) {
                 await processXPEvent(req.user._id, 'streak_7_days', null, '7-day streak bonus!');
                 await awardActionBadge(req.user._id, 'streak_7_days');
@@ -147,13 +147,13 @@ export const getLeaderboard = async (req, res) => {
 
         const leaderboard = await GamificationProfile
             .find()
-            .sort({ totalXp: -1 })
+            .sort({ totalXP: -1 })
             .limit(limit)
             .populate('user', 'username')
             .select('user totalXP level levelTitle currentStreak earnedBadges');
 
         const myProfile = await GamificationProfile.findOne({ user: req.user._id });
-        const myRank = myProfile ? await GamificationProfile.countDocuments({ totalXp: { $gt: myProfile.totalXP } }) + 1 : null;
+        const myRank = myProfile ? await GamificationProfile.countDocuments({ totalXP: { $gt: myProfile.totalXP } }) + 1 : null;
 
         const totalParticipants = await GamificationProfile.countDocuments();
 
@@ -268,6 +268,140 @@ export const getXPHistory = async (req, res) => {
         });
     }
 };
+
+/**
+ * @desc    Get platform-wide gamification stats
+ * @route   GET /api/gamification/admin/stats
+ * @access  Private/Admin
+ */
+
+export const seedBadges = async (req, res) => {
+    try {
+        const defaultBadges = [
+            {
+                key: 'first_login',
+                name: 'Welcome Aboard!',
+                description: 'Logged in for the first time',
+                category: 'action',
+                xpReward: 25,
+                condition: { type: 'action', actionKey: 'first_login' }
+            },
+            {
+                key: 'first_saving_goal',
+                name: 'Goal Setter',
+                description: 'Created your first saving goal',
+                category: 'action',
+                xpReward: 40,
+                condition: { type: 'action', actionKey: 'first_saving_goal' }
+            },
+            {
+                key: 'first_investment',
+                name: 'Investor',
+                description: 'Made your first investment',
+                category: 'action',
+                xpReward: 50,
+                condition: { type: 'action', actionKey: 'first_investment' }
+            },
+            {
+                key: 'read_5_articles',
+                name: 'Bookworm',
+                description: 'Read 5 financial articles',
+                category: 'action',
+                xpReward: 30,
+                condition: { type: 'action', actionKey: 'read_5_articles' }
+            },
+            {
+                key: 'milestone_100xp',
+                name: 'Century Club',
+                description: 'Earned 100 total XP',
+                category: 'milestone',
+                xpReward: 10,
+                condition: { type: 'xp_total', threshold: 100 }
+            },
+            {
+                key: 'milestone_super_saver',
+                name: 'Super Saver',
+                description: 'Saved $500 total',
+                category: 'milestone',
+                xpReward: 30,
+                condition: { type: 'xp_total', threshold: 500 }
+            },
+            {
+                key: 'milestone_1000xp',
+                name: 'XP Legend',
+                description: 'Earned 1000 total XP',
+                category: 'milestone',
+                xpReward: 75,
+                condition: { type: 'xp_total', threshold: 1000 }
+            },
+            {
+                key: 'milestone_level5',
+                name: 'Rising Star',
+                description: 'Reached Level 5',
+                category: 'milestone',
+                xpReward: 20,
+                condition: { type: 'level', threshold: 5 }
+            },
+            {
+                key: 'milestone_budget_master',
+                name: 'Budget Master',
+                description: 'Reached Level 10',
+                category: 'milestone',
+                xpReward: 50,
+                condition: { type: 'level', threshold: 10 }
+            },
+            {
+                key: 'streak_3_days',
+                name: 'On Fire!',
+                description: 'Logged in 3 days in a row',
+                category: 'streak',
+                xpReward: 15,
+                condition: { type: 'streak_days', threshold: 3 }
+            },
+            {
+                key: 'streak_7_days',
+                name: 'Week Warrior',
+                description: 'Maintained a 7-day streak',
+                category: 'streak',
+                xpReward: 50,
+                condition: { type: 'streak_days', threshold: 7 }
+            },
+            {
+                key: 'streak_30_days',
+                name: 'Monthly Legend',
+                description: 'Maintained a 30-day streak',
+                category: 'streak',
+                xpReward: 150,
+                condition: { type: 'streak_days', threshold: 30 }
+            }
+        ];
+
+        let seeded = 0;
+        let skipped = 0;
+
+        for (const badge of defaultBadges) {
+            const exists = await BadgeDefinition.findOne({ key: badge.key });
+            if (!exists) {
+                await BadgeDefinition.create(badge);
+                seeded++;
+            } else {
+                skipped++;
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            message: `Seeding complete: ${seeded} created, ${skipped} already existed`,
+            data: { seeded, skipped }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to seed badges',
+            error: error.message
+        });
+    }
+}
 
 
 /**
