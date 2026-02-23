@@ -1,7 +1,7 @@
 import express from "express";
 import * as transactionController from "../controllers/transaction.controller.js";
-import { authMiddleware } from "../middleware/auth.middleware.js";
-import { validate } from "../middleware/validate.middleware.js";
+import { protect } from "../middleware/auth.middleware.js";
+import { validate } from "../middleware/validation.middleware.js";
 import {
   validateCreateTransaction,
   validateUpdateTransaction,
@@ -12,7 +12,7 @@ import {
 const router = express.Router();
 
 // All routes are protected
-router.use(authMiddleware);
+router.use(protect);
 
 // POST /api/transactions
 router.post(
