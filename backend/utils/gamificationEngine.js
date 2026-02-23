@@ -4,7 +4,7 @@ import BadgeDefinition from "../models/badge.model.js";
 export const XP_REWARDS = {
     daily_login: 5,
     streak_7_days: 20,
-    streaL_30_days: 75,
+    streak_30_days: 75,
     complete_goal: 30,
     first_login: 25,
     first_saving_goal: 40,
@@ -91,7 +91,7 @@ export const evaluateBadges = async (profile) => {
 export const awardActionBadge = async (userId, actionKey) => {
     const def = await BadgeDefinition.findOne({
         'condition.type': 'action',
-        'condition.actionKey': 'actionKey',
+        'condition.actionKey': actionKey,
         isActive: true
     });
     if (!def) return null;
