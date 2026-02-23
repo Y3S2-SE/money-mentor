@@ -1,7 +1,7 @@
 import * as transactionService from "../services/transaction.service.js";
 
 // POST /api/transactions
-export const createTransaction = async (req, res) => {
+export const createTransaction = async (req, res, next) => {
   try {
     const transaction = await transactionService.createTransaction(
       req.user.id,
@@ -14,16 +14,12 @@ export const createTransaction = async (req, res) => {
       data: transaction,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to create transaction",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
 // GET /api/transactions
-export const getTransactions = async (req, res) => {
+export const getTransactions = async (req, res, next) => {
   try {
     const result = await transactionService.getTransactions(
       req.user.id,
@@ -37,16 +33,12 @@ export const getTransactions = async (req, res) => {
       pagination: result.pagination,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to retrieve transactions",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
 // GET /api/transactions/:id
-export const getTransactionById = async (req, res) => {
+export const getTransactionById = async (req, res, next) => {
   try {
     const transaction = await transactionService.getTransactionById(
       req.params.id,
@@ -59,16 +51,15 @@ export const getTransactionById = async (req, res) => {
       data: transaction,
     });
   } catch (error) {
-    const isNotFound = error.message === "Transaction not found";
-    return res.status(isNotFound ? 404 : 500).json({
-      success: false,
-      message: error.message,
-    });
+    if (error.message === "Transaction not found") {
+      res.status(404);
+    }
+    next(error);
   }
 };
 
 // PUT /api/transactions/:id
-export const updateTransaction = async (req, res) => {
+export const updateTransaction = async (req, res, next) => {
   try {
     const transaction = await transactionService.updateTransaction(
       req.params.id,
@@ -82,16 +73,15 @@ export const updateTransaction = async (req, res) => {
       data: transaction,
     });
   } catch (error) {
-    const isNotFound = error.message === "Transaction not found";
-    return res.status(isNotFound ? 404 : 500).json({
-      success: false,
-      message: error.message,
-    });
+    if (error.message === "Transaction not found") {
+      res.status(404);
+    }
+    next(error);
   }
 };
 
 // DELETE /api/transactions/:id
-export const deleteTransaction = async (req, res) => {
+export const deleteTransaction = async (req, res, next) => {
   try {
     await transactionService.deleteTransaction(req.params.id, req.user.id);
 
@@ -100,10 +90,9 @@ export const deleteTransaction = async (req, res) => {
       message: "Transaction deleted successfully",
     });
   } catch (error) {
-    const isNotFound = error.message === "Transaction not found";
-    return res.status(isNotFound ? 404 : 500).json({
-      success: false,
-      message: error.message,
-    });
+    if (error.message === "Transaction not found") {
+      res.status(404);
+    }
+    next(error);
   }
 };
