@@ -13,12 +13,12 @@ const badgeDefinitionSchema = new mongoose.Schema(
             type: String,
             required: [true, 'Badge name is required'],
             trim: true,
-            maxLenght: [50, 'Badge name cannot exceed 50 characters']
+            maxLength: [50, 'Badge name cannot exceed 50 characters']
         },
         description: {
             type: String,
             required: [true, 'Badge description is required'],
-            maxLenght: [150, 'Description cannot exceed 150 characters']
+            maxLength: [150, 'Description cannot exceed 150 characters']
         },
         category: {
             type: String,
