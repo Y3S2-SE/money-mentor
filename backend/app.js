@@ -33,10 +33,10 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use("/api/transactions", transactionRoutes);
 
 // Error handling 
 app.use(notFound);
 app.use(errorHandler);
-app.use("/api/transactions", transactionRoutes);
 
 export default app;
