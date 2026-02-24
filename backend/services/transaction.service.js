@@ -12,7 +12,7 @@ export const createTransaction = async (userId, data) => {
 
 // Get all transactions for a user with filters and pagination
 export const getTransactions = async (userId, filters = {}) => {
-  const { type, month, category, page = 1, limit = 10 } = filters;
+  const { type, date, month, year, category, page = 1, limit = 10 } = filters;
 
   const query = { userId };
 
@@ -24,10 +24,24 @@ export const getTransactions = async (userId, filters = {}) => {
     query.category = { $regex: category, $options: "i" };
   }
 
-  if (month) {
+  // Exact date filter (YYYY-MM-DD) - highest priority
+  if (date) {
+    const start = new Date(date);
+    const end = new Date(date);
+    end.setDate(end.getDate() + 1);
+    query.date = { $gte: start, $lt: end };
+  }
+  // Month filter (YYYY-MM)
+  else if (month) {
     const [year, mon] = month.split("-");
     const start = new Date(year, mon - 1, 1);
     const end = new Date(year, mon, 1);
+    query.date = { $gte: start, $lt: end };
+  }
+  // Year filter (YYYY)
+  else if (year) {
+    const start = new Date(year, 0, 1);
+    const end = new Date(parseInt(year) + 1, 0, 1);
     query.date = { $gte: start, $lt: end };
   }
 

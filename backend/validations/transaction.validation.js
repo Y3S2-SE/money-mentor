@@ -56,9 +56,17 @@ export const validateGetTransactions = [
     .optional()
     .isIn(["income", "expense"]).withMessage("Type must be 'income' or 'expense'"),
 
+  query("date")
+    .optional()
+    .isISO8601().withMessage("Date must be a valid date (YYYY-MM-DD)"),
+
   query("month")
     .optional()
     .matches(/^\d{4}-\d{2}$/).withMessage("Month must be in YYYY-MM format"),
+
+  query("year")
+    .optional()
+    .matches(/^\d{4}$/).withMessage("Year must be in YYYY format"),
 
   query("category")
     .optional()
