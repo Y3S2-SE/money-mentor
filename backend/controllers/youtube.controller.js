@@ -77,44 +77,45 @@ export const getVideoSuggestions = async (req, res) => {
         const allVideos = [];
         const seenVideoIds = new Set();
         const cacheStats = { fromCache: 0, fromApi: 0 };
+        const MAX_TOTAL_VIDEOS = 5; // Global limit for the response
 
-        // Process each keyword — check cache first, fall back to API
         for (const keyword of chat.youtubeKeywords) {
+            // Stop processing keywords if we already reached our total limit
+            if (allVideos.length >= MAX_TOTAL_VIDEOS) break;
+
             const normalizedKeyword = keyword.toLowerCase().trim();
             const cached = await YoutubeCache.findOne({ keyword: normalizedKeyword });
 
             let videos;
 
             if (cached && !isStale(cached.cachedAt)) {
-                // Cache hit and still fresh — use cached videos
                 videos = cached.videos;
                 cacheStats.fromCache++;
             } else {
-                // Cache miss or stale — fetch from YouTube API and save
                 try {
                     videos = await fetchAndCache(normalizedKeyword);
                     cacheStats.fromApi++;
                 } catch {
-                    // If YouTube API fails for this keyword, use stale cache if available
                     videos = cached ? cached.videos : [];
                 }
             }
 
-            // Deduplicate videos across all keywords
             for (const video of videos) {
-                if (!seenVideoIds.has(video.videoId)) {
+                // Only add if not seen AND we haven't hit the limit of 5
+                if (!seenVideoIds.has(video.videoId) && allVideos.length < MAX_TOTAL_VIDEOS) {
                     seenVideoIds.add(video.videoId);
                     allVideos.push(video);
                 }
             }
         }
 
+        // Return the limited list
         res.status(200).json({
             success: true,
             data: {
                 keywords: chat.youtubeKeywords,
-                videos: allVideos,
-                cacheStats // useful for debugging — shows how many came from cache vs API
+                videos: allVideos, // Will now be max 5
+                cacheStats 
             }
         });
     } catch (error) {
