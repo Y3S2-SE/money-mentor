@@ -8,6 +8,8 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
+
+import groupRoutes from "./routes/group.route.js";
 import authRoutes from './routes/auth.route.js';
 import userRoutes from './routes/user.route.js';
 import gamificationRoutes from './routes/gamification.route.js';
@@ -34,6 +36,7 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
+app.use("/api/groups", groupRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/play', gamificationRoutes);
