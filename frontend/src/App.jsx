@@ -7,6 +7,7 @@ import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
 import AdminPage from './pages/AdminPage';
+import GroupPage from './pages/Group';
 
 const AdminRoute = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
@@ -34,6 +35,14 @@ function App() {
             element={
               <PrivateRoute>
                 <AdminPage/>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path='/group'
+            element={
+              <PrivateRoute>
+                <GroupPage/>
               </PrivateRoute>
             }
           />
