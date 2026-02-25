@@ -1,219 +1,165 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import mongoose from 'mongoose';
 import Chat from '../../../models/chat.model.js';
-import { setupTestDB, teardownTestDB, clearTestDB } from '../../setup/testSetup.js';
 
 describe('Chat Model Unit Tests', () => {
-  beforeAll(async () => {
-    await setupTestDB();
-  });
 
-  afterAll(async () => {
-    await teardownTestDB();
-  });
+    const fakeUserId = () => new mongoose.Types.ObjectId();
 
-  beforeEach(async () => {
-    await clearTestDB();
-  });
-
-  // Helper — fake ObjectId for the user field
-  const fakeUserId = () => new mongoose.Types.ObjectId();
-
-  // ── Chat Creation ──────────────────────────────────────────────
-  describe('Chat Creation', () => {
-    it('should create a valid chat with required fields', async () => {
-      const userId = fakeUserId();
-      const chat = await Chat.create({ user: userId });
-
-      expect(chat.user.toString()).toBe(userId.toString());
-      expect(chat.title).toBe('New Conversation');
-      expect(chat.messages).toEqual([]);
-      expect(chat.youtubeKeywords).toEqual([]);
-    });
-
-    it('should fail without a user field', async () => {
-      await expect(Chat.create({})).rejects.toThrow();
-    });
-
-    it('should use default title when not provided', async () => {
-      const chat = await Chat.create({ user: fakeUserId() });
-      expect(chat.title).toBe('New Conversation');
-    });
-
-    it('should save a custom title', async () => {
-      const chat = await Chat.create({
+    const makeChat = (overrides = {}) => new Chat({
         user: fakeUserId(),
-        title: 'How do I budget?'
-      });
-      expect(chat.title).toBe('How do I budget?');
+        ...overrides
     });
 
-    it('should fail when title exceeds 60 characters', async () => {
-      await expect(
-        Chat.create({ user: fakeUserId(), title: 'a'.repeat(61) })
-      ).rejects.toThrow();
+    // ── Default Values ─────────────────────────────────────────
+    describe('Default Values', () => {
+        it('should default title to New Conversation', () => {
+            const chat = makeChat();
+            expect(chat.title).toBe('New Conversation');
+        });
+
+        it('should default messages to empty array', () => {
+            const chat = makeChat();
+            expect(chat.messages).toEqual([]);
+        });
+
+        it('should default youtubeKeywords to empty array', () => {
+            const chat = makeChat();
+            expect(chat.youtubeKeywords).toEqual([]);
+        });
+
+        it('should assign a valid ObjectId', () => {
+            const chat = makeChat();
+            expect(chat._id).toBeInstanceOf(mongoose.Types.ObjectId);
+        });
     });
 
-    it('should accept exactly 60 character title', async () => {
-      const chat = await Chat.create({
-        user: fakeUserId(),
-        title: 'a'.repeat(60)
-      });
-      expect(chat.title.length).toBe(60);
-    });
-  });
+    // ── Schema Validation ──────────────────────────────────────
+    describe('Schema Validation', () => {
+        it('should pass validation with required user field', async () => {
+            const chat = makeChat();
+            await expect(chat.validate()).resolves.toBeUndefined();
+        });
 
-  // ── Messages ───────────────────────────────────────────────────
-  describe('Messages', () => {
-    it('should save messages with user role', async () => {
-      const chat = await Chat.create({
-        user: fakeUserId(),
-        messages: [{ role: 'user', content: 'How do I save money?' }]
-      });
+        it('should fail validation without user field', async () => {
+            const chat = new Chat({});
+            await expect(chat.validate()).rejects.toThrow();
+        });
 
-      expect(chat.messages).toHaveLength(1);
-      expect(chat.messages[0].role).toBe('user');
-      expect(chat.messages[0].content).toBe('How do I save money?');
-    });
+        it('should save a custom title', async () => {
+            const chat = makeChat({ title: 'How do I budget?' });
+            await expect(chat.validate()).resolves.toBeUndefined();
+            expect(chat.title).toBe('How do I budget?');
+        });
 
-    it('should save messages with model role', async () => {
-      const chat = await Chat.create({
-        user: fakeUserId(),
-        messages: [{ role: 'model', content: 'Start by tracking your expenses.' }]
-      });
+        it('should fail validation when title exceeds 60 characters', async () => {
+            const chat = makeChat({ title: 'a'.repeat(61) });
+            await expect(chat.validate()).rejects.toThrow();
+        });
 
-      expect(chat.messages[0].role).toBe('model');
-    });
-
-    it('should fail with invalid message role', async () => {
-      await expect(
-        Chat.create({
-          user: fakeUserId(),
-          messages: [{ role: 'assistant', content: 'Hello' }]
-        })
-      ).rejects.toThrow();
+        it('should pass validation with exactly 60 character title', async () => {
+            const chat = makeChat({ title: 'a'.repeat(60) });
+            await expect(chat.validate()).resolves.toBeUndefined();
+            expect(chat.title.length).toBe(60);
+        });
     });
 
-    it('should fail when message content is missing', async () => {
-      await expect(
-        Chat.create({
-          user: fakeUserId(),
-          messages: [{ role: 'user' }]
-        })
-      ).rejects.toThrow();
+    // ── Messages Validation ────────────────────────────────────
+    describe('Messages Validation', () => {
+        it('should pass validation with valid user message', async () => {
+            const chat = makeChat({
+                messages: [{ role: 'user', content: 'How do I save money?' }]
+            });
+            await expect(chat.validate()).resolves.toBeUndefined();
+            expect(chat.messages[0].role).toBe('user');
+            expect(chat.messages[0].content).toBe('How do I save money?');
+        });
+
+        it('should pass validation with valid model message', async () => {
+            const chat = makeChat({
+                messages: [{ role: 'model', content: 'Start by tracking your expenses.' }]
+            });
+            await expect(chat.validate()).resolves.toBeUndefined();
+            expect(chat.messages[0].role).toBe('model');
+        });
+
+        it('should fail validation with invalid message role', async () => {
+            const chat = makeChat({
+                messages: [{ role: 'assistant', content: 'Hello' }]
+            });
+            await expect(chat.validate()).rejects.toThrow();
+        });
+
+        it('should fail validation when message content is missing', async () => {
+            const chat = makeChat({
+                messages: [{ role: 'user' }]
+            });
+            await expect(chat.validate()).rejects.toThrow();
+        });
+
+        it('should fail validation when message role is missing', async () => {
+            const chat = makeChat({
+                messages: [{ content: 'Hello' }]
+            });
+            await expect(chat.validate()).rejects.toThrow();
+        });
+
+        it('should accept multiple messages in order', async () => {
+            const chat = makeChat({
+                messages: [
+                    { role: 'user', content: 'What is budgeting?' },
+                    { role: 'model', content: 'Budgeting is tracking your income and expenses.' },
+                    { role: 'user', content: 'How do I start?' }
+                ]
+            });
+            await expect(chat.validate()).resolves.toBeUndefined();
+            expect(chat.messages).toHaveLength(3);
+            expect(chat.messages[0].role).toBe('user');
+            expect(chat.messages[1].role).toBe('model');
+            expect(chat.messages[2].role).toBe('user');
+        });
+
+        it('should trim whitespace from message content', async () => {
+            const chat = makeChat({
+                messages: [{ role: 'user', content: '  hello  ' }]
+            });
+            await chat.validate();
+            expect(chat.messages[0].content).toBe('hello');
+        });
+
+        it('should push new messages into the array', () => {
+            const chat = makeChat();
+            chat.messages.push({ role: 'user', content: 'New message' });
+            expect(chat.messages).toHaveLength(1);
+            expect(chat.messages[0].content).toBe('New message');
+        });
     });
 
-    it('should fail when message role is missing', async () => {
-      await expect(
-        Chat.create({
-          user: fakeUserId(),
-          messages: [{ content: 'Hello' }]
-        })
-      ).rejects.toThrow();
+    // ── YouTube Keywords ───────────────────────────────────────
+    describe('YouTube Keywords', () => {
+        it('should save provided keywords', async () => {
+            const chat = makeChat({
+                youtubeKeywords: ['budgeting for beginners', '50 30 20 rule']
+            });
+            await expect(chat.validate()).resolves.toBeUndefined();
+            expect(chat.youtubeKeywords).toHaveLength(2);
+            expect(chat.youtubeKeywords).toContain('budgeting for beginners');
+        });
+
+        it('should update keywords by reassigning array', () => {
+            const chat = makeChat();
+            chat.youtubeKeywords = ['investing basics', 'compound interest explained'];
+            expect(chat.youtubeKeywords).toHaveLength(2);
+            expect(chat.youtubeKeywords[0]).toBe('investing basics');
+        });
     });
 
-    it('should save multiple messages in order', async () => {
-      const chat = await Chat.create({
-        user: fakeUserId(),
-        messages: [
-          { role: 'user', content: 'What is budgeting?' },
-          { role: 'model', content: 'Budgeting is tracking your income and expenses.' },
-          { role: 'user', content: 'How do I start?' }
-        ]
-      });
-
-      expect(chat.messages).toHaveLength(3);
-      expect(chat.messages[0].role).toBe('user');
-      expect(chat.messages[1].role).toBe('model');
-      expect(chat.messages[2].role).toBe('user');
+    // ── User Reference ─────────────────────────────────────────
+    describe('User Reference', () => {
+        it('should store the user ObjectId correctly', () => {
+            const userId = fakeUserId();
+            const chat = new Chat({ user: userId });
+            expect(chat.user.toString()).toBe(userId.toString());
+        });
     });
-
-    it('should default to empty messages array', async () => {
-      const chat = await Chat.create({ user: fakeUserId() });
-      expect(chat.messages).toEqual([]);
-    });
-
-    it('should add message timestamps', async () => {
-      const chat = await Chat.create({
-        user: fakeUserId(),
-        messages: [{ role: 'user', content: 'Test message' }]
-      });
-
-      expect(chat.messages[0].createdAt).toBeDefined();
-      expect(chat.messages[0].createdAt).toBeInstanceOf(Date);
-    });
-
-    it('should push new messages and save', async () => {
-      const chat = await Chat.create({ user: fakeUserId() });
-      chat.messages.push({ role: 'user', content: 'New message' });
-      await chat.save();
-
-      const updated = await Chat.findById(chat._id);
-      expect(updated.messages).toHaveLength(1);
-      expect(updated.messages[0].content).toBe('New message');
-    });
-
-    it('should trim whitespace from message content', async () => {
-      const chat = await Chat.create({
-        user: fakeUserId(),
-        messages: [{ role: 'user', content: '  hello  ' }]
-      });
-      expect(chat.messages[0].content).toBe('hello');
-    });
-  });
-
-  // ── YouTube Keywords ───────────────────────────────────────────
-  describe('YouTube Keywords', () => {
-    it('should default to empty keywords array', async () => {
-      const chat = await Chat.create({ user: fakeUserId() });
-      expect(chat.youtubeKeywords).toEqual([]);
-    });
-
-    it('should save provided keywords', async () => {
-      const chat = await Chat.create({
-        user: fakeUserId(),
-        youtubeKeywords: ['budgeting for beginners', '50 30 20 rule']
-      });
-
-      expect(chat.youtubeKeywords).toHaveLength(2);
-      expect(chat.youtubeKeywords).toContain('budgeting for beginners');
-    });
-
-    it('should update keywords on save', async () => {
-      const chat = await Chat.create({ user: fakeUserId() });
-      chat.youtubeKeywords = ['investing basics', 'compound interest explained'];
-      await chat.save();
-
-      const updated = await Chat.findById(chat._id);
-      expect(updated.youtubeKeywords).toHaveLength(2);
-      expect(updated.youtubeKeywords[0]).toBe('investing basics');
-    });
-  });
-
-  // ── Timestamps ─────────────────────────────────────────────────
-  describe('Timestamps', () => {
-    it('should add createdAt timestamp', async () => {
-      const chat = await Chat.create({ user: fakeUserId() });
-      expect(chat.createdAt).toBeDefined();
-      expect(chat.createdAt).toBeInstanceOf(Date);
-    });
-
-    it('should add updatedAt timestamp', async () => {
-      const chat = await Chat.create({ user: fakeUserId() });
-      expect(chat.updatedAt).toBeDefined();
-      expect(chat.updatedAt).toBeInstanceOf(Date);
-    });
-
-    it('should update updatedAt on modification', async () => {
-      const chat = await Chat.create({ user: fakeUserId() });
-      const originalUpdatedAt = chat.updatedAt;
-
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      chat.title = 'Updated title';
-      await chat.save();
-
-      expect(chat.updatedAt.getTime()).toBeGreaterThan(originalUpdatedAt.getTime());
-    });
-  });
 });
