@@ -85,3 +85,20 @@ export const getRecentTransactions = async (req, res, next) => {
     next(error);
   }
 };
+
+// GET /api/dashboard/convert
+export const convertCurrency = async (req, res, next) => {
+  try {
+    const { amount, from = "LKR", to = "USD" } = req.query;
+
+    const result = await dashboardService.convertCurrency(amount, from, to);
+
+    return res.status(200).json({
+      success: true,
+      message: "Currency converted successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
