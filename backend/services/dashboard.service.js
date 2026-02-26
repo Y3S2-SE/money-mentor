@@ -215,3 +215,34 @@ export const getRecentTransactions = async (userId) => {
 
   return transactions;
 };
+
+// GET /api/dashboard/convert?amount=10000&from=LKR&to=USD
+// Uses fawazahmed0 exchange API (free, no key needed, supports LKR)
+export const convertCurrency = async (amount, from = "LKR", to = "USD") => {
+  const fromLower = from.toLowerCase();
+  const toLower = to.toLowerCase();
+
+  const url = `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${fromLower}.json`;
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Currency conversion failed: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const rate = data[fromLower][toLower];
+
+  if (!rate) {
+    throw new Error(`Currency '${to}' is not supported`);
+  }
+
+  return {
+    amount: parseFloat(amount),
+    from: from.toUpperCase(),
+    to: to.toUpperCase(),
+    convertedAmount: parseFloat((amount * rate).toFixed(2)),
+    rate: parseFloat(rate.toFixed(6)),
+    date: data.date,
+  };
+};
