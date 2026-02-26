@@ -205,3 +205,13 @@ Keep it simple and encouraging for a young person. Do not use technical jargon.
     insight,
   };
 };
+
+// GET /api/dashboard/recent-transactions
+// Returns last 5 transactions for the user
+export const getRecentTransactions = async (userId) => {
+  const transactions = await Transaction.find({ userId })
+    .sort({ date: -1 })
+    .limit(5);
+
+  return transactions;
+};
