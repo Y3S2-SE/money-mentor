@@ -68,3 +68,20 @@ export const getFinancialInsight = async (req, res, next) => {
     next(error);
   }
 };
+
+// GET /api/dashboard/recent-transactions
+export const getRecentTransactions = async (req, res, next) => {
+  try {
+    const transactions = await dashboardService.getRecentTransactions(
+      req.user._id
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Recent transactions retrieved successfully",
+      data: transactions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
