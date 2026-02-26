@@ -3,7 +3,7 @@ import * as dashboardController from "../controllers/dashboard.controller.js";
 import * as savingsGoalController from "../controllers/savingsGoal.controller.js";
 import { protect } from "../middleware/auth.middleware.js";
 import { validate } from "../middleware/validation.middleware.js";
-import { validateDashboardQuery } from "../validations/dashboard.validation.js";
+import { validateDashboardQuery, validateCurrencyConvert } from "../validations/dashboard.validation.js";
 import {
   validateCreateSavingsGoal,
   validateUpdateSavingsGoal,
@@ -44,6 +44,14 @@ router.get(
 
 // GET /api/dashboard/recent-transactions
 router.get("/recent-transactions", dashboardController.getRecentTransactions);
+
+// GET /api/dashboard/convert
+router.get(
+  "/convert",
+  validateCurrencyConvert,
+  validate,
+  dashboardController.convertCurrency
+);
 
 // POST /api/dashboard/savings-goal
 router.post(
