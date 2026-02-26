@@ -42,6 +42,9 @@ router.get(
   dashboardController.getFinancialInsight
 );
 
+// GET /api/dashboard/recent-transactions
+router.get("/recent-transactions", dashboardController.getRecentTransactions);
+
 // POST /api/dashboard/savings-goal
 router.post(
   "/savings-goal",
