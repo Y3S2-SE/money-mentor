@@ -194,8 +194,8 @@ Give a short, friendly, and motivating financial tip (2-3 sentences max) tailore
 Keep it simple and encouraging for a young person. Do not use technical jargon.
   `.trim();
 
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_2);
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
   const result = await model.generateContent(prompt);
   const insight = result.response.text();
 
