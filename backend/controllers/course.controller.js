@@ -2,7 +2,7 @@ import Course from "../models/course.model.js";
 import User from "../models/user.model.js";
 
 // @desc    Create a new course
-// @route   POST /api/courses
+// @route   POST /api/course
 // @access  Private/Admin
 export const createCourse = async (req, res) => {
     try {
@@ -34,7 +34,7 @@ export const createCourse = async (req, res) => {
 };
 
 // @desc    Get all courses (published only for users, all for admins)
-// @route   GET /api/courses
+// @route   GET /api/course
 // @access  Private
 export const getAllCourses = async (req, res) => {
     try {
@@ -85,7 +85,7 @@ export const getAllCourses = async (req, res) => {
 };
 
 // @desc    Get single course by ID
-// @route   GET /api/courses/:id
+// @route   GET /api/course/:id
 // @access  Private
 export const getCourseById = async (req, res) => {
     try {
@@ -117,7 +117,7 @@ export const getCourseById = async (req, res) => {
 };
 
 // @desc    Update course
-// @route   PUT /api/courses/:id
+// @route   PUT /api/course/:id
 // @access  Private/Admin
 export const updateCourse = async (req, res) => {
     try {
@@ -148,7 +148,7 @@ export const updateCourse = async (req, res) => {
 };
 
 // @desc    Delete course
-// @route   DELETE /api/courses/:id
+// @route   DELETE /api/course/:id
 // @access  Private/Admin
 export const deleteCourse = async (req, res) => {
     try {
@@ -169,7 +169,7 @@ export const deleteCourse = async (req, res) => {
 };
 
 // @desc    Submit course answers & earn points
-// @route   POST /api/courses/:id/submit
+// @route   POST /api/course/:id/submit
 // @access  Private
 export const submitCourse = async (req, res) => {
     try {
