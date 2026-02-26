@@ -23,3 +23,23 @@ export const validateDashboardQuery = [
     .isIn(["income", "expense"])
     .withMessage("Type must be 'income' or 'expense'"),
 ];
+
+export const validateCurrencyConvert = [
+  query("amount")
+    .notEmpty()
+    .withMessage("Amount is required")
+    .isFloat({ min: 0.01 })
+    .withMessage("Amount must be a positive number"),
+
+  query("from")
+    .optional()
+    .isString()
+    .isLength({ min: 3, max: 3 })
+    .withMessage("From currency must be a 3-letter currency code e.g. LKR"),
+
+  query("to")
+    .optional()
+    .isString()
+    .isLength({ min: 3, max: 3 })
+    .withMessage("To currency must be a 3-letter currency code e.g. USD"),
+];
