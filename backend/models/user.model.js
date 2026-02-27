@@ -36,6 +36,10 @@ const userSchema = new mongoose.Schema(
         },
         lastLogin: {
             type: Date
+        },
+        points: {
+            type: Number,
+            default: 0
         }
     },
     {

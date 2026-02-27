@@ -12,12 +12,13 @@ import { errorHandler, notFound } from './middleware/errorHandler.js';
 import groupRoutes from "./routes/group.route.js";
 import authRoutes from './routes/auth.route.js';
 import userRoutes from './routes/user.route.js';
+import transactionRoutes from "./routes/transaction.routes.js";
 import gamificationRoutes from './routes/gamification.route.js';
 import courseRoutes from './routes/course.route.js';
 import chatRoutes from './routes/chat.route.js';
 import youtubeRoutes from './routes/youtube.route.js';
+import dashboardRoutes from "./routes/dashboard.routes.js";
 import chatRoomRoutes from "./routes/chatRoom.route.js";
-
 
 const app = express();
 
@@ -41,12 +42,13 @@ app.get('/health', (req, res) => {
 app.use("/api/groups", groupRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use("/api/transactions", transactionRoutes);
 app.use('/api/play', gamificationRoutes);
 app.use('/api/course', courseRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/youtube', youtubeRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/chat-room", chatRoomRoutes);
-
 
 // Error handling 
 app.use(notFound);
