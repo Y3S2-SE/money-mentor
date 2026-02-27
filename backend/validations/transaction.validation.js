@@ -18,6 +18,14 @@ const isRealYear = (value) => {
   return year >= 1900 && year <= 2100;
 };
 
+// Helper: checks if a date is within the current month or in the past
+const isNotBeyondCurrentMonth = (value) => {
+  const now = new Date();
+  const endOfCurrentMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0));
+  const inputDate = new Date(value + "T00:00:00.000Z");
+  return inputDate <= endOfCurrentMonth;
+};
+
 export const validateCreateTransaction = [
   body("type")
     .notEmpty().withMessage("Type is required")
@@ -43,6 +51,9 @@ export const validateCreateTransaction = [
     .custom((value) => {
       if (!isRealDate(value)) {
         throw new Error("Date does not exist in the calendar (e.g. Feb 30 is invalid)");
+      }
+      if (!isNotBeyondCurrentMonth(value)) {
+        throw new Error("Transaction date cannot be beyond the current month");
       }
       return true;
     }),
@@ -76,6 +87,9 @@ export const validateUpdateTransaction = [
     .custom((value) => {
       if (!isRealDate(value)) {
         throw new Error("Date does not exist in the calendar (e.g. Feb 30 is invalid)");
+      }
+      if (!isNotBeyondCurrentMonth(value)) {
+        throw new Error("Transaction date cannot be beyond the current month");
       }
       return true;
     }),
