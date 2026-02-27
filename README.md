@@ -42,7 +42,7 @@ MoneyMentor is a full-stack web application designed to provide gamified financi
 > Developed by Hiruvinda
 - Create and manage user groups
 - Real-time messaging functionality
-- Community-based financial discussions
+- Share user achivements and badges among members
 - Collaborative engagement features
 
 ## Project Structure 
@@ -152,7 +152,7 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | Income & Expense Tracker | Dishan | [View Docs →](your-postman-link-here) |
 | Gamification Engine | Ravindu | [View Docs →](https://documenter.getpostman.com/view/52326226/2sBXcGFfiP) |
 | Knowledge Hub | Thimeth | [View Docs →](https://documenter.getpostman.com/view/43108804/2sBXcHhJUQ#6f3f6126-8286-40c6-a695-c8d1c6f27b21) |
-| Group & Chat Function | Hiruvinda | [View Docs →](your-postman-link-here) |
+| Group & Chat Function | Hiruvinda | [View Docs →](https://documenter.getpostman.com/view/52186165/2sBXcGDzcJ) |
 
 ### Health Check
 | Method | Endpoint | Description | Auth |
@@ -200,6 +200,11 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | POST | `/api/group/remove-member` | Remove member from saving group |  Group Admin |
 | PUT | `/api/group/update` | Update saving group details |  Group Admin |
 | POST | `/api/group/regenerate-invite` | Regenerate group invite code |  Group Admin |
+||
+| POST | `/api/chat-room/ticket` | Generate 30s TTL ticket |   |
+| GET | `/api/chat-room/:groupId/messages` | get previous message history |   |
+| Delete | `/api/chat-room//:groupId/messages/:messageId` | Delete user send message |  User |
+
 
 ### Course — `/api/course`
 
@@ -253,6 +258,7 @@ npm run test:watch
 | User Model | `user.model.test.js` | Unit | `toAuthJSON`, `comparePassword`, defaults, field assignments |
 | Gamification Model | `gamification.model.test.js` | Unit | `getLevelFromXP`, `getTitleForLevel`, `awardXP`, `updateStreak`, `awardBadge`, `levelProgress` virtual |
 | Group Model | `group.model.test.js` | Unit | Creation, members, admin ref, invite code, timestamps, CRUD (mocked) |
+| Message Model | message.model.test.js | Unit | Group reference, sender reference, content, type, readBy array, deletedAt, timestamps, CRUD (mocked) |
 | Course Model | `course.model.test.js` | Unit | Creation, defaults, question validation, option count, `totalPoints` calculation, completions |
 | Chat Model | `chat.model.test.js` | Unit | Creation, defaults, message roles, content trim, keyword storage |
 | Youtube Model | `youtube.model.test.js` | Unit | Creation, keyword normalization, video field defaults, staleness logic |
@@ -262,6 +268,7 @@ npm run test:watch
 | Course Endpoints | `course.integration.test.js` | Integration | Create, list with filters/pagination, get by ID, update, delete, submit & grade, points award, duplicate submission prevention |
 | Chat Endpoints | `chat.integration.test.js` | Integration | Start conversation, send message, list chats, get by ID, delete, ownership checks, Gemini mocked |
 | YouTube Endpoints | `youtube.integration.test.js` | Integration | Video search, cache hit/miss, staleness check, deduplication, keyword-based fetch |
+| Group Endpoints | `group.integration.test.js` | Integration | create group, join, leave, get groups details, delete group, remove member, update group, re-generate invite code,  |
 
 ### Test Environment
 Tests use a separate `.env.test` file pointing to a dedicated test database (`moneymentor_test`). The database is dropped and recreated between test suites automatically via `testSetup.js`.

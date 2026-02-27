@@ -6,7 +6,7 @@ describe('Group Model - Unit Tests', () => {
   const mockAdminId = new mongoose.Types.ObjectId();
   const mockMemberId = new mongoose.Types.ObjectId();
 
-  // ── Default Values ─────────────────────────────────────────
+  //Default Values 
   describe('Default Values', () => {
     it('should default maxMembers to 5', () => {
       const group = new Group({ name: 'Test Group', admin: mockAdminId });
@@ -25,7 +25,7 @@ describe('Group Model - Unit Tests', () => {
     });
   });
 
-  // ── Field Assignments ──────────────────────────────────────
+  // Field Assignments 
   describe('Field Assignments', () => {
     it('should assign name correctly', () => {
       const group = new Group({ name: 'My Group', admin: mockAdminId });
@@ -63,7 +63,7 @@ describe('Group Model - Unit Tests', () => {
     });
   });
 
-  // ── Admin Reference ────────────────────────────────────────
+  //  Admin Reference 
   describe('Admin Reference', () => {
     it('should store admin as an ObjectId', () => {
       const group = new Group({ name: 'Test Group', admin: mockAdminId });
@@ -78,7 +78,7 @@ describe('Group Model - Unit Tests', () => {
     });
   });
 
-  // ── Members ────────────────────────────────────────────────
+  //  Members 
   describe('Members', () => {
     it('should store members as ObjectIds', () => {
       const group = new Group({ name: 'Test Group', admin: mockAdminId, members: [mockMemberId] });
@@ -110,7 +110,7 @@ describe('Group Model - Unit Tests', () => {
     });
   });
 
-  // ── Validation ─────────────────────────────────────────────
+  //  Validation 
   describe('Validation', () => {
     it('should require name', () => {
       const group = new Group({ admin: mockAdminId });
@@ -144,12 +144,10 @@ describe('Group Model - Unit Tests', () => {
     });
   });
 
-  // ── Timestamps ─────────────────────────────────────────────
+  //  Timestamps 
   describe('Timestamps', () => {
     it('should have timestamps option enabled', () => {
       const group = new Group({ name: 'Test Group', admin: mockAdminId });
-      // Timestamps are added by MongoDB on save, but the schema
-      // paths exist on the model
       expect(Group.schema.paths.createdAt).toBeDefined();
       expect(Group.schema.paths.updatedAt).toBeDefined();
     });
