@@ -31,12 +31,12 @@ MoneyMentor is a full-stack web application designed to provide gamified financi
 - Financial goal milestones
 - Motivation through engagement mechanics
 
-### 3. Learning Hub
+### 3. Knowledge Hub
 > Developed by Thimeth
-- Financial literacy learning modules
-- Structured educational content
-- Progress-based learning experience
-- Knowledge tracking and improvement
+- Finance courses with MCQ quizzes and automatic grading (pass at 70%)
+- Points awarded on course completion, tracked on user profile
+- AI financial advisor chatbot powered by Google Gemini with persistent conversation history
+- YouTube video suggestions generated from chat topics, cached for 7 days to reduce API quota usage
 
 ### 4. Grouping & Chat Feature
 > Developed by Hiruvinda
