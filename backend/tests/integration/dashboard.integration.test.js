@@ -9,11 +9,9 @@ describe('Dashboard Integration Tests', () => {
   let userToken;
   let userId;
 
-  // ─── Current month helper ────────────────────────────────────────────────
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-  // ─── DB lifecycle ─────────────────────────────────────────────────────────
   beforeAll(async () => {
     await setupTestDB();
   });
@@ -34,7 +32,6 @@ describe('Dashboard Integration Tests', () => {
     userId = res.body.data.user.id;
   });
 
-  // ─── Seed helpers ─────────────────────────────────────────────────────────
   const seedTransactions = async (overrides = []) => {
     const defaults = [
       { userId, type: 'income',  amount: 50000, category: 'Salary',    date: new Date() },
@@ -49,9 +46,7 @@ describe('Dashboard Integration Tests', () => {
     await SavingsGoal.create({ userId, monthlyGoal, month });
   };
 
-  // ───────────────────────────────────────────────────────────────────────────
   // GET /api/dashboard/summary
-  // ───────────────────────────────────────────────────────────────────────────
   describe('GET /api/dashboard/summary', () => {
     it('should return 200 with correct income, expense and savings for current month', async () => {
       await seedTransactions();
@@ -144,9 +139,7 @@ describe('Dashboard Integration Tests', () => {
     });
   });
 
-  // ───────────────────────────────────────────────────────────────────────────
   // GET /api/dashboard/category-breakdown
-  // ───────────────────────────────────────────────────────────────────────────
   describe('GET /api/dashboard/category-breakdown', () => {
     it('should return expense breakdown with correct percentages', async () => {
       await seedTransactions();
@@ -201,9 +194,7 @@ describe('Dashboard Integration Tests', () => {
     });
   });
 
-  // ───────────────────────────────────────────────────────────────────────────
   // GET /api/dashboard/trends
-  // ───────────────────────────────────────────────────────────────────────────
   describe('GET /api/dashboard/trends', () => {
     it('should return monthly trends for last 6 months', async () => {
       await Transaction.insertMany([
@@ -242,9 +233,7 @@ describe('Dashboard Integration Tests', () => {
     });
   });
 
-  // ───────────────────────────────────────────────────────────────────────────
   // GET /api/dashboard/recent-transactions
-  // ───────────────────────────────────────────────────────────────────────────
   describe('GET /api/dashboard/recent-transactions', () => {
     it('should return at most 5 most recent transactions', async () => {
       // Insert 7 transactions
@@ -318,9 +307,7 @@ describe('Dashboard Integration Tests', () => {
     });
   });
 
-  // ───────────────────────────────────────────────────────────────────────────
   // GET /api/dashboard/convert
-  // ───────────────────────────────────────────────────────────────────────────
   describe('GET /api/dashboard/convert', () => {
     it('should convert LKR to USD successfully', async () => {
       const res = await request(app)
@@ -374,9 +361,7 @@ describe('Dashboard Integration Tests', () => {
     });
   });
 
-  // ───────────────────────────────────────────────────────────────────────────
   // POST /api/dashboard/savings-goal
-  // ───────────────────────────────────────────────────────────────────────────
   describe('POST /api/dashboard/savings-goal', () => {
     it('should create a savings goal and return 201', async () => {
       const res = await request(app)
@@ -442,9 +427,7 @@ describe('Dashboard Integration Tests', () => {
     });
   });
 
-  // ───────────────────────────────────────────────────────────────────────────
   // GET /api/dashboard/savings-goal
-  // ───────────────────────────────────────────────────────────────────────────
   describe('GET /api/dashboard/savings-goal', () => {
     it('should return the savings goal for current month', async () => {
       await seedSavingsGoal(20000);
@@ -485,9 +468,7 @@ describe('Dashboard Integration Tests', () => {
     });
   });
 
-  // ───────────────────────────────────────────────────────────────────────────
   // PUT /api/dashboard/savings-goal
-  // ───────────────────────────────────────────────────────────────────────────
   describe('PUT /api/dashboard/savings-goal', () => {
     it('should update an existing savings goal and return 200', async () => {
       await seedSavingsGoal(20000);
@@ -534,9 +515,7 @@ describe('Dashboard Integration Tests', () => {
     });
   });
 
-  // ───────────────────────────────────────────────────────────────────────────
   // GET /api/dashboard/savings-goal-progress
-  // ───────────────────────────────────────────────────────────────────────────
   describe('GET /api/dashboard/savings-goal-progress', () => {
     it('should return progress when goal and transactions exist', async () => {
       await seedSavingsGoal(20000);

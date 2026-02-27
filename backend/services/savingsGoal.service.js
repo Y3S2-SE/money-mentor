@@ -1,7 +1,7 @@
 import SavingsGoal from "../models/savingsGoal.model.js";
 import { getSummary } from "./dashboard.service.js";
 
-// Helper: get current month in YYYY-MM format
+// Helper to get current month in YYYY-MM format
 const getCurrentMonth = () => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
