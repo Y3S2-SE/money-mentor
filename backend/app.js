@@ -17,8 +17,8 @@ import gamificationRoutes from './routes/gamification.route.js';
 import courseRoutes from './routes/course.route.js';
 import chatRoutes from './routes/chat.route.js';
 import youtubeRoutes from './routes/youtube.route.js';
+import dashboardRoutes from "./routes/dashboard.routes.js";
 import chatRoomRoutes from "./routes/chatRoom.route.js";
-
 
 const app = express();
 
@@ -47,8 +47,8 @@ app.use('/api/play', gamificationRoutes);
 app.use('/api/course', courseRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/youtube', youtubeRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/chat-room", chatRoomRoutes);
-
 
 // Error handling 
 app.use(notFound);
