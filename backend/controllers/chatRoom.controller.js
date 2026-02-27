@@ -2,7 +2,7 @@ import Message from "../models/message.model.js";
 import Group from "../models/group.model.js";
 import { createTicket } from "../websocket/wsTicketStore.js";
 
-// POST /api/chat/ticket
+// POST /api/chat-room/ticket
 export const getWsTicket = async (req, res) => {
   try {
     const ticket = createTicket(req.user._id.toString());
@@ -12,7 +12,7 @@ export const getWsTicket = async (req, res) => {
   }
 };
 
-// GET /api/chat/:groupId/messages?page=1&limit=50
+// GET /api/chat-room/:groupId/messages?page=1&limit=50
 export const getMessageHistory = async (req, res) => {
   try {
     const { groupId } = req.params;
@@ -59,7 +59,7 @@ export const getMessageHistory = async (req, res) => {
   }
 };
 
-// DELETE /api/chat/:groupId/messages/:messageId
+// DELETE /api/chat-room/:groupId/messages/:messageId
 export const deleteMessage = async (req, res) => {
   try {
     const { groupId, messageId } = req.params;
