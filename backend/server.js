@@ -3,6 +3,7 @@ import http from 'http';
 import app from "./app.js";
 import { logger } from "./utils/logger.js";
 import { connectDB } from "./config/database.js";
+import { initWebSocketServer } from "./websocket/wsServer.js";
 
 const PORT = process.env.PORT || 5080;
 
@@ -12,6 +13,8 @@ const server = http.createServer(app);
 const startServer = async () => {
     try {
         await connectDB();
+
+        initWebSocketServer(server);
 
         server.listen(PORT, () => {
             logger.success(`server running on port ${PORT}`);
