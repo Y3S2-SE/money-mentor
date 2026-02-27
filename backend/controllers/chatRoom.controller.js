@@ -37,7 +37,7 @@ export const getMessageHistory = async (req, res) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate("sender", "name avatar"),
+        .populate("sender", "username"),
       Message.countDocuments({ groupId, deletedAt: null }),
     ]);
 
