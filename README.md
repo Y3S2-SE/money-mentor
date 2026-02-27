@@ -42,7 +42,7 @@ MoneyMentor is a full-stack web application designed to provide gamified financi
 > Developed by Hiruvinda
 - Create and manage user groups
 - Real-time messaging functionality
-- Community-based financial discussions
+- Share user achivements and badges among members
 - Collaborative engagement features
 
 ## Project Structure 
@@ -152,7 +152,7 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | Income & Expense Tracker | Dishan | [View Docs →](your-postman-link-here) |
 | Gamification Engine | Ravindu | [View Docs →](https://documenter.getpostman.com/view/52326226/2sBXcGFfiP) |
 | Learning Hub | Thimeth | [View Docs →](your-postman-link-here) |
-| Group & Chat Function | Hiruvinda | [View Docs →](your-postman-link-here) |
+| Group & Chat Function | Hiruvinda | [View Docs →](https://documenter.getpostman.com/view/52186165/2sBXcGDzcJ) |
 
 ### Health Check
 | Method | Endpoint | Description | Auth |
@@ -200,6 +200,11 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | POST | `/api/group/remove-member` | Remove member from saving group |  Group Admin |
 | PUT | `/api/group/update` | Update saving group details |  Group Admin |
 | POST | `/api/group/regenerate-invite` | Regenerate group invite code |  Group Admin |
+||
+| POST | `/api/chat-room/ticket` | Generate 30s TTL ticket |   |
+| GET | `/api/chat-room/:groupId/messages` | get previous message history |   |
+| Delete | `/api/chat-room//:groupId/messages/:messageId` | Delete user send message |  User |
+
 
 ##  Testing
 
@@ -226,9 +231,11 @@ npm run test:watch
 | User Model | `user.model.test.js` | Unit | `toAuthJSON`, `comparePassword`, defaults, field assignments |
 | Gamification Model | `gamification.model.test.js` | Unit | `getLevelFromXP`, `getTitleForLevel`, `awardXP`, `updateStreak`, `awardBadge`, `levelProgress` virtual |
 | Group Model | `group.model.test.js` | Unit | Creation, members, admin ref, invite code, timestamps, CRUD (mocked) |
+| Message Model | message.model.test.js | Unit | Group reference, sender reference, content, type, readBy array, deletedAt, timestamps, CRUD (mocked) |
 | Validation Middleware | `validation.middleware.test.js` | Unit | Pass, fail, multiple error formatting |
 | Auth Endpoints | `auth.integration.test.js` | Integration | Register, login, profile, update, change password, logout |
 | Gamification Endpoints | `gamification.integration.test.js` | Integration | Profile, daily login, award XP, leaderboard, badges, admin stats |
+| Group Endpoints | `group.integration.test.js` | Integration | create group, join, leave, get groups details, delete group, remove member, update group, re-generate invite code,  |
 
 ### Test Environment
 Tests use a separate `.env.test` file pointing to a dedicated test database (`moneymentor_test`). The database is dropped and recreated between test suites automatically via `testSetup.js`.
