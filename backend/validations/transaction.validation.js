@@ -21,8 +21,9 @@ const isRealYear = (value) => {
 // Helper: checks if a date is within the current month or in the past
 const isNotBeyondCurrentMonth = (value) => {
   const now = new Date();
-  const endOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  return new Date(value) <= endOfCurrentMonth;
+  const endOfCurrentMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0));
+  const inputDate = new Date(value + "T00:00:00.000Z");
+  return inputDate <= endOfCurrentMonth;
 };
 
 export const validateCreateTransaction = [
