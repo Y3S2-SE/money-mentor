@@ -151,7 +151,7 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | User Authentication | Ravindu | [View Docs →](https://documenter.getpostman.com/view/52326226/2sBXcBmgg3) |
 | Income & Expense Tracker | Dishan | [View Docs →](your-postman-link-here) |
 | Gamification Engine | Ravindu | [View Docs →](https://documenter.getpostman.com/view/52326226/2sBXcGFfiP) |
-| Learning Hub | Thimeth | [View Docs →](your-postman-link-here) |
+| Knowledge Hub | Thimeth | [View Docs →](https://documenter.getpostman.com/view/43108804/2sBXcHhJUQ#6f3f6126-8286-40c6-a695-c8d1c6f27b21) |
 | Group & Chat Function | Hiruvinda | [View Docs →](your-postman-link-here) |
 
 ### Health Check
@@ -201,6 +201,33 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | PUT | `/api/group/update` | Update saving group details |  Group Admin |
 | POST | `/api/group/regenerate-invite` | Regenerate group invite code |  Group Admin |
 
+### Course — `/api/course`
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/course/create` | Create a new course | Admin |
+| GET | `/api/course` | Get all published courses with filters, search & pagination | User |
+| GET | `/api/course/:id` | Get a single course by ID | User |
+| PUT | `/api/course/:id` | Update course details or publish status | Admin |
+| DELETE | `/api/course/:id` | Delete a course | Admin |
+| POST | `/api/course/:id/submit` | Submit answers, get graded, earn points | User |
+
+### Chat — `/api/chat`
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/chat` | Start a new AI conversation | User |
+| POST | `/api/chat/:id/message` | Send a message in an existing conversation | User |
+| GET | `/api/chat` | Get all conversations for the logged-in user | User |
+| GET | `/api/chat/:id` | Get a single conversation with full message history | User |
+| DELETE | `/api/chat/:id` | Delete a conversation | User |
+
+### YouTube — `/api/youtube`
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/youtube/search?chatId=:id` | Get video suggestions based on a chat's keywords | User |
+
 ##  Testing
 
 ### Running Tests
@@ -226,9 +253,15 @@ npm run test:watch
 | User Model | `user.model.test.js` | Unit | `toAuthJSON`, `comparePassword`, defaults, field assignments |
 | Gamification Model | `gamification.model.test.js` | Unit | `getLevelFromXP`, `getTitleForLevel`, `awardXP`, `updateStreak`, `awardBadge`, `levelProgress` virtual |
 | Group Model | `group.model.test.js` | Unit | Creation, members, admin ref, invite code, timestamps, CRUD (mocked) |
+| Course Model | `course.model.test.js` | Unit | Creation, defaults, question validation, option count, `totalPoints` calculation, completions |
+| Chat Model | `chat.model.test.js` | Unit | Creation, defaults, message roles, content trim, keyword storage |
+| Youtube Model | `youtube.model.test.js` | Unit | Creation, keyword normalization, video field defaults, staleness logic |
 | Validation Middleware | `validation.middleware.test.js` | Unit | Pass, fail, multiple error formatting |
 | Auth Endpoints | `auth.integration.test.js` | Integration | Register, login, profile, update, change password, logout |
 | Gamification Endpoints | `gamification.integration.test.js` | Integration | Profile, daily login, award XP, leaderboard, badges, admin stats |
+| Course Endpoints | `course.integration.test.js` | Integration | Create, list with filters/pagination, get by ID, update, delete, submit & grade, points award, duplicate submission prevention |
+| Chat Endpoints | `chat.integration.test.js` | Integration | Start conversation, send message, list chats, get by ID, delete, ownership checks, Gemini mocked |
+| YouTube Endpoints | `youtube.integration.test.js` | Integration | Video search, cache hit/miss, staleness check, deduplication, keyword-based fetch |
 
 ### Test Environment
 Tests use a separate `.env.test` file pointing to a dedicated test database (`moneymentor_test`). The database is dropped and recreated between test suites automatically via `testSetup.js`.
