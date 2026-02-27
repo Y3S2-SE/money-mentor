@@ -111,6 +111,8 @@ MoneyMentor/
 │   ├── seeds/
 │   │   └── seedBadges.js
 │   ├── jest.config.js 
+│   ├── package.json
+│   ├── package-lock.json
 │   ├── server.js 
 │   ├── app.js
 │   └── .env.example
@@ -127,7 +129,9 @@ MoneyMentor/
 │   │   ├── services/
 │   │   │   └── apiService.js
 │   │   └── App.jsx
-│   └── public/
+│   ├── public/
+│   ├── package.json
+│   └── package-lock.json
 ├── .gitignore
 └── README.md
 ```
