@@ -1,24 +1,24 @@
 import { body, query, param } from "express-validator";
 
-// Helper: checks if a date string is a real calendar date
+// Helper to checks if a date string is a real calendar date
 const isRealDate = (value) => {
   const date = new Date(value);
   return !isNaN(date.getTime()) && date.toISOString().startsWith(value);
 };
 
-// Helper: checks if a month string (YYYY-MM) has a valid month (01-12)
+// Helper to checks if a month string (YYYY-MM) has a valid month (01-12)
 const isRealMonth = (value) => {
   const [year, month] = value.split("-").map(Number);
   return month >= 1 && month <= 12 && year >= 1900 && year <= 2100;
 };
 
-// Helper: checks if a year is within a reasonable range
+// Helper to checks if a year is within a reasonable range
 const isRealYear = (value) => {
   const year = parseInt(value);
   return year >= 1900 && year <= 2100;
 };
 
-// Helper: checks if a date is within the current month or in the past
+// Helper to checks if a date is within the current month or in the past
 const isNotBeyondCurrentMonth = (value) => {
   const now = new Date();
   const endOfCurrentMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0));

@@ -39,9 +39,7 @@ describe('Transaction API Integration Tests', () => {
         otherUserId = otherRes.body.data.user.id;
     });
 
-    // -----------------------------------------------
     // POST /api/transactions
-    // -----------------------------------------------
     describe('POST /api/transactions', () => {
         it('should create an income transaction and persist it to the database', async () => {
             const res = await request(app)
@@ -234,9 +232,7 @@ describe('Transaction API Integration Tests', () => {
         });
     });
 
-    // -----------------------------------------------
     // GET /api/transactions
-    // -----------------------------------------------
     describe('GET /api/transactions', () => {
         beforeEach(async () => {
             // Seed transactions for primary user directly into DB
@@ -408,9 +404,7 @@ describe('Transaction API Integration Tests', () => {
         });
     });
 
-    // -----------------------------------------------
     // GET /api/transactions/:id
-    // -----------------------------------------------
     describe('GET /api/transactions/:id', () => {
         beforeEach(async () => {
             const transaction = await Transaction.create({
@@ -467,9 +461,7 @@ describe('Transaction API Integration Tests', () => {
         });
     });
 
-    // -----------------------------------------------
     // PUT /api/transactions/:id
-    // -----------------------------------------------
     describe('PUT /api/transactions/:id', () => {
         beforeEach(async () => {
             const transaction = await Transaction.create({
@@ -595,9 +587,7 @@ describe('Transaction API Integration Tests', () => {
         });
     });
 
-    // -----------------------------------------------
     // DELETE /api/transactions/:id
-    // -----------------------------------------------
     describe('DELETE /api/transactions/:id', () => {
         beforeEach(async () => {
             const transaction = await Transaction.create({
