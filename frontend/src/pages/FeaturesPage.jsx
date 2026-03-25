@@ -136,12 +136,6 @@ const FeaturesPage = () => {
       ScrollTrigger.batch('.feat-card', {
         interval: 0.06,
         start: 'top 88%',
-        onEnter: (els) => {
-          gsap.fromTo(els,
-            { y: 60, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.85, stagger: 0.1, ease: 'power3.out', force3D: true }
-          );
-        },
       });
 
       // Tag labels slide in
@@ -168,7 +162,7 @@ const FeaturesPage = () => {
       <section className="bg-primary pt-32 pb-16 px-6 md:px-16 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: 'radial-gradient(circle at 70% 50%, #85D5A5 0%, transparent 60%)' }} />
-        
+
         <div className="max-w-7xl mx-auto relative z-10 flex flex-col lg:flex-row items-center gap-12">
           {/* Left Text */}
           <div className="w-full lg:w-1/2">
@@ -192,12 +186,12 @@ const FeaturesPage = () => {
               </Link>
             </div>
           </div>
-          
+
           {/* Right 3D Money Element */}
           <div className="w-full lg:w-1/2 hidden md:flex relative h-[380px] items-center justify-center feat-hero-image transform-gpu" style={{ perspective: '1000px' }}>
             {/* Base glow */}
             <div className="absolute w-56 h-56 bg-emerald-400/20 rounded-full blur-[70px]" />
-            
+
             {/* 3D Coin 1 */}
             <div className="absolute top-4 right-12 xl:right-28 w-20 h-20 rounded-full bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 shadow-[0_12px_25px_rgba(0,0,0,0.4),inset_0_-4px_12px_rgba(0,0,0,0.2),inset_0_4px_12px_rgba(255,255,255,0.4)] flex items-center justify-center border-[3px] border-yellow-200/40 transform rotate-12 money-float-1 z-20">
               <div className="w-12 h-12 rounded-full border-2 border-yellow-200/30 flex items-center justify-center bg-gradient-to-tl from-amber-600/30 to-transparent">
@@ -211,7 +205,7 @@ const FeaturesPage = () => {
                 <span className="text-yellow-100 text-4xl font-bold font-headline drop-shadow-lg">$</span>
               </div>
             </div>
-            
+
             {/* Stacked Cards behind main card to add 3D depth */}
             <div className="absolute w-60 h-64 bg-emerald-900/40 rounded-3xl transform rotate-6 translate-x-3 translate-y-3 blur-[2px] border border-white/5" />
             <div className="absolute w-60 h-64 bg-teal-800/40 rounded-3xl transform rotate-2 translate-x-1 translate-y-1 blur-[1px] border border-white/10" />
@@ -221,7 +215,7 @@ const FeaturesPage = () => {
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-2xl transform translate-x-8 -translate-y-8" />
               <div className="absolute bottom-0 left-0 w-40 h-40 bg-black/20 rounded-full blur-2xl transform -translate-x-8 translate-y-8" />
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
-              
+
               <div className="p-6 h-full flex flex-col justify-between relative z-10">
                 <div className="flex justify-between items-start">
                   <span className="material-symbols-outlined text-white/70 text-3xl drop-shadow-md">contactless</span>
@@ -232,8 +226,8 @@ const FeaturesPage = () => {
                 </div>
                 <div>
                   <div className="relative w-12 h-8 rounded-lg bg-gradient-to-br from-yellow-100 via-yellow-300 to-amber-500 mb-5 shadow-md overflow-hidden border border-yellow-100/50">
-                     <div className="absolute inset-x-0 h-[1px] top-1/2 bg-yellow-600/30" />
-                     <div className="absolute inset-y-0 w-[1px] left-1/3 bg-yellow-600/30" />
+                    <div className="absolute inset-x-0 h-[1px] top-1/2 bg-yellow-600/30" />
+                    <div className="absolute inset-y-0 w-[1px] left-1/3 bg-yellow-600/30" />
                   </div>
                   <p className="text-white/90 font-mono tracking-widest text-xs mb-1 drop-shadow-md">**** **** **** 8842</p>
                   <p className="text-white/70 text-[9px] uppercase tracking-[0.2em] font-label drop-shadow-sm">MoneyMentor</p>
