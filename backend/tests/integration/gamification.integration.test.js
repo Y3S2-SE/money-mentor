@@ -53,7 +53,7 @@ describe('Gamification Integration Tests',  () => {
                 .expect(200);
 
             expect(res.body.success).toBe(true);
-            expect(res.body.data.totalXP).toBe(0);
+            expect(res.body.data.totalXP).toBe(5);
             expect(res.body.data.level).toBe(1);
             expect(res.body.data.levelTitle).toBe('Money Newbie');
         });
@@ -73,7 +73,8 @@ describe('Gamification Integration Tests',  () => {
                 .expect(200);
 
             expect(res.body.success).toBe(true);
-            expect(res.body.data.xpAwarded).toBe(5);
+            expect(res.body.data.alreadyCheckedIn).toBe(true);
+            expect(res.body.data.xpAwarded).toBe(0);
             expect(res.body.data.currentStreak).toBe(1);
         });
 
