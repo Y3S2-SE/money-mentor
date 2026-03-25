@@ -11,7 +11,9 @@ const initialState = {
     isLoading: false,
     isSuccess: false,
     isError: false,
-    message: ''
+    message: '',
+    dailyLoginReward: null,
+    pendingBadges: []
 };
 
 // Register user
@@ -45,7 +47,7 @@ export const login = createAsyncThunk(
 // Logout user 
 export const logout = createAsyncThunk(
     'auth/logout',
-    async (_, thunkAPI) => {
+    async () => {
         try {
             await authService.logout();
         } catch (error) {
@@ -108,6 +110,17 @@ export const authSlice = createSlice({
         },
         clearMessage: (state) => {
             state.message = '';
+        },
+        clearDailyLoginReward: (state) => {
+            state.dailyLoginReward = null;
+        },
+        clearPendingBadges: (state) => {
+            state.pendingBadges = [];
+        },
+        addPendingBadges: (state, action) => {
+            if (action.payload?.length > 0) {
+                state.pendingBadges.push(...action.payload);
+            }
         }
     },
     extraReducers: (builder) => {
@@ -122,6 +135,14 @@ export const authSlice = createSlice({
                 state.user = action.payload.user;
                 state.token = action.payload.token;
                 state.message = 'Registration successful';
+                const reward = action.payload.dailyLogin;
+                if (reward && !reward.alreadyCheckedIn) {
+                    state.dailyLoginReward = reward;
+                }
+                const badges = reward?.newlyEarnedBadges ?? [];
+                if (badges.length > 0) {
+                    state.pendingBadges.push(...badges);
+                }
             })
             .addCase(register.rejected, (state, action) => {
                 state.isLoading = false;
@@ -140,6 +161,14 @@ export const authSlice = createSlice({
                 state.user = action.payload.user;
                 state.token = action.payload.token;
                 state.message = 'Login successful';
+                const reward = action.payload.dailyLogin;
+                if (reward && !reward.alreadyCheckedIn) {
+                    state.dailyLoginReward = reward;
+                }
+                const badges = reward?.newlyEarnedBadges ?? [];
+                if (badges.length > 0) {
+                    state.pendingBadges.push(...badges);
+                }
             })
             .addCase(login.rejected, (state, action) => {
                 state.isLoading = false;
@@ -156,6 +185,8 @@ export const authSlice = createSlice({
                 state.isSuccess = false;
                 state.isError = false;
                 state.message = '';
+                state.dailyLoginReward = null;
+                state.pendingBadges = [];
             })
             // Get Profile
             .addCase(getProfile.pending, (state) => {
@@ -204,5 +235,5 @@ export const authSlice = createSlice({
     },
 });
 
-export const { reset, clearMessage } = authSlice.actions;
+export const { reset, clearMessage, clearDailyLoginReward, clearPendingBadges, addPendingBadges } = authSlice.actions;
 export default authSlice.reducer;
