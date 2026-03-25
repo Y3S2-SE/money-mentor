@@ -17,7 +17,7 @@ import KnowledgeHub from './pages/KnowledgeHub';
 const AdminRoute = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
   if (!user) return <Navigate to="/auth" />;
-  if (user.role !== 'admin') return <Navigate to="/dashboard" />;
+  if (user.role !== 'admin') return <Navigate to="/dashboard"/>;
   return children;
 }
 
