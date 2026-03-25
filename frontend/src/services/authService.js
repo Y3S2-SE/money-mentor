@@ -23,7 +23,7 @@ const authService = {
     logout: async () => {
         try {
             await api.post('/auth/logout')
-        } catch (error) {
+        } finally {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
         }
