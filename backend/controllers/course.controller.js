@@ -57,17 +57,37 @@ export const getAllCourses = async (req, res) => {
         }
 
         const courses = await Course.find(query)
-            .select('-questions.correctAnswerIndex -questions.explanation -completions') // hide answers & completions in list view
+            .select('-questions.correctAnswerIndex -questions.explanation') // hide answers in list view
             .populate('createdBy', 'username')
             .limit(limit * 1)
             .skip((page - 1) * limit)
             .sort({ createdAt: -1 });
 
+        // Transform array to hide other users' completions for privacy
+        const mappedCourses = courses.map(course => {
+            const courseObj = course.toObject();
+            
+            // Check if current user completed it
+            const userCompletion = courseObj.completions.find(
+                (c) => c.user.toString() === req.user._id.toString()
+            );
+
+            courseObj.isCompleted = !!userCompletion;
+            courseObj.userScore = userCompletion ? userCompletion.score : null;
+            courseObj.userPointsEarned = userCompletion ? userCompletion.pointsEarned : null;
+            courseObj.completedAt = userCompletion ? userCompletion.completedAt : null;
+
+            // Delete the full completions array so no other user IDs leak
+            delete courseObj.completions;
+
+            return courseObj;
+        });
+
         const total = await Course.countDocuments(query);
 
         res.status(200).json({
             success: true,
-            data: courses,
+            data: mappedCourses,
             pagination: {
                 total,
                 page: Number(page),
@@ -121,12 +141,19 @@ export const getCourseById = async (req, res) => {
 // @access  Private/Admin
 export const updateCourse = async (req, res) => {
     try {
-        const { title, description, category, difficulty, thumbnail, questions, passingScore, isPublished } = req.body;
+        const allowedFields = ['title', 'description', 'category', 'difficulty', 'thumbnail', 'questions', 'passingScore', 'isPublished'];
+
+        const updates = {};
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
 
         const course = await Course.findByIdAndUpdate(
             req.params.id,
-            { title, description, category, difficulty, thumbnail, questions, passingScore, isPublished },
-            { new: true, runValidators: true }
+            updates,
+            { new: true, runValidators: false }
         );
 
         if (!course) {
@@ -139,6 +166,7 @@ export const updateCourse = async (req, res) => {
             data: course
         });
     } catch (error) {
+        console.log('Update error:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to update course',

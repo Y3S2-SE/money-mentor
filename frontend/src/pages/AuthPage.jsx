@@ -1,71 +1,89 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation, Link } from 'react-router-dom';
 import LoginForm from '../components/auth/LoginForm';
 import RegisterForm from '../components/auth/RegisterForm';
 
 const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const location = useLocation();
+  const [isLogin, setIsLogin] = useState(location.state?.isLogin === false ? false : true);
+
+  useEffect(() => {
+    if (location.state?.isLogin === false) {
+      setIsLogin(false);
+    }
+  }, [location.state?.isLogin]);
 
   return (
-    // Outer Frame
-    <div className="min-h-screen flex items-center justify-center backdrop-blur-4xl bg-linear-to-br from-gray-900 via-black to-gray-800">
-      {/* Card Container */}
-      <div className="w-full max-w-240 bg-white border border-gray-500 rounded-[40px] min-h-170 shadow-2xl overflow-hidden flex flex-row">
-        
-        <div className="flex w-full flex-col md:flex-row">
-          {/* Left Side - Hero Section */}
-          <div className="relative w-full md:w-[46%] bg-black p-8 flex flex-col justify-start pt-24 overflow-hidden">
-            <div className="relative z-10 text-white">
-              <h1 className="text-3xl md:text-4xl font-normal tracking-tight leading-normal">
-                Convert your ideas<br />
-                into successful<br />
-                business.
-              </h1>
+    <div className="min-h-screen bg-primary font-body text-emerald-50 selection:bg-primary-fixed selection:text-on-primary-fixed flex items-center justify-center relative overflow-hidden">
+
+      {/* Background elements from Landing Page */}
+      <div className="absolute inset-0 z-0">
+        <img alt="Modern abstract background" className="w-full h-full object-cover object-center opacity-30 grayscale scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsmFFoLNx6fRXaTxwTBZt9njBfim9eQJCcY5-q-o-rJJ23nnbtL4f7L5dP4zXJbYi0wZpEdD1Yma1eeCxT2gvy8cwwGWAnMS6M4xmrnjS4uJ5n_RI-o11U98YoZvFh_iPJTEgr-_ZdAe2kOT_6OWsH4Gb-GxzZHxB3f4cnLy6eLI81pzOJVyZyJucaeyuppYOMEyG1INhZyT12X-jfW9ZvNCTJdbVTabHsTpDPv9ekEf7Gm8O78LoloqB-nMkGv6KSe0zz11b5zXK4" />
+        <div className="absolute inset-0 hero-bg-overlay"></div>
+        <div className="absolute inset-0 hero-glow"></div>
+      </div>
+
+      {/* Top Nav Minimal */}
+      <nav className="absolute top-0 w-full z-50">
+        <div className="flex justify-between items-center px-8 md:px-16 py-8 w-full max-w-[1920px] mx-auto">
+          <Link to="/" className="text-xl font-bold tracking-tighter text-emerald-50 font-headline hover:text-white transition-colors">MoneyMentor</Link>
+        </div>
+      </nav>
+
+      {/* Main Content Card container */}
+      <div className={`relative z-10 w-full max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center ${isLogin ? 'mt-0' : 'mt-16 sm:mt-0'} pb-12 sm:pb-0`}>
+
+        {/* Left Side: Editorial Typography */}
+        <div className="hidden lg:flex flex-col">
+          <h2 className="text-[10px] uppercase tracking-[0.4em] text-outline font-bold mb-4">Gamified Savings</h2>
+          <h1 className="text-4xl lg:text-5xl xl:text-7xl font-headline font-bold tracking-tighter text-gradient leading-[1.1] mb-4">
+            {isLogin ? "Level up your savings." : "Start your journey."}
+          </h1>
+          <p className="text-emerald-100/60 text-lg leading-relaxed font-light max-w-md">
+            {isLogin
+              ? "Jump back into MoneyMentor to track your progress, complete daily challenges, and hit your financial goals."
+              : "Join our community today to build healthy money habits through fun challenges and rewards!"}
+          </p>
+        </div>
+
+        {/* Right Side: Glassmorphism / Sleek Form Panel */}
+        <div className={`w-full mx-auto relative mt-16 lg:mt-0 transition-all duration-500 ${isLogin ? 'max-w-md' : 'max-w-sxl'}`}>
+          {/* Decorative corner accents */}
+          <div className="absolute -top-px -left-px w-6 h-px bg-emerald-400"></div>
+          <div className="absolute -top-px -left-px w-px h-6 bg-emerald-400"></div>
+
+          <div className="bg-surface-bright/5 backdrop-blur-2xl border border-white/10 p-8 md:p-12 shadow-2xl relative overflow-hidden">
+
+            {/* Header */}
+            <div className="mb-12 text-left">
+              <h3 className="text-3xl font-headline font-bold text-white mb-2 tracking-tight">
+                {isLogin ? 'Login' : 'Sign Up'}
+              </h3>
+              <p className="font-label text-emerald-100/40 tracking-[0.2em] text-[10px] uppercase">
+                {isLogin ? 'Welcome back to MoneyMentor' : 'Create your free account'}
+              </p>
             </div>
-            
-            <div className="absolute bottom-0 left-0 right-0 h-100">
-                {/* Main vertical streaks */}
-                <div className="absolute -bottom-0.5 left-[20%]  w-24 h-75 bg-blue-600 blur-[60px] opacity-80 animate-blob"></div>
-                <div className="absolute bottom-0 left-[30%] transform -translate-x-1/2 -translate-y-1/2 w-32 h-62.5 bg-blue-500 blur-[50px] opacity-60 animate-blob animation-delay-2000"></div>
-                <div className="absolute bottom-0 left-[50%] transform -translate-x-1/2 -translate-y-1/2 w-20 h-50 bg-blue-700 blur-2xl opacity-50 animate-blob animation-delay-4000"></div>
-            </div>
-          </div>
 
-          {/* Right Side - Form Section */}
-          <div className="w-full md:w-[50%] bg-white p-12 md:p-12 flex flex-col justify-center">
-            <div className="w-full max-w-md mx-auto">
+            {/* Form injected here */}
+            {isLogin ? <LoginForm /> : <RegisterForm />}
 
-              {/* Heading */}
-              <div className="mb-6">
-                <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">
-                    {isLogin ? 'Welcome Back' : 'Get Started'}
-                </h2>
-                <p className="text-gray-400 text-md">
-                    Welcome to MoneyMentor — Let's get started
-                </p>
-              </div>
-
-              <div className="border-t border-gray-300 w-[95%] mb-8"></div>
-
-              {/* Forms */}
-              {isLogin ? <LoginForm /> : <RegisterForm />}
-
-              {/* Footer Toggle */}
-              <div className="text-center mt-6">
-                <p className="text-gray-500 text-sm font-medium">
-                  {isLogin ? "Don't have an account? " : "Already have account? "}
-                  <button
-                    onClick={() => setIsLogin(!isLogin)}
-                    className="text-gray-900 font-bold hover:text-blue-700 hover:underline ml-1 cursor-pointer"
-                  >
-                    {isLogin ? 'Sign Up' : 'Login'}
-                  </button>
-                </p>
-              </div>
-
+            {/* Footer Toggle */}
+            <div className="mt-12 pt-8 border-t border-white/10 text-center">
+              <p className="font-label text-[9px] uppercase tracking-[0.1em] text-emerald-100/40">
+                {isLogin ? "Don't have an account? " : "Already have an account? "}
+                <button
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="text-white hover:text-emerald-300 transition-colors tracking-[0.2em] ml-2 font-bold focus:outline-none"
+                >
+                  {isLogin ? 'SIGN UP HERE' : 'LOGIN INSTEAD'}
+                </button>
+              </p>
             </div>
           </div>
         </div>
+
       </div>
+
     </div>
   );
 };
