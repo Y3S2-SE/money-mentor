@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../store/slices/authSlice";
 
 import { Wallet, Gamepad2, BookOpen, Users, LogOut } from 'lucide-react';
+import api from "../../services/api";
 
 const navItems = [
     { label: 'My', icon: Wallet, path: '/dashboard' },
@@ -17,13 +18,26 @@ const Sidebar = ({ children }) => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
+    const [levelTitle, setLevelTitle] = useState(null);
+
+    useEffect(() => {
+        if (!user || user.role === 'admin') return;
+
+        api.get('/play/profile')
+            .then(res => setLevelTitle(res.data.data.levelTitle))
+            .catch(() => {}); 
+    }, [user]);
 
     const handleLogout = async () => {
         await dispatch(logout());
-        navigate('/login');
+        navigate('/auth');
     };
 
     const initials = user?.username ? user.username.slice(0, 2).toUpperCase() : 'MM';
+
+    const userSubtitle = user?.role === 'admin'
+        ? 'Administrator'
+        : (levelTitle ?? 'Money Newbie');
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -66,7 +80,7 @@ const Sidebar = ({ children }) => {
                                     {user?.username ?? 'User'}
                                 </span>
                                 <span className="text-blue-300/70 text-[10px] font-medium uppercase tracking-wide">
-                                    {user?.role === 'admin' ? 'Administrator' : 'Pro Saver'}
+                                    {userSubtitle}
                                 </span>
                             </div>
                         </div>
