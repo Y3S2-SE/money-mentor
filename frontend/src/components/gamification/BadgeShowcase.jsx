@@ -42,7 +42,7 @@ const BadgeCard = ({ badge }) => {
 
     return (
         <div
-            className={`flex flex-col items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-default
+            className={`flex flex-col items-center gap-3 p-5 rounded-xl border transition-all duration-200 cursor-default
                 ${badge.earned
                     ? 'bg-white border-blue-100 hover:border-blue-300 hover:shadow-md hover:-translate-y-0.5'
                     : 'bg-gray-50 border-gray-200'
@@ -51,7 +51,7 @@ const BadgeCard = ({ badge }) => {
             onMouseLeave={handleMouseLeave}
         >
             {/* Icon */}
-            <div className="w-16 h-16 relative">
+            <div className={`relative ${badge.earned ? 'w-16 h-16' : 'w-20 h-20'}`}>
                 <BadgeIcon ref={iconRef} badgeKey={badge.key} earned={badge.earned} />
                 {badge.earned && (
                     <div className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center z-10 border-2 border-white">
