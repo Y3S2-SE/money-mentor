@@ -17,8 +17,9 @@ const questionSchema = new mongoose.Schema({
     correctAnswerIndex: {
         type: Number,
         min: 0,
+        required: [true, 'Correct answer index is required'],
         validate: {
-            validator: (v) => v !== undefined && v !== null,
+            validator: function (v) { return v !== null && v !== undefined; },
             message: 'Correct answer index is required'
         }
     },
