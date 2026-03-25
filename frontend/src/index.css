@@ -28,3 +28,33 @@
 .animate-blob {
   animation: blob 10s infinite;
 }
+
+.mm-toast {
+  background:rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+ 
+  color:         #111827 !important;
+  border-radius: 12px !important;
+  padding:       12px 16px !important;
+  font-size:     13px !important;
+  margin-bottom: 16px;
+  font-weight:   500 !important;
+  max-width:     380px !important;
+  border:        1px solid rgba(255, 255, 255, 0.6) !important;
+  box-shadow:    0 4px 24px rgba(0, 0, 0, 0.10) !important;
+ 
+  transition: transform 0.3s ease, opacity 0.3s ease, font-size 0.3s ease !important;
+}
+ 
+.mm-toast--error {
+  border-color: rgba(254, 202, 202, 0.8) !important;
+  background:   rgba(255, 255, 255, 0.80) !important;
+}
+ 
+ 
+div[role="status"] > div:not(:last-child) .mm-toast {
+  transform: scale(0.75) !important;
+  opacity:   0.65 !important;
+  font-size: 11px !important;
+}
