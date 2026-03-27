@@ -1,21 +1,29 @@
 import { body, query, param } from "express-validator";
 
-// Helper: checks if a date string is a real calendar date
+// Helper to checks if a date string is a real calendar date
 const isRealDate = (value) => {
   const date = new Date(value);
   return !isNaN(date.getTime()) && date.toISOString().startsWith(value);
 };
 
-// Helper: checks if a month string (YYYY-MM) has a valid month (01-12)
+// Helper to checks if a month string (YYYY-MM) has a valid month (01-12)
 const isRealMonth = (value) => {
   const [year, month] = value.split("-").map(Number);
   return month >= 1 && month <= 12 && year >= 1900 && year <= 2100;
 };
 
-// Helper: checks if a year is within a reasonable range
+// Helper to checks if a year is within a reasonable range
 const isRealYear = (value) => {
   const year = parseInt(value);
   return year >= 1900 && year <= 2100;
+};
+
+// Helper to checks if a date is within the current month or in the past
+const isNotBeyondCurrentMonth = (value) => {
+  const now = new Date();
+  const endOfCurrentMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0));
+  const inputDate = new Date(value + "T00:00:00.000Z");
+  return inputDate <= endOfCurrentMonth;
 };
 
 export const validateCreateTransaction = [
@@ -43,6 +51,9 @@ export const validateCreateTransaction = [
     .custom((value) => {
       if (!isRealDate(value)) {
         throw new Error("Date does not exist in the calendar (e.g. Feb 30 is invalid)");
+      }
+      if (!isNotBeyondCurrentMonth(value)) {
+        throw new Error("Transaction date cannot be beyond the current month");
       }
       return true;
     }),
@@ -76,6 +87,9 @@ export const validateUpdateTransaction = [
     .custom((value) => {
       if (!isRealDate(value)) {
         throw new Error("Date does not exist in the calendar (e.g. Feb 30 is invalid)");
+      }
+      if (!isNotBeyondCurrentMonth(value)) {
+        throw new Error("Transaction date cannot be beyond the current month");
       }
       return true;
     }),

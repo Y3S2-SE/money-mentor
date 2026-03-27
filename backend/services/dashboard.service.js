@@ -1,7 +1,7 @@
 import Transaction from "../models/transaction.model.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Helper: get start and end of a month
+// Helper to get start and end of a month
 const getMonthRange = (month) => {
   if (month) {
     const [year, mon] = month.split("-");

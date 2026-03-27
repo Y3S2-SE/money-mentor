@@ -16,8 +16,12 @@ const questionSchema = new mongoose.Schema({
     },
     correctAnswerIndex: {
         type: Number,
+        min: 0,
         required: [true, 'Correct answer index is required'],
-        min: 0
+        validate: {
+            validator: function (v) { return v !== null && v !== undefined; },
+            message: 'Correct answer index is required'
+        }
     },
     explanation: {
         type: String,

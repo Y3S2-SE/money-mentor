@@ -1,6 +1,6 @@
 import { body, query } from "express-validator";
 
-// Helper: checks if a month string (YYYY-MM) has a valid month (01-12)
+// Helper to checks if a month string (YYYY-MM) has a valid month (01-12)
 const isRealMonth = (value) => {
   const [year, month] = value.split("-").map(Number);
   return month >= 1 && month <= 12 && year >= 1900 && year <= 2100;
