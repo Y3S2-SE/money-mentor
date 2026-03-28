@@ -19,6 +19,13 @@ const messageSchema = new mongoose.Schema(
       trim: true,
       maxlength: 2000,
     },
+    linkPreview: {
+      url: String,
+      title: String,
+      description: String,
+      image: String,
+      siteName: String,
+    },
     type: {
       type: String,
       enum: ["text", "system"],
