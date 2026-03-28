@@ -9,6 +9,7 @@ import {
 } from "./roomManager.js";
 import Message from "../models/message.model.js";
 import { logger } from "../utils/logger.js";
+import { getLinkPreview } from "../utils/getLinkPreview.js";
 
 // ─── Message type constants ───────────────────────────────────────────────────
 const MSG = {
@@ -26,6 +27,12 @@ const MSG = {
   ERROR: "error",
   CONNECTED: "connected",
 };
+
+// ─── URL extractor ────────────────────────────────────────────────────────────
+function extractUrl(text) {
+  const match = text.match(/https?:\/\/[^\s]+/);
+  return match ? match[0] : null;
+}
 
 export const initWebSocketServer = (httpServer) => {
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
@@ -71,7 +78,7 @@ export const initWebSocketServer = (httpServer) => {
         userName: user.name,
         onlineUsers: getOnlineUsers(groupId),
       },
-      userId // exclude the joining user themselves
+      userId
     );
 
     // ── Handle incoming messages ─────────────────────────────────────────────
@@ -100,13 +107,18 @@ export const initWebSocketServer = (httpServer) => {
           }
 
           try {
-            // Persist to DB
+            // ── Fetch link preview if URL is present ─────────────────────
+            const url = extractUrl(content);
+            const linkPreview = url ? await getLinkPreview(url) : null;
+
+            // ── Persist to DB ─────────────────────────────────────────────
             const savedMessage = await Message.create({
               groupId,
               sender: userId,
               content,
               type: "text",
               readBy: [userId],
+              linkPreview,  // null if no URL, preview object if URL found
             });
 
             const populated = await savedMessage.populate("sender", "name avatar");
@@ -119,12 +131,13 @@ export const initWebSocketServer = (httpServer) => {
                 sender: populated.sender,
                 groupId,
                 createdAt: populated.createdAt,
+                linkPreview: populated.linkPreview ?? null, // 👈 include in broadcast
               },
             };
 
             // Send to everyone in the room (including sender for confirmation)
             broadcastToRoom(groupId, payload);
-            sendToUser(groupId, userId, payload); // ensure sender gets it too
+            sendToUser(groupId, userId, payload);
           } catch (err) {
             logger.error("Error saving message:", err);
             ws.send(JSON.stringify({ type: MSG.ERROR, message: "Failed to save message" }));
