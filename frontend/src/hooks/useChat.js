@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getWsTicket, getMessageHistory } from '../services/chatService';
+import { getWsTicket, getMessageHistory } from '../services/messageService';
 
 const WS_BASE = import.meta.env.VITE_WS_URL || 'ws://localhost:5080';
 
