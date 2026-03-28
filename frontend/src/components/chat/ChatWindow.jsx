@@ -128,13 +128,22 @@ export default function ChatWindow({ group, onClose }) {
             </div>
           ) : (
             <>
-              {messages.map((msg) => (
-                <ChatMessage
-                  key={msg._id}
-                  message={msg}
-                  isOwn={msg.sender?._id === user?._id || msg.sender === user?._id}
-                />
-              ))}
+              {messages.map((msg) => {
+                const senderId = typeof msg.sender === 'object'
+                  ? msg.sender?._id
+                  : msg.sender;
+                const isOwn = senderId == user?.id;
+
+                console.log('sender:', msg.sender, '| user:', user?._id, '| isOwn:', isOwn);
+
+                return (
+                  <ChatMessage
+                    key={msg._id}
+                    message={msg}
+                    isOwn={isOwn}
+                  />
+                );
+              })}
               <TypingIndicator typingUsers={typingUsers} />
               <div ref={bottomRef} />
             </>
