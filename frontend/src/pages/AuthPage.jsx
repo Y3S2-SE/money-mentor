@@ -14,7 +14,7 @@ const AuthPage = () => {
   }, [location.state?.isLogin]);
 
   return (
-    <div className="min-h-screen bg-primary font-body text-emerald-50 selection:bg-primary-fixed selection:text-on-primary-fixed flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-primary font-body text-blue-50 selection:bg-primary-fixed selection:text-on-primary-fixed flex items-center justify-center relative overflow-hidden">
 
       {/* Background elements from Landing Page */}
       <div className="absolute inset-0 z-0">
@@ -26,7 +26,7 @@ const AuthPage = () => {
       {/* Top Nav Minimal */}
       <nav className="absolute top-0 w-full z-50">
         <div className="flex justify-between items-center px-8 md:px-16 py-8 w-full max-w-[1920px] mx-auto">
-          <Link to="/" className="text-xl font-bold tracking-tighter text-emerald-50 font-headline hover:text-white transition-colors">MoneyMentor</Link>
+          <Link to="/" className="text-xl font-bold tracking-tighter text-blue-50 font-headline hover:text-white transition-colors">MoneyMentor</Link>
         </div>
       </nav>
 
@@ -39,7 +39,7 @@ const AuthPage = () => {
           <h1 className="text-4xl lg:text-5xl xl:text-7xl font-headline font-bold tracking-tighter text-gradient leading-[1.1] mb-4">
             {isLogin ? "Level up your savings." : "Start your journey."}
           </h1>
-          <p className="text-emerald-100/60 text-lg leading-relaxed font-light max-w-md">
+          <p className="text-blue-100/60 text-lg leading-relaxed font-light max-w-md">
             {isLogin
               ? "Jump back into MoneyMentor to track your progress, complete daily challenges, and hit your financial goals."
               : "Join our community today to build healthy money habits through fun challenges and rewards!"}
@@ -49,8 +49,8 @@ const AuthPage = () => {
         {/* Right Side: Glassmorphism / Sleek Form Panel */}
         <div className={`w-full mx-auto relative mt-16 lg:mt-0 transition-all duration-500 ${isLogin ? 'max-w-md' : 'max-w-sxl'}`}>
           {/* Decorative corner accents */}
-          <div className="absolute -top-px -left-px w-6 h-px bg-emerald-400"></div>
-          <div className="absolute -top-px -left-px w-px h-6 bg-emerald-400"></div>
+          <div className="absolute -top-px -left-px w-6 h-px bg-blue-400"></div>
+          <div className="absolute -top-px -left-px w-px h-6 bg-blue-400"></div>
 
           <div className="bg-surface-bright/5 backdrop-blur-2xl border border-white/10 p-8 md:p-12 shadow-2xl relative overflow-hidden">
 
@@ -59,7 +59,7 @@ const AuthPage = () => {
               <h3 className="text-3xl font-headline font-bold text-white mb-2 tracking-tight">
                 {isLogin ? 'Login' : 'Sign Up'}
               </h3>
-              <p className="font-label text-emerald-100/40 tracking-[0.2em] text-[10px] uppercase">
+              <p className="font-label text-blue-100/40 tracking-[0.2em] text-[10px] uppercase">
                 {isLogin ? 'Welcome back to MoneyMentor' : 'Create your free account'}
               </p>
             </div>
@@ -69,11 +69,11 @@ const AuthPage = () => {
 
             {/* Footer Toggle */}
             <div className="mt-12 pt-8 border-t border-white/10 text-center">
-              <p className="font-label text-[9px] uppercase tracking-[0.1em] text-emerald-100/40">
+              <p className="font-label text-[9px] uppercase tracking-[0.1em] text-blue-100/40">
                 {isLogin ? "Don't have an account? " : "Already have an account? "}
                 <button
                   onClick={() => setIsLogin(!isLogin)}
-                  className="text-white hover:text-emerald-300 transition-colors tracking-[0.2em] ml-2 font-bold focus:outline-none"
+                  className="text-white hover:text-blue-300 transition-colors tracking-[0.2em] ml-2 font-bold focus:outline-none"
                 >
                   {isLogin ? 'SIGN UP HERE' : 'LOGIN INSTEAD'}
                 </button>
