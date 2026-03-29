@@ -99,11 +99,11 @@ const ContactPage = () => {
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: 'radial-gradient(circle at 30% 60%, #85D5A5 0%, transparent 60%)' }} />
         <div className="max-w-3xl mx-auto relative z-10">
-          <p className="font-label text-[10px] uppercase tracking-[0.4em] text-emerald-300/70 mb-6">Get in touch</p>
+          <p className="font-label text-[10px] uppercase tracking-[0.4em] text-blue-300/70 mb-6">Get in touch</p>
           <h1 className="contact-hero-title text-5xl md:text-7xl font-headline font-bold tracking-tighter leading-[0.95] mb-8">
             We'd love to hear from you.
           </h1>
-          <p className="contact-hero-sub text-emerald-100/60 text-lg md:text-xl max-w-xl leading-relaxed font-light">
+          <p className="contact-hero-sub text-blue-100/60 text-lg md:text-xl max-w-xl leading-relaxed font-light">
             Have a question, feedback, or a feature idea? Reach out and a team member will get back to you shortly.
           </p>
         </div>

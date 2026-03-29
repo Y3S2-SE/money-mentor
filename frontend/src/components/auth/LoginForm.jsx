@@ -76,8 +76,8 @@ const LoginForm = () => {
   };
 
   const inputContainerStyle = "relative group mb-10";
-  const labelStyle = "font-label text-[10px] uppercase tracking-[0.2em] text-emerald-100/50 mb-3 block transition-colors group-focus-within:text-emerald-400";
-  const inputStyle = (hasError) => `w-full bg-transparent border-b ${hasError ? 'border-red-500/50' : 'border-white/20'} py-4 focus:border-emerald-400 focus:ring-0 transition-colors placeholder:text-white/10 text-base text-white outline-none`;
+  const labelStyle = "font-label text-[10px] uppercase tracking-[0.2em] text-blue-100/50 mb-3 block transition-colors group-focus-within:text-blue-400";
+  const inputStyle = (hasError) => `w-full bg-transparent border-b ${hasError ? 'border-red-500/50' : 'border-white/20'} py-4 px-2 focus:border-blue-400 focus:ring-0 transition-colors placeholder:text-white/10 text-base text-white outline-none`;
 
   return (
     <form onSubmit={handleSubmit} className="mt-8">
@@ -144,7 +144,7 @@ const LoginForm = () => {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-5 bg-white text-primary rounded-full font-label tracking-[0.2em] text-[11px] uppercase font-bold hover:bg-emerald-50 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-xl flex items-center justify-center"
+          className="w-full py-5 bg-white text-primary rounded-full font-label tracking-[0.2em] text-[11px] uppercase font-bold hover:bg-blue-50 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-xl flex items-center justify-center"
         >
           {isLoading ? (
             <span className="flex items-center justify-center gap-3">

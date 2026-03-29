@@ -7,6 +7,7 @@ if (process.env.NODE_ENV !== 'test') {
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import helmet from 'helmet';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 
 import groupRoutes from "./routes/group.route.js";
@@ -19,15 +20,25 @@ import chatRoutes from './routes/chat.route.js';
 import youtubeRoutes from './routes/youtube.route.js';
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import chatRoomRoutes from "./routes/chatRoom.route.js";
+import { apiLimiter, authLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
+
+app.set('trust proxy', 1);
+
+app.use(helmet());
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()) : ['http://localhost:5173'];
 
 app.use(cors({ origin: allowedOrigins, credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+app.use(express.json({ limit: '50kb' }));
+app.use(express.urlencoded({ extended: true, limit: '50kb' }));
+
+//app.use('/api', apiLimiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 app.get('/health', (req, res) => {
     res.json({

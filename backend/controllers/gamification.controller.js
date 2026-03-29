@@ -1,6 +1,6 @@
 import GamificationProfile from "../models/gamification.model.js";
 import BadgeDefinition from "../models/badge.model.js";
-import { awardActionBadge, processXPEvent, XP_REWARDS } from "../utils/gamificationEngine.js";
+import { awardActionBadge, processXPEvent, processDailyLogin, XP_REWARDS } from "../utils/gamificationEngine.js";
 import { BADGE_SEEDS } from "../seeds/seedBadges.js";
 
 /**
@@ -32,86 +32,27 @@ export const getMyProfile = async (req, res) => {
 };
 
 /**
- * @desc    Record daily login — awards XP, updates streak, evaluates badges
- * @route   POST /api/gamification/daily-login
+ * @desc    Record daily login — delegates to shared processDailyLogin utility.
+ * @route   POST /api/play/daily-login
  * @access  Private
  */
 export const dailyLogin = async (req, res) => {
     try {
-        // Step 1: Check streak FIRST without awarding XP yet
-        let profile = await GamificationProfile.findOne({ user: req.user._id });
-        if (!profile) {
-            profile = await GamificationProfile.create({ user: req.user._id });
-        }
-
-        const streakResult = profile.updateStreak();
-
-        // Step 2: If already checked in today, return early — no XP awarded
-        if (!streakResult.streakUpdated) {
-            return res.status(200).json({
-                success: true,
-                message: 'Already checked in today',
-                data: {
-                    alreadyCheckedIn: true,
-                    xpAwarded: 0,
-                    totalXP: profile.totalXP,
-                    level: profile.level,
-                    levelTitle: profile.levelTitle,
-                    leveledUp: false,
-                    currentStreak: profile.currentStreak,
-                    longestStreak: profile.longestStreak,
-                    newlyEarnedBadges: []
-                }
+        const result = await processDailyLogin(req.user._id);
+ 
+        if (!result) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to process daily login'
             });
         }
-
-        // Step 3: Streak updated — NOW award XP
-        await profile.save();
-
-        const result = await processXPEvent(
-            req.user._id,
-            'daily_login',
-            null,
-            'Daily login reward'
-        );
-
-        const { xpResult, newlyEarnedBadges } = result;
-
-        // Step 4: Streak milestone bonuses
-        if (profile.currentStreak === 7) {
-            await processXPEvent(req.user._id, 'streak_7_days', null, '7-day streak bonus!');
-            await awardActionBadge(req.user._id, 'streak_7_days');
-        } else if (profile.currentStreak === 30) {
-            await processXPEvent(req.user._id, 'streak_30_days', null, '30-day streak bonus!');
-            await awardActionBadge(req.user._id, 'streak_30_days');
-        }
-
-        // Step 5: First login badge (only 1 xpHistory entry = first ever login)
-        if (result.profile.xpHistory.length === 1) {
-            await awardActionBadge(req.user._id, 'first_login');
-        }
-
-        const updated = await GamificationProfile.findOne({ user: req.user._id });
-
+ 
         res.status(200).json({
             success: true,
-            message: `Day ${updated.currentStreak} streak! Keep it up!`,
-            data: {
-                alreadyCheckedIn: false,
-                xpAwarded: XP_REWARDS.daily_login,
-                totalXP: updated.totalXP,
-                level: updated.level,
-                levelTitle: updated.levelTitle,
-                leveledUp: xpResult?.leveledUp ?? false,
-                currentStreak: updated.currentStreak,
-                longestStreak: updated.longestStreak,
-                newlyEarnedBadges: newlyEarnedBadges.map(b => ({
-                    key: b.key,
-                    name: b.name,
-                    description: b.description,
-                    category: b.category
-                }))
-            }
+            message: result.alreadyCheckedIn
+                ? 'Already checked in today'
+                : `Day ${result.currentStreak} streak! Keep it up!`,
+            data: result
         });
     } catch (error) {
         res.status(500).json({
@@ -178,20 +119,25 @@ export const getLeaderboard = async (req, res) => {
 
         const leaderboard = await GamificationProfile
             .find()
+            .populate({
+                path: 'user',
+                match: { role: { $ne: 'admin' } },
+                select: 'username role'
+            })
             .sort({ totalXP: -1 })
             .limit(limit)
-            .populate('user', 'username')
             .select('user totalXP level levelTitle currentStreak earnedBadges');
 
         const myProfile = await GamificationProfile.findOne({ user: req.user._id });
         const myRank = myProfile ? await GamificationProfile.countDocuments({ totalXP: { $gt: myProfile.totalXP } }) + 1 : null;
 
         const totalParticipants = await GamificationProfile.countDocuments();
+        const filteredLeaderboard = leaderboard.filter(entry => entry.user !== null);
 
         res.status(200).json({
             success: true,
             data: {
-                leaderboard: leaderboard.map((entry, index) => ({
+                leaderboard: filteredLeaderboard.map((entry, index) => ({
                     rank: index + 1,
                     username: entry.user?.username ?? 'Unknown',
                     totalXP: entry.totalXP,
