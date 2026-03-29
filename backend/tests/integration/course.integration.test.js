@@ -78,7 +78,7 @@ describe('Course API Integration Tests', () => {
         ...overrides
     });
 
-    // ── POST /api/course ────────────────────────────────────────
+    // POST /api/course
     describe('POST /api/course/create', () => {
         it('should create a course as admin', async () => {
             const response = await request(app)
@@ -120,7 +120,7 @@ describe('Course API Integration Tests', () => {
                 .post('/api/course/create')
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send(validCoursePayload({ title: undefined }))
-                .expect(500);
+                .expect(400);
 
             expect(response.body.success).toBe(false);
         });
@@ -130,7 +130,7 @@ describe('Course API Integration Tests', () => {
                 .post('/api/course/create')
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send(validCoursePayload({ questions: [] }))
-                .expect(500);
+                .expect(400);
 
             expect(response.body.success).toBe(false);
         });
@@ -140,7 +140,7 @@ describe('Course API Integration Tests', () => {
                 .post('/api/course/create')
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send(validCoursePayload({ category: 'crypto' }))
-                .expect(500);
+                .expect(400);
 
             expect(response.body.success).toBe(false);
         });
@@ -156,7 +156,7 @@ describe('Course API Integration Tests', () => {
         });
     });
 
-    // ── GET /api/course ─────────────────────────────────────────
+    // GET /api/course
     describe('GET /api/course', () => {
         beforeEach(async () => {
             // Create a published and an unpublished course
@@ -255,7 +255,7 @@ describe('Course API Integration Tests', () => {
         });
     });
 
-    // ── GET /api/course/:id ─────────────────────────────────────
+    // GET /api/course/:id
     describe('GET /api/course/:id', () => {
         let publishedCourseId;
         let draftCourseId;
@@ -338,7 +338,7 @@ describe('Course API Integration Tests', () => {
         });
     });
 
-    // ── PUT /api/course/:id ─────────────────────────────────────
+    // PUT /api/course/:id
     describe('PUT /api/course/:id', () => {
         let courseId;
 
@@ -401,7 +401,7 @@ describe('Course API Integration Tests', () => {
         });
     });
 
-    // ── DELETE /api/course/:id ──────────────────────────────────
+    // DELETE /api/course/:id
     describe('DELETE /api/course/:id', () => {
         let courseId;
 
@@ -455,7 +455,7 @@ describe('Course API Integration Tests', () => {
         });
     });
 
-    // ── POST /api/course/:id/submit ─────────────────────────────
+    // POST /api/course/:id/submit
     describe('POST /api/course/:id/submit', () => {
         let courseId;
 
@@ -499,18 +499,27 @@ describe('Course API Integration Tests', () => {
                 .set('Authorization', `Bearer ${userToken}`)
                 .send({ answers: [1, 0] });
 
-            const user = await User.findById(userId);
-            expect(user.points || 0).toBe(0);
+            const response = await request(app)
+                .get('/api/course/my-points')
+                .set('Authorization', `Bearer ${userToken}`)
+                .expect(200);
+
+            expect(response.body.data.totalPoints).toBe(0);
         });
 
-        it('should award points to user on pass', async () => {
+        it('should reflect earned points in my-points endpoint after passing', async () => {
             await request(app)
                 .post(`/api/course/${courseId}/submit`)
                 .set('Authorization', `Bearer ${userToken}`)
                 .send({ answers: [0, 1] });
 
-            const user = await User.findById(userId);
-            expect(user.points).toBe(20);
+            const response = await request(app)
+                .get('/api/course/my-points')
+                .set('Authorization', `Bearer ${userToken}`)
+                .expect(200);
+
+            expect(response.body.success).toBe(true);
+            expect(response.body.data.totalPoints).toBe(20);
         });
 
         it('should record completion in course', async () => {
@@ -589,7 +598,63 @@ describe('Course API Integration Tests', () => {
         });
     });
 
-    // ── Full Workflow ────────────────────────────────────────────
+    // GET /api/course/my-points
+    describe('GET /api/course/my-points', () => {
+        beforeEach(async () => {
+            const course = await Course.create({
+                ...validCoursePayload(),
+                createdBy: adminId,
+                isPublished: true
+            });
+            courseId = course._id;
+        });
+
+        it('should return 0 when user has not completed any courses', async () => {
+            const response = await request(app)
+                .get('/api/course/my-points')
+                .set('Authorization', `Bearer ${userToken}`)
+                .expect(200);
+
+            expect(response.body.success).toBe(true);
+            expect(response.body.data.totalPoints).toBe(0);
+        });
+
+        it('should return correct total after passing a course', async () => {
+            await request(app)
+                .post(`/api/course/${courseId}/submit`)
+                .set('Authorization', `Bearer ${userToken}`)
+                .send({ answers: [0, 1] });
+
+            const response = await request(app)
+                .get('/api/course/my-points')
+                .set('Authorization', `Bearer ${userToken}`)
+                .expect(200);
+
+            expect(response.body.data.totalPoints).toBe(20);
+        });
+
+        it('should return 0 after failing a course', async () => {
+            await request(app)
+                .post(`/api/course/${courseId}/submit`)
+                .set('Authorization', `Bearer ${userToken}`)
+                .send({ answers: [1, 0] });
+
+            const response = await request(app)
+                .get('/api/course/my-points')
+                .set('Authorization', `Bearer ${userToken}`)
+                .expect(200);
+
+            expect(response.body.data.totalPoints).toBe(0);
+        });
+
+        it('should reject unauthenticated request', async () => {
+            await request(app)
+                .get('/api/course/my-points')
+                .expect(401);
+        });
+    });
+
+    // Full Workflow
     describe('Course Workflow', () => {
         it('should complete full admin and user workflow', async () => {
             // Admin creates course

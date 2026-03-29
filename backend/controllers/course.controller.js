@@ -1,5 +1,4 @@
 import Course from "../models/course.model.js";
-import User from "../models/user.model.js";
 
 // @desc    Create a new course
 // @route   POST /api/course
@@ -66,7 +65,7 @@ export const getAllCourses = async (req, res) => {
         // Transform array to hide other users' completions for privacy
         const mappedCourses = courses.map(course => {
             const courseObj = course.toObject();
-            
+
             // Check if current user completed it
             const userCompletion = courseObj.completions.find(
                 (c) => c.user.toString() === req.user._id.toString()
@@ -254,12 +253,6 @@ export const submitCourse = async (req, res) => {
         });
         await course.save();
 
-        // Add points to user (only if passed)
-        // NOTE: You'll need to add a `points` field to the User model
-        if (passed) {
-            await User.findByIdAndUpdate(req.user._id, { $inc: { points: pointsEarned } });
-        }
-
         res.status(200).json({
             success: true,
             message: passed ? `Congratulations! You passed and earned ${pointsEarned} points!` : 'You did not pass. Review and try again.',
@@ -275,6 +268,35 @@ export const submitCourse = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to submit course',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Get total points earned by logged-in user across all completed courses
+// @route   GET /api/course/my-points
+// @access  Private
+export const getUserPoints = async (req, res) => {
+    try {
+        const courses = await Course.find({
+            'completions.user': req.user._id
+        });
+
+        const totalPoints = courses.reduce((total, course) => {
+            const completion = course.completions.find(
+                (c) => c.user.toString() === req.user._id.toString()
+            );
+            return total + (completion?.pointsEarned || 0);
+        }, 0);
+
+        res.status(200).json({
+            success: true,
+            data: { totalPoints }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch user points',
             error: error.message
         });
     }
