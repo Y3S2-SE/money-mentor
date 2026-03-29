@@ -40,6 +40,84 @@ export const processXPEvent = async (userId, source, customAmount = null, descri
     return { profile, xpResult, streakResult, newlyEarnedBadges };
 };
 
+/**
+ * Shared daily login reward processor 
+ * Used by both auth.controller (auto on login) and gamification.controller (manual route).
+ */
+
+export const processDailyLogin = async (userId, { silent = false } = {}) => {
+    try {
+        let profile = await GamificationProfile.findOne({ user: userId });
+        if (!profile) {
+            profile = await GamificationProfile.create({ user: userId });
+        }
+ 
+        const streakResult = profile.updateStreak();
+ 
+        if (!streakResult.streakUpdated) {
+            return {
+                alreadyCheckedIn:  true,
+                xpAwarded:         0,
+                totalXP:           profile.totalXP,
+                level:             profile.level,
+                levelTitle:        profile.levelTitle,
+                leveledUp:         false,
+                currentStreak:     profile.currentStreak,
+                longestStreak:     profile.longestStreak,
+                newlyEarnedBadges: []
+            };
+        }
+ 
+        await profile.save();
+ 
+        const result = await processXPEvent(userId, 'daily_login', null, 'Daily login reward');
+        const { xpResult, newlyEarnedBadges } = result;
+ 
+        // Collect action badges — return value captured so they reach the frontend
+        const actionBadges = [];
+ 
+        if (result.profile.xpHistory.length === 1) {
+            const badge = await awardActionBadge(userId, 'first_login');
+            if (badge) actionBadges.push(badge);
+        }
+ 
+        if (profile.currentStreak === 7) {
+            await processXPEvent(userId, 'streak_7_days', null, '7-day streak bonus!');
+            const badge = await awardActionBadge(userId, 'streak_7_days');
+            if (badge) actionBadges.push(badge);
+        } else if (profile.currentStreak === 30) {
+            await processXPEvent(userId, 'streak_30_days', null, '30-day streak bonus!');
+            const badge = await awardActionBadge(userId, 'streak_30_days');
+            if (badge) actionBadges.push(badge);
+        }
+ 
+        const updated = await GamificationProfile.findOne({ user: userId });
+ 
+        // Combine milestone badges + action badges
+        const allEarnedBadges = [...newlyEarnedBadges, ...actionBadges];
+ 
+        return {
+            alreadyCheckedIn:  false,
+            xpAwarded:         XP_REWARDS.daily_login,
+            totalXP:           updated.totalXP,
+            level:             updated.level,
+            levelTitle:        updated.levelTitle,
+            leveledUp:         xpResult?.leveledUp ?? false,
+            currentStreak:     updated.currentStreak,
+            longestStreak:     updated.longestStreak,
+            newlyEarnedBadges: allEarnedBadges.map(b => ({
+                key:         b.key,
+                name:        b.name,
+                description: b.description,
+                category:    b.category
+            }))
+        };
+    } catch (err) {
+        if (!silent) console.error('[processDailyLogin] Error:', err.message);
+        return null;
+    }
+};
+
 
 /**
  * Checks all active badge definitions against the profile.
