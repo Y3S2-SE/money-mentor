@@ -13,7 +13,7 @@ router.put('/:id', authorize('admin'), updateCourseRules, validate, updateCourse
 router.delete('/:id', authorize('admin'), deleteCourse);
 
 router.get('/', getAllCourses);
-router.get('/my-points', getUserPoints);
+router.get('/my-points', getUserPoints); //new endpoint for gamification
 router.get('/:id', getCourseById);
 router.post('/:id/submit', submitCourseRules, validate, submitCourse);
 
