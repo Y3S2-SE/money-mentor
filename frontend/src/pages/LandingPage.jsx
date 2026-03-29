@@ -362,7 +362,7 @@ const LandingPage = () => {
               <Link
                 to="/auth"
                 state={{ isLogin: false }}
-                className="inline-block px-14 py-5 bg-white text-primary rounded-full font-label tracking-[0.18em] text-[12px] uppercase font-bold hover:bg-emerald-50 transition-colors shadow-2xl hover:shadow-white/20 hover:scale-[1.03] active:scale-[0.97]"
+                className="inline-block px-14 py-5 bg-white text-primary rounded-full font-label tracking-[0.18em] text-[12px] uppercase font-bold hover:bg-blue-50 transition-colors shadow-2xl hover:shadow-white/20 hover:scale-[1.03] active:scale-[0.97]"
               >
                 Start Saving
               </Link>
@@ -392,7 +392,7 @@ const LandingPage = () => {
             ].map(({ cls, label, init }) => (
               <div key={cls} className="flex flex-col gap-2">
                 <span className={`${cls} text-4xl md:text-5xl font-headline font-bold text-white tracking-tighter`}>{init}</span>
-                <span className="font-label text-[9px] uppercase tracking-[0.3em] text-emerald-100/50">{label}</span>
+                <span className="font-label text-[9px] uppercase tracking-[0.3em] text-blue-100/50">{label}</span>
               </div>
             ))}
           </div>
@@ -444,9 +444,9 @@ const LandingPage = () => {
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlcAN3flZpoUbpZ006ieRJpwClCupQF_slSn5IZZmXZZzvU4CvRMazdvtCO7cueKNtRWPW7YouYjRVtyM3pNTMIfzS_eO7NKFp1rx3mI-q6KOyM-7OPki7EA62VhdcjGRrQ_hPGLCWqO25jtkOFqZ_kLyUiyka_Aj9wefVoLx0vAN50nRyIbzoZlGOj-1Srf9HM0ECShbsaT-e6ljKnVqIMNjhayxNGOde48jwgFa92_QgJHWmHyOkNf5aCDbeyGQgqJ4xUqO5sGX4"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent p-12 flex flex-col justify-end">
-                  <p className="text-emerald-400 font-label text-xs uppercase tracking-widest mb-4">Core Philosophy</p>
+                  <p className="text-blue-400 font-label text-xs uppercase tracking-widest mb-4">Core Philosophy</p>
                   <h4 className="text-3xl font-headline font-bold text-white mb-4">Safe & Secure</h4>
-                  <p className="text-emerald-100/60 max-w-sm">Your data is protected with enterprise-level security while you focus on building your financial future.</p>
+                  <p className="text-blue-100/60 max-w-sm">Your data is protected with enterprise-level security while you focus on building your financial future.</p>
                 </div>
               </div>
 
@@ -463,11 +463,11 @@ const LandingPage = () => {
                 </div>
               </div>
 
-              <div className="bento-item bg-primary-container p-12 rounded-xl flex flex-col justify-between text-emerald-50">
+              <div className="bento-item bg-primary-container p-12 rounded-xl flex flex-col justify-between text-blue-50">
                 <div>
-                  <span className="material-symbols-outlined text-emerald-400 text-4xl mb-6 block">groups</span>
+                  <span className="material-symbols-outlined text-blue-400 text-4xl mb-6 block">groups</span>
                   <h4 className="text-2xl font-headline font-bold mb-2">Community Hub</h4>
-                  <p className="text-emerald-100/60 text-sm">Compete on leaderboards, share success stories, and get inspired!</p>
+                  <p className="text-blue-100/60 text-sm">Compete on leaderboards, share success stories, and get inspired!</p>
                 </div>
               </div>
             </div>
