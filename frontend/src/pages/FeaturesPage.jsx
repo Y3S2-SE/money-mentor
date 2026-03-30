@@ -7,11 +7,11 @@ import PublicNavbar from '../components/PublicNavbar';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// All cards share the MoneyMentor green/teal palette — two alternating tones
-const G1 = { color: 'from-emerald-950 to-emerald-900', accent: '#6EE7B7' }; // bright mint
-const G2 = { color: 'from-[#0a2218] to-emerald-950', accent: '#34D399' }; // deeper emerald
-const G3 = { color: 'from-teal-950 to-teal-900', accent: '#5EEAD4' }; // teal
-const G4 = { color: 'from-[#072018] to-teal-950', accent: '#2DD4BF' }; // teal-deep
+// All cards share the MoneyMentor green/blue palette — two alternating tones
+const G1 = { color: 'from-blue-950 to-blue-900', accent: '#3B82F6' }; // blue-500
+const G2 = { color: 'from-[#0a2218] to-blue-950', accent: '#2563EB' }; // blue-600
+const G3 = { color: 'from-blue-950 to-blue-900', accent: '#60A5FA' }; // blue-400
+const G4 = { color: 'from-[#072018] to-blue-950', accent: '#1D4ED8' }; // blue-700
 
 const features = [
   {
@@ -166,18 +166,18 @@ const FeaturesPage = () => {
         <div className="max-w-7xl mx-auto relative z-10 flex flex-col lg:flex-row items-center gap-12">
           {/* Left Text */}
           <div className="w-full lg:w-1/2">
-            <p className="feat-hero-tag font-label text-[10px] uppercase tracking-[0.4em] text-emerald-300/70 mb-6">
+            <p className="feat-hero-tag font-label text-[10px] uppercase tracking-[0.4em] text-blue-300/70 mb-6">
               Everything you need
             </p>
             <h1 className="feat-hero-title text-5xl md:text-6xl lg:text-7xl font-headline font-bold tracking-tighter leading-[0.95] mb-6">
               A platform built for your financial journey.
             </h1>
-            <p className="feat-hero-sub text-emerald-100/60 text-base md:text-lg leading-relaxed font-light mb-10 max-w-xl">
+            <p className="feat-hero-sub text-blue-100/60 text-base md:text-lg leading-relaxed font-light mb-10 max-w-xl">
               From daily expense tracking and AI-powered advice to gamified learning and real-time community chat — every feature works together to help you build lasting financial habits.
             </p>
             <div className="feat-hero-cta flex flex-wrap gap-4">
               <Link to="/auth" state={{ isLogin: false }}
-                className="px-8 py-3 bg-white text-primary rounded-full font-label tracking-[0.15em] text-[11px] uppercase font-bold hover:bg-emerald-50 transition-all shadow-xl">
+                className="px-8 py-3 bg-white text-primary rounded-full font-label tracking-[0.15em] text-[11px] uppercase font-bold hover:bg-blue-50 transition-all shadow-xl">
                 Get Started Free
               </Link>
               <Link to="/contact"
@@ -190,7 +190,7 @@ const FeaturesPage = () => {
           {/* Right 3D Money Element */}
           <div className="w-full lg:w-1/2 hidden md:flex relative h-[380px] items-center justify-center feat-hero-image transform-gpu" style={{ perspective: '1000px' }}>
             {/* Base glow */}
-            <div className="absolute w-56 h-56 bg-emerald-400/20 rounded-full blur-[70px]" />
+            <div className="absolute w-56 h-56 bg-blue-400/20 rounded-full blur-[70px]" />
 
             {/* 3D Coin 1 */}
             <div className="absolute top-4 right-12 xl:right-28 w-20 h-20 rounded-full bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 shadow-[0_12px_25px_rgba(0,0,0,0.4),inset_0_-4px_12px_rgba(0,0,0,0.2),inset_0_4px_12px_rgba(255,255,255,0.4)] flex items-center justify-center border-[3px] border-yellow-200/40 transform rotate-12 money-float-1 z-20">
@@ -207,11 +207,11 @@ const FeaturesPage = () => {
             </div>
 
             {/* Stacked Cards behind main card to add 3D depth */}
-            <div className="absolute w-60 h-64 bg-emerald-900/40 rounded-3xl transform rotate-6 translate-x-3 translate-y-3 blur-[2px] border border-white/5" />
-            <div className="absolute w-60 h-64 bg-teal-800/40 rounded-3xl transform rotate-2 translate-x-1 translate-y-1 blur-[1px] border border-white/10" />
+            <div className="absolute w-60 h-64 bg-blue-900/40 rounded-3xl transform rotate-6 translate-x-3 translate-y-3 blur-[2px] border border-white/5" />
+            <div className="absolute w-60 h-64 bg-blue-800/40 rounded-3xl transform rotate-2 translate-x-1 translate-y-1 blur-[1px] border border-white/10" />
 
             {/* Main abstract 3D Card / Wallet */}
-            <div className="relative w-60 h-64 bg-gradient-to-br from-emerald-400 via-emerald-600 to-teal-800 rounded-3xl shadow-[0_25px_50px_rgba(0,0,0,0.6),inset_2px_2px_12px_rgba(255,255,255,0.6),inset_-2px_-2px_12px_rgba(0,0,0,0.3)] border border-white/30 transform -rotate-6 money-float-main overflow-hidden backdrop-blur-md z-10 transition-transform duration-700 hover:rotate-0">
+            <div className="relative w-60 h-64 bg-gradient-to-br from-blue-400 via-blue-600 to-blue-800 rounded-3xl shadow-[0_25px_50px_rgba(0,0,0,0.6),inset_2px_2px_12px_rgba(255,255,255,0.6),inset_-2px_-2px_12px_rgba(0,0,0,0.3)] border border-white/30 transform -rotate-6 money-float-main overflow-hidden backdrop-blur-md z-10 transition-transform duration-700 hover:rotate-0">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-2xl transform translate-x-8 -translate-y-8" />
               <div className="absolute bottom-0 left-0 w-40 h-40 bg-black/20 rounded-full blur-2xl transform -translate-x-8 translate-y-8" />
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
@@ -286,11 +286,11 @@ const FeaturesPage = () => {
       <section className="py-24 px-6 md:px-16 bg-primary text-white text-center">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-4xl md:text-6xl font-headline font-bold tracking-tighter mb-6">Ready to level up?</h2>
-          <p className="text-emerald-100/60 text-lg mb-12 font-light">
+          <p className="text-blue-100/60 text-lg mb-12 font-light">
             Join thousands of users already saving smarter and building their financial future.
           </p>
           <Link to="/auth" state={{ isLogin: false }}
-            className="inline-block px-14 py-5 bg-white text-primary rounded-full font-label tracking-[0.18em] text-[12px] uppercase font-bold hover:bg-emerald-50 transition-colors shadow-2xl hover:scale-[1.03] active:scale-[0.97]">
+            className="inline-block px-14 py-5 bg-white text-primary rounded-full font-label tracking-[0.18em] text-[12px] uppercase font-bold hover:bg-blue-50 transition-colors shadow-2xl hover:scale-[1.03] active:scale-[0.97]">
             Create Free Account
           </Link>
         </div>

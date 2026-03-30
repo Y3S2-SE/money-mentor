@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../store/slices/authSlice";
 
 import { LayoutDashboard, Wallet, Gamepad2, BookOpen, Users, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import api from "../../services/api";
 
 const navItems = [
     { label: 'My Wallet', icon: Wallet, path: '/dashboard' },
@@ -18,33 +19,66 @@ const Sidebar = ({ children }) => {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [profile, setProfile] = useState(null);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await api.get('/play/profile');
+                setProfile(res.data.data);
+            } catch (e) {
+                console.error(e);
+            }
+        };
+        fetchData();
+    }, []);
 
     const handleLogout = async () => {
         await dispatch(logout());
         navigate('/');
     };
 
+    const currentXP = profile?.totalXP || 0;
+    const level = profile?.level || 1;
+    const currentLevelXP = (level - 1) * 100;
+    const nextLevelXP = level * 100;
+
+    const earnedXP = currentXP - currentLevelXP;
+    const neededXP = 100;
+    const remainingXP = Math.max((nextLevelXP - currentXP), 0);
+
+    const progressPercent = Math.min((earnedXP / neededXP) * 100, 100);
+
+    const [prevXP, setPrevXP] = useState(currentXP);
+
+    useEffect(() => {
+        if (currentXP !== prevXP) {
+            // trigger animation
+            setPrevXP(currentXP);
+        }
+    }, [currentXP]);
+
     return (
-        <div className="flex h-screen bg-[#F8F9FA] overflow-hidden">
+        <div className="flex h-screen bg-surface-bright overflow-hidden">
             <aside
-                className={`relative hidden lg:flex flex-col bg-[#F8F9FA] border-r border-gray-200/60 h-screen transition-all duration-300 ease-in-out z-40 ${isCollapsed ? 'w-20' : 'w-64'
+                className={`relative hidden lg:flex flex-col bg-surface-bright border-r border-gray-200/60 h-screen transition-all duration-300 ease-in-out z-40 ${isCollapsed ? 'w-20' : 'w-64'
                     }`}
             >
                 {/* Collapse Toggle */}
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="absolute -right-2.5 top-9 bg-white border border-gray-200 rounded-full w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#0F291E] hover:border-gray-300 shadow-sm transition-all duration-200 z-50 outline-none focus:ring-2 focus:ring-[#0F291E]/20"
+                    className="absolute -right-2.5 top-9 bg-white border border-gray-200 rounded-full w-5 h-5 flex items-center justify-center text-gray-400 hover:text-blue-950 hover:border-gray-300 shadow-sm transition-all duration-200 z-50 outline-none focus:ring-2 focus:ring-blue-950/20"
                 >
                     {isCollapsed ? <ChevronRight className="w-3 h-3 ml-px" /> : <ChevronLeft className="w-3 h-3 mr-px" />}
                 </button>
 
                 <div className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-6 gap-3'} py-8 transition-all duration-300`}>
-                    <div className="w-10 h-10 rounded-xl bg-[#0F291E] flex flex-col items-center justify-center shrink-0 shadow-md">
+                    <div className="w-10 h-10 rounded-xl bg-blue-950 flex flex-col items-center justify-center shrink-0 shadow-md">
                         <Wallet className="w-5 h-5 text-white" />
                     </div>
                     {!isCollapsed && (
                         <div className="flex flex-col overflow-hidden whitespace-nowrap">
-                            <span className="text-[#0F291E] font-extrabold text-[20px] tracking-tight leading-tight">MoneyMentor</span>
+                            <span className="text-blue-950 font-extrabold text-[20px] tracking-tight leading-tight">MoneyMentor</span>
                             <span className="text-gray-400 text-[8px] font-bold tracking-widest mt-0.5">THE DIGITAL CURATOR</span>
                         </div>
                     )}
@@ -59,13 +93,13 @@ const Sidebar = ({ children }) => {
                                 to={path}
                                 className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-4 px-6'} py-3.5 transition-all duration-200 group
                                     ${isActive
-                                        ? 'bg-gray-200/60 text-[#0F291E] border-r-4 border-[#0F291E]'
-                                        : 'text-gray-500 hover:bg-gray-100/80 hover:text-[#0F291E] border-r-4 border-transparent'
+                                        ? 'bg-gray-200/60 text-blue-950 border-r-4 border-blue-950'
+                                        : 'text-gray-500 hover:bg-gray-100/80 hover:text-blue-950 border-r-4 border-transparent'
                                     }
                                 `}
                                 title={isCollapsed ? label : undefined}
                             >
-                                <Icon className={`w-5 h-5 shrink-0 transition-colors duration-200 ${isActive ? 'text-[#0F291E]' : 'text-gray-400 group-hover:text-[#0F291E]'}`} />
+                                <Icon className={`w-5 h-5 shrink-0 transition-colors duration-200 ${isActive ? 'text-blue-950' : 'text-gray-400 group-hover:text-blue-950'}`} />
                                 {!isCollapsed && (
                                     <span className={`text-[15px] whitespace-nowrap ${isActive ? 'font-bold' : 'font-medium'}`}>
                                         {label}
@@ -79,26 +113,26 @@ const Sidebar = ({ children }) => {
                 <div className="px-5 pb-6 mt-auto flex flex-col gap-4">
                     {/* Level Card */}
                     {!isCollapsed ? (
-                        <div className="bg-[#0F291E] rounded-2xl p-4 text-white shadow-lg relative overflow-hidden group transition-all duration-300">
+                        <div className="bg-blue-950 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden group transition-all duration-300">
                             {/* Decorative background element */}
                             <div className="absolute top-0 right-0 w-16 h-16 bg-white/5 rounded-bl-[64px] pointer-events-none" />
 
                             <div className="flex justify-between items-center mb-3 relative z-10">
-                                <span className="text-[11px] font-bold tracking-wider text-white">LEVEL 4</span>
-                                <span className="text-[11px] font-bold text-white">850 XP</span>
+                                <span className="text-[11px] font-bold tracking-wider text-white">LEVEL {level}</span>
+                                <span className="text-[11px] font-bold text-white">{currentXP} XP</span>
                             </div>
                             <div className="w-full bg-black/40 h-1.5 rounded-full mb-3 overflow-hidden relative z-10">
-                                <div className="bg-[#85D5A5] h-full rounded-full transition-all duration-1000" style={{ width: '85%' }}></div>
+                                <div className="bg-[#85a4d5] h-full rounded-full transition-all duration-1000" style={{ width: `${progressPercent}%` }}></div>
                             </div>
                             <div className="flex justify-between items-center relative z-10">
-                                <span className="text-[10px] text-gray-300 font-medium">150 XP to Level 5</span>
+                                <span className="text-[10px] text-gray-300 font-medium">{remainingXP} XP to Level {level + 1}</span>
                             </div>
                         </div>
                     ) : (
-                        <div className="w-10 h-10 mx-auto bg-[#0F291E] rounded-xl flex flex-col items-center justify-center shrink-0 shadow-lg cursor-help transition-all duration-300 hover:bg-[#153b2a]" title="Level 4 - 850 XP (150 XP to Level 5)">
-                            <span className="text-[8px] font-bold text-white mb-0.5">LVL 4</span>
+                        <div className="w-10 h-10 mx-auto bg-blue-950 rounded-xl flex flex-col items-center justify-center shrink-0 shadow-lg cursor-help transition-all duration-300 hover:bg-[#17153b]" title="Level 4 - 850 XP (150 XP to Level 5)">
+                            <span className="text-[8px] font-bold text-white mb-0.5">LVL {profile.level}</span>
                             <div className="w-6 bg-black/40 h-1 rounded-full overflow-hidden">
-                                <div className="bg-[#85D5A5] h-full rounded-full" style={{ width: '85%' }}></div>
+                                <div className="bg-[#85a4d5] h-full rounded-full" style={{ width: '85%' }}></div>
                             </div>
                         </div>
                     )}
@@ -132,9 +166,9 @@ const Sidebar = ({ children }) => {
                                 className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200"
                             >
                                 <div className={`p-2 rounded-full transition-all duration-200 flex items-center justify-center ${isActive ? 'bg-gray-100' : ''}`}>
-                                    <Icon className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-[#0F291E]' : 'text-gray-400'}`} />
+                                    <Icon className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-blue-950' : 'text-gray-400'}`} />
                                 </div>
-                                <span className={`text-[10px] transition-colors duration-200 whitespace-nowrap ${isActive ? 'text-[#0F291E] font-bold' : 'text-gray-500 font-medium'}`}>
+                                <span className={`text-[10px] transition-colors duration-200 whitespace-nowrap ${isActive ? 'text-blue-950 font-bold' : 'text-gray-500 font-medium'}`}>
                                     {label.replace(' & Level Up', '').replace(' Hub', '')}
                                 </span>
                             </Link>
