@@ -197,7 +197,7 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | User Authentication | Ravindu | [View Docs →](https://documenter.getpostman.com/view/52326226/2sBXcBmgg3) |
 | Income & Expense Tracker | Dishan | [View Docs →](https://documenter.getpostman.com/view/43514147/2sBXcHhdsu) |
 | Gamification Engine | Ravindu | [View Docs →](https://documenter.getpostman.com/view/52326226/2sBXcGFfiP) |
-| Knowledge Hub | Thimeth | [View Docs →](https://documenter.getpostman.com/view/43108804/2sBXcHhJUQ#6f3f6126-8286-40c6-a695-c8d1c6f27b21) |
+| Knowledge Hub | Thimeth | [View Docs →](https://documenter.getpostman.com/view/43108804/2sBXcHhJUQ#da36d5ac-3be7-4d11-9a68-1a3eea6681e9) |
 | Group & Chat Function | Hiruvinda | [View Docs →](https://documenter.getpostman.com/view/52186165/2sBXcGDzcJ) |
 
 ### Health Check
@@ -262,6 +262,18 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | PUT | `/api/course/:id` | Update course details or publish status | Admin |
 | DELETE | `/api/course/:id` | Delete a course | Admin |
 | POST | `/api/course/:id/submit` | Submit answers, get graded, earn points | User |
+
+### Articles — `/api/article`
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/article/create` | Create a new article | Admin |
+| GET | `/api/article` | Get all articles | User |
+| GET | `/api/article/:id` | Get a single article by ID | User |
+| PUT | `/api/article/:id` | Update an article | Admin |
+| DELETE | `/api/article/:id` | Delete an article | Admin |
+| POST | `/api/article/complete` | Mark an article as read and earn points | User |
+| GET | `/api/article/my-points` | Get user's article reading points | User |
 
 ### Chat — `/api/chat`
 
