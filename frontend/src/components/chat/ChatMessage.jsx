@@ -1,3 +1,5 @@
+import ChatBadgeCard from './ChatBadgeCard';
+
 function LinkPreviewCard({ preview }) {
   if (!preview?.url) return null;
 
@@ -43,6 +45,41 @@ export default function ChatMessage({ message, isOwn }) {
     minute: '2-digit',
   });
 
+  // ── Badge share message ────────────────────────────────────────────────
+  if (message.type === 'badge' && message.badgeShare) {
+    return (
+      <div className={`flex ${isOwn ? 'justify-end' : 'justify-start items-end gap-2'} mb-2`}>
+        {!isOwn && (
+          <div className="w-7 h-7 rounded-full bg-blue-200 flex items-center justify-center text-[11px] font-bold text-blue-800 shrink-0 mb-4">
+            {(message?.sender?.username || '?').charAt(0).toUpperCase()}
+          </div>
+        )}
+
+        <div className="max-w-[75%]">
+          {!isOwn && (
+            <p className="text-[11px] text-slate-400 mb-1 ml-1">
+              {message.sender?.username}
+            </p>
+          )}
+          <div className={`px-4 py-2.5 rounded-2xl shadow-sm ${
+            isOwn
+              ? 'bg-blue-950 rounded-tr-sm'
+              : 'bg-white border border-slate-100 rounded-tl-sm'
+          }`}>
+            <p className={`text-xs mb-2 ${isOwn ? 'text-blue-200' : 'text-slate-400'}`}>
+              🏅 shared a badge
+            </p>
+            <ChatBadgeCard badgeShare={message.badgeShare} />
+          </div>
+          <p className={`text-[10px] text-slate-400 mt-1 ${isOwn ? 'text-right pr-1' : 'ml-1'}`}>
+            {time}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Regular text message ───────────────────────────────────────────────
   if (isOwn) {
     return (
       <div className="flex justify-end mb-2">
@@ -59,9 +96,8 @@ export default function ChatMessage({ message, isOwn }) {
 
   return (
     <div className="flex justify-start items-end gap-2 mb-2">
-      {/* Avatar */}
       <div className="w-7 h-7 rounded-full bg-blue-200 flex items-center justify-center text-[11px] font-bold text-blue-800 shrink-0 mb-4">
-        {(message?.sender?.username || "?").charAt(0).toUpperCase()}
+        {(message?.sender?.username || '?').charAt(0).toUpperCase()}
       </div>
       <div className="max-w-[70%]">
         <p className="text-[11px] text-slate-400 mb-1 ml-1">{message.sender?.username}</p>
