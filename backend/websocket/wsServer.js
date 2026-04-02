@@ -57,7 +57,7 @@ export const initWebSocketServer = (httpServer) => {
 
     // ── Join room ────────────────────────────────────────────────────────────
     joinRoom(groupId, userId, ws);
-    logger.info(`User ${user.name} (${userId}) joined room ${group.name} (${groupId})`);
+    logger.info(`User ${user.username} (${userId}) joined room ${group.name} (${groupId})`);
 
     // Confirm connection to the joining user
     ws.send(
@@ -75,7 +75,7 @@ export const initWebSocketServer = (httpServer) => {
       {
         type: MSG.USER_JOINED,
         userId,
-        userName: user.name,
+        userName: user.username,
         onlineUsers: getOnlineUsers(groupId),
       },
       userId
@@ -121,7 +121,7 @@ export const initWebSocketServer = (httpServer) => {
               linkPreview,  // null if no URL, preview object if URL found
             });
 
-            const populated = await savedMessage.populate("sender", "name avatar");
+            const populated = await savedMessage.populate("sender", "username");
 
             const payload = {
               type: MSG.NEW_MESSAGE,
@@ -153,7 +153,7 @@ export const initWebSocketServer = (httpServer) => {
             {
               type: MSG.TYPING,
               userId,
-              userName: user.name,
+              userName: user.username,
               isTyping: data.type === MSG.TYPING_START,
             },
             userId
@@ -169,12 +169,12 @@ export const initWebSocketServer = (httpServer) => {
     // ── Handle disconnect ────────────────────────────────────────────────────
     ws.on("close", () => {
       leaveRoom(groupId, userId, ws);
-      logger.info(`User ${user.name} (${userId}) left room ${group.name} (${groupId})`);
+      logger.info(`User ${user.username} (${userId}) left room ${group.name} (${groupId})`);
 
       broadcastToRoom(groupId, {
         type: MSG.USER_LEFT,
         userId,
-        userName: user.name,
+        userName: user.username,
         onlineUsers: getOnlineUsers(groupId),
       });
     });
