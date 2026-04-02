@@ -61,7 +61,7 @@ export default function ChatMessage({ message, isOwn }) {
     <div className="flex justify-start items-end gap-2 mb-2">
       {/* Avatar */}
       <div className="w-7 h-7 rounded-full bg-blue-200 flex items-center justify-center text-[11px] font-bold text-blue-800 shrink-0 mb-4">
-        {(message.sender?.username || '?').charAt(0).toUpperCase()}
+        {(message?.sender?.username || "?").charAt(0).toUpperCase()}
       </div>
       <div className="max-w-[70%]">
         <p className="text-[11px] text-slate-400 mb-1 ml-1">{message.sender?.username}</p>
