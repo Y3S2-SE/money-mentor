@@ -1,4 +1,5 @@
 import Course from "../models/course.model.js";
+import { processXPEvent } from "../utils/gamificationEngine.js";
 
 // @desc    Create a new course
 // @route   POST /api/course
@@ -140,24 +141,22 @@ export const getCourseById = async (req, res) => {
 // @access  Private/Admin
 export const updateCourse = async (req, res) => {
     try {
-        const allowedFields = ['title', 'description', 'category', 'difficulty', 'thumbnail', 'questions', 'passingScore', 'isPublished'];
-
-        const updates = {};
-        for (const field of allowedFields) {
-            if (req.body[field] !== undefined) {
-                updates[field] = req.body[field];
-            }
-        }
-
-        const course = await Course.findByIdAndUpdate(
-            req.params.id,
-            updates,
-            { new: true, runValidators: false }
-        );
+        const course = await Course.findById(req.params.id);
+        console.log('Incoming questions:', JSON.stringify(req.body.questions, null, 2));
 
         if (!course) {
             return res.status(404).json({ success: false, message: 'Course not found' });
         }
+
+        const allowedFields = ['title', 'description', 'category', 'difficulty', 'thumbnail', 'questions', 'passingScore', 'isPublished'];
+
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                course[field] = req.body[field];
+            }
+        }
+
+        await course.save();
 
         res.status(200).json({
             success: true,
@@ -252,6 +251,19 @@ export const submitCourse = async (req, res) => {
             pointsEarned: passed ? pointsEarned : 0 // only award points if passed
         });
         await course.save();
+
+        if (passed) {
+            try {
+                await processXPEvent(
+                    req.user._id,
+                    'complete_course',
+                    pointsEarned,
+                    `Completed course: ${course.title}`
+                );
+            } catch (xpErr) {
+                console.error('[XP] course completion award failed:', xpErr.message);
+            }
+        }
 
         res.status(200).json({
             success: true,
