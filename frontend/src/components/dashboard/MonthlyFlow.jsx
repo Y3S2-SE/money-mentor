@@ -39,11 +39,11 @@ const MonthlyFlow = ({ summary, categoryBreakdown, loading }) => {
         : 0;
 
     return (
-        <div className="bg-white rounded-2xl p-6 border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 font-body">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-                <h3 className="text-base font-semibold text-gray-800">Monthly Flow</h3>
-                <div className="flex items-center gap-3 text-xs text-gray-400">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                <h3 className="text-base font-semibold text-gray-800 font-headline">Monthly Flow</h3>
+                <div className="flex items-center gap-3 text-xs text-gray-400 font-label">
                     <span className="flex items-center gap-1">
                         <span className="w-2 h-2 rounded-full bg-blue-950 inline-block" />
                         Credits
@@ -58,10 +58,10 @@ const MonthlyFlow = ({ summary, categoryBreakdown, loading }) => {
             {/* Income bar */}
             <div className="mb-5">
                 <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Income</span>
+                    <span className="text-xs font-medium text-gray-400 uppercase tracking-wider font-label">Income</span>
                     <div className="flex items-center gap-1">
                         <ArrowUpRight className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-sm font-bold text-gray-900">
+                        <span className="text-sm font-bold text-gray-900 font-label">
                             {formatCurrency(summary.totalIncome)}
                         </span>
                     </div>
@@ -77,10 +77,10 @@ const MonthlyFlow = ({ summary, categoryBreakdown, loading }) => {
             {/* Expense bar */}
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Expenses</span>
+                    <span className="text-xs font-medium text-gray-400 uppercase tracking-wider font-label">Expenses</span>
                     <div className="flex items-center gap-1">
                         <ArrowDownRight className="w-3.5 h-3.5 text-red-400" />
-                        <span className="text-sm font-bold text-red-500">
+                        <span className="text-sm font-bold text-red-500 font-label">
                             {formatCurrency(summary.totalExpense)}
                         </span>
                     </div>
@@ -94,20 +94,20 @@ const MonthlyFlow = ({ summary, categoryBreakdown, loading }) => {
             </div>
 
             {/* Stats row */}
-            <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-50">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-50">
                 <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Savings Rate</p>
-                    <p className="text-lg font-bold text-gray-900">{summary.savingsRate}%</p>
+                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 font-label">Savings Rate</p>
+                    <p className="text-lg font-bold text-gray-900 font-headline">{summary.savingsRate}%</p>
                 </div>
-                <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Top Spend</p>
-                    <p className="text-lg font-bold text-gray-900 truncate">
+                <div className="min-w-0">
+                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 font-label">Top Spend</p>
+                    <p className="text-lg font-bold text-gray-900 truncate font-headline">
                         {topCategory?.category || '—'}
                     </p>
                 </div>
                 <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Daily Avg</p>
-                    <p className="text-lg font-bold text-gray-900">
+                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 font-label">Daily Avg</p>
+                    <p className="text-lg font-bold text-gray-900 font-headline">
                         {formatCurrency(dailyAvg)}
                     </p>
                 </div>
