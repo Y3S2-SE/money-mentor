@@ -1,7 +1,8 @@
 import GamificationProfile from "../models/gamification.model.js";
 import BadgeDefinition from "../models/badge.model.js";
-import { awardActionBadge, processXPEvent, processDailyLogin, XP_REWARDS } from "../utils/gamificationEngine.js";
+import { awardActionBadge, processXPEvent, processDailyLogin, XP_REWARDS, syncBadgesForUser } from "../utils/gamificationEngine.js";
 import { BADGE_SEEDS } from "../seeds/seedBadges.js";
+import Group from "../models/group.model.js";
 
 /**
  * @desc    Get current user's full gamification profile
@@ -18,9 +19,30 @@ export const getMyProfile = async (req, res) => {
             profile = await GamificationProfile.create({ user: req.user._id });
         }
 
+        let newlyUnlocked = [];
+
+        const shouldSync = req.query.sync === 'true';
+        if (shouldSync) {
+            try {
+                newlyUnlocked = await syncBadgesForUser(req.user._id) || [];
+                profile = await GamificationProfile
+                    .findOne({ user: req.user._id })
+                    .populate('earnedBadges.badge', 'key name description category xpReward');
+            } catch (syncErr) {
+                console.error('[Badge Sync] failed:', syncErr.message);
+            }
+        }
+
         res.status(200).json({
             success: true,
-            data:profile.toJSON()
+            data:profile.toJSON(),
+            newlyUnlocked: newlyUnlocked.map(b => ({
+                key: b.key,
+                name: b.name,
+                description: b.description,
+                category: b.category,
+                xpReward: b.xpReward ?? 0
+            }))
         });
     } catch (error) {
         res.status(500).json({
@@ -117,8 +139,25 @@ export const getLeaderboard = async (req, res) => {
     try {
         const limit = Math.min(parseInt(req.query.limit) || 10, 50);
 
+        const userGroups = await Group.find({
+            $or: [{ members: req.user._id }, { admin: req.user._id }]
+        }).select('members admin')
+
+        const friendIdSet = new Set();
+        friendIdSet.add(req.user._id.toString());
+
+        for (const group of userGroups) {
+            for (const memberId of group.members) {
+                friendIdSet.add(memberId.toString());
+            }
+            friendIdSet.add(group.admin.toString());
+        }
+
+        const friendIds = Array.from(friendIdSet);
+
+        // if user has no group, return only themselves
         const leaderboard = await GamificationProfile
-            .find()
+            .find({ user: { $in: friendIds } })
             .populate({
                 path: 'user',
                 match: { role: { $ne: 'admin' } },
@@ -129,9 +168,14 @@ export const getLeaderboard = async (req, res) => {
             .select('user totalXP level levelTitle currentStreak earnedBadges');
 
         const myProfile = await GamificationProfile.findOne({ user: req.user._id });
-        const myRank = myProfile ? await GamificationProfile.countDocuments({ totalXP: { $gt: myProfile.totalXP } }) + 1 : null;
 
-        const totalParticipants = await GamificationProfile.countDocuments();
+        // Rank within friends
+        const myRank = myProfile ? await GamificationProfile.countDocuments({ 
+            user: { $in: friendIds },
+            totalXP: { $gt: myProfile.totalXP } }) + 1 
+            : null;
+
+        const totalParticipants = await GamificationProfile.countDocuments({ user: { $in: friendIds } });
         const filteredLeaderboard = leaderboard.filter(entry => entry.user !== null);
 
         res.status(200).json({
@@ -148,7 +192,8 @@ export const getLeaderboard = async (req, res) => {
                     isCurrentUser: entry.user?._id.toString() === req.user._id.toString()
                 })),
                 myRank,
-                totalParticipants
+                totalParticipants,
+                friendCount: friendIds.length
             }
         });
     } catch (error) {
@@ -255,6 +300,7 @@ export const getXPHistory = async (req, res) => {
 export const seedBadges = async (req, res) => {
     try {
         let seeded = 0;
+        let updated= 0;
         let skipped = 0;
 
         for (const badge of BADGE_SEEDS) {
@@ -263,14 +309,19 @@ export const seedBadges = async (req, res) => {
                 await BadgeDefinition.create(badge);
                 seeded++;
             } else {
-                skipped++;
+                await BadgeDefinition.findOneAndUpdate(
+                    { key: badge.key },
+                    { $set: badge },
+                    { runValidators: true }
+                );
+                updated++;
             }
         }
 
         res.status(200).json({
             success: true,
-            message: `Seeding complete: ${seeded} created, ${skipped} already existed`,
-            data: { seeded, skipped }
+            message: `Seeding complete: ${seeded} created, ${updated} updated, ${skipped} already existed`,
+            data: { seeded, updated, skipped }
         });
     } catch (error) {
         res.status(500).json({
