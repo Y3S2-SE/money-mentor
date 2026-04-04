@@ -26,9 +26,18 @@ const messageSchema = new mongoose.Schema(
       image: String,
       siteName: String,
     },
+    // ── Badge share ────────────────────────────────────────────────────────
+    badgeShare: {
+      badgeId:     { type: mongoose.Schema.Types.ObjectId, ref: "BadgeDefinition" },
+      key:         String,   // e.g. "streak_7_days"  — used to load Lottie on client
+      name:        String,
+      description: String,
+      category:    String,
+      xpReward:    Number,
+    },
     type: {
       type: String,
-      enum: ["text", "system"],
+      enum: ["text", "system", "badge"],
       default: "text",
     },
     readBy: [
