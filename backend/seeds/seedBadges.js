@@ -42,10 +42,10 @@ export const BADGE_SEEDS = [
     {
         key: 'milestone_super_saver',
         name: 'Super Saver',
-        description: 'Saved $500 total',
+        description: 'Saved LKR 10,000 in a single month',
         category: 'milestone',
         xpReward: 30,
-        condition: { type: 'xp_total', threshold: 500 }
+        condition: { type: 'xp_total', threshold: 10000 }
     },
     {
         key: 'milestone_1000xp',
