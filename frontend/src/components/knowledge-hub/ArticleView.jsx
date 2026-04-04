@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
 import "@blocknote/mantine/style.css";
@@ -11,79 +11,25 @@ const ArticleView = ({ articleId, onBack, onComplete }) => {
     const [article, setArticle] = useState(null);
     const [loading, setLoading] = useState(true);
     const [secondsElapsed, setSecondsElapsed] = useState(0);
-    const [scrollPercentage, setScrollPercentage] = useState(0);
     const [isCompleting, setIsCompleting] = useState(false);
     const [alreadyCompleted, setAlreadyCompleted] = useState(false);
     const [completionAnim, setCompletionAnim] = useState(null);
-    
+
     const containerRef = useRef(null);
     const timerRef = useRef(null);
+    // FIX BUG 2 & 4: keep a ref to always-current secondsElapsed so handleComplete
+    // never reads a stale closure value, regardless of deps array.
+    const secondsElapsedRef = useRef(0);
 
-    // Initialize BlockNote editor in read-only mode
     const editor = useCreateBlockNote();
 
-    useEffect(() => {
-        fetchArticle();
-        import('../../assets/lottie/rising_star.json').then(data => setCompletionAnim(data.default));
-        return () => clearInterval(timerRef.current);
-    }, [articleId]);
-
-    const fetchArticle = async () => {
-        try {
-            setLoading(true);
-            const res = await getArticleById(articleId);
-            setArticle(res.data);
-            setAlreadyCompleted(res.data.isRead);
-
-            // Load content into editor
-            if (res.data.content) {
-                const blocks = typeof res.data.content === 'string' 
-                    ? JSON.parse(res.data.content) 
-                    : res.data.content;
-                
-                const initialBlocks = blocks.content || (Array.isArray(blocks) ? blocks : []);
-                editor.replaceBlocks(editor.topLevelBlocks, initialBlocks);
-            }
-
-            if (!res.data.isRead) {
-                timerRef.current = setInterval(() => {
-                    setSecondsElapsed(prev => prev + 1);
-                }, 1000);
-            }
-        } catch (error) {
-            toast.error('Failed to load article');
-            onBack();
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleScroll = (e) => {
-        const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-        const totalScrollable = scrollHeight - clientHeight;
-        if (totalScrollable <= 0) {
-            setScrollPercentage(100);
-            return;
-        }
-        const percentage = Math.min(100, Math.ceil((scrollTop / totalScrollable) * 100));
-        setScrollPercentage(prev => Math.max(prev, percentage));
-    };
-
-    useEffect(() => {
-        if (!article || alreadyCompleted || isCompleting) return;
-        const minSeconds = Math.floor(article.readTime * 60 * 0.6);
-        const hasScrolledEnough = scrollPercentage >= 80;
-        const hasTimeElapsed = secondsElapsed >= minSeconds;
-        if (hasScrolledEnough && hasTimeElapsed) {
-            handleComplete();
-        }
-    }, [secondsElapsed, scrollPercentage, article, alreadyCompleted]);
-
-    const handleComplete = async () => {
+    // FIX BUG 2 & 4: wrap in useCallback so it's stable, and read from the ref
+    // instead of the state variable to avoid the stale closure entirely.
+    const handleComplete = useCallback(async () => {
         if (isCompleting) return;
         setIsCompleting(true);
         try {
-            const res = await completeArticle(articleId, secondsElapsed);
+            const res = await completeArticle(articleId, secondsElapsedRef.current);
             setAlreadyCompleted(true);
             clearInterval(timerRef.current);
             toast.success(`Module Mastered! +${res.data.pointsEarned} XP`, { icon: '🚀' });
@@ -96,9 +42,72 @@ const ArticleView = ({ articleId, onBack, onComplete }) => {
         } finally {
             setIsCompleting(false);
         }
+    }, [articleId, isCompleting, onComplete]);
+
+    useEffect(() => {
+        // FIX BUG 3: clear any existing interval before starting a new one,
+        // so switching articleId doesn't leave a ghost timer running.
+        clearInterval(timerRef.current);
+        setSecondsElapsed(0);
+        secondsElapsedRef.current = 0;
+        setAlreadyCompleted(false);
+        setArticle(null);
+
+        fetchArticle();
+        import('../../assets/lottie/rising_star.json').then(data => setCompletionAnim(data.default));
+
+        return () => clearInterval(timerRef.current);
+    }, [articleId]);
+
+    const fetchArticle = async () => {
+        try {
+            setLoading(true);
+            const res = await getArticleById(articleId);
+            setArticle(res.data);
+            setAlreadyCompleted(res.data.isRead);
+
+            if (res.data.content) {
+                const blocks = typeof res.data.content === 'string'
+                    ? JSON.parse(res.data.content)
+                    : res.data.content;
+                const initialBlocks = blocks.content || (Array.isArray(blocks) ? blocks : []);
+                editor.replaceBlocks(editor.topLevelBlocks, initialBlocks);
+            }
+
+            if (!res.data.isRead) {
+                // FIX BUG 3: guard against a double-start (fetchArticle called twice)
+                clearInterval(timerRef.current);
+                timerRef.current = setInterval(() => {
+                    if (!document.hidden) {
+                        // FIX BUG 2: keep the ref in sync with every tick
+                        secondsElapsedRef.current += 1;
+                        setSecondsElapsed(prev => prev + 1);
+                    }
+                }, 1000);
+            }
+        } catch (error) {
+            toast.error('Failed to load article');
+            onBack();
+        } finally {
+            setLoading(false);
+        }
     };
 
-    if (loading) {
+
+
+    // Trigger completion purely on time — once the required seconds elapse, call the endpoint.
+    useEffect(() => {
+        if (!article || alreadyCompleted || isCompleting) return;
+
+        const minSeconds = Math.floor(article.readTime * 60 * 0.6);
+
+        if (secondsElapsed >= minSeconds) {
+            handleComplete();
+        }
+    }, [secondsElapsed, article, alreadyCompleted, isCompleting, handleComplete]);
+
+    // FIX BUG 5: guard the render-time computation so it only runs when article exists.
+    if (loading || !article) {
         return (
             <div className="flex flex-col items-center justify-center py-40 gap-4">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
@@ -107,6 +116,7 @@ const ArticleView = ({ articleId, onBack, onComplete }) => {
         );
     }
 
+    // Safe: article is guaranteed non-null past this point.
     const minSecondsRequired = Math.floor(article.readTime * 60 * 0.6);
     const progressPercent = Math.min(100, Math.ceil((secondsElapsed / minSecondsRequired) * 100));
 
@@ -128,16 +138,16 @@ const ArticleView = ({ articleId, onBack, onComplete }) => {
                     <div className="flex items-center gap-6">
                         {!alreadyCompleted && (
                             <div className="flex items-center gap-4">
-                                 <div className="text-right hidden sm:block">
-                                    <p className="text-[10px] uppercase font-bold tracking-tighter text-on-surface/30 leading-none mb-1">Engagement</p>
-                                    <p className="text-[11px] font-bold text-primary">{Math.max(progressPercent, scrollPercentage)}%</p>
-                                 </div>
-                                 <div className="w-20 h-2 bg-surface-container-low rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-primary transition-all duration-1000 ease-out" 
-                                        style={{ width: `${Math.max(progressPercent, scrollPercentage)}%` }} 
+                                <div className="text-right hidden sm:block">
+                                    <p className="text-[10px] uppercase font-bold tracking-tighter text-on-surface/30 leading-none mb-1">Focus Time</p>
+                                    <p className="text-[11px] font-bold text-primary">{progressPercent}%</p>
+                                </div>
+                                <div className="w-20 h-2 bg-surface-container-low rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-primary transition-all duration-1000 ease-out"
+                                        style={{ width: `${progressPercent}%` }}
                                     />
-                                 </div>
+                                </div>
                             </div>
                         )}
                         {alreadyCompleted && (
@@ -149,9 +159,8 @@ const ArticleView = ({ articleId, onBack, onComplete }) => {
                     </div>
                 </div>
 
-                <div 
-                    className="flex-1 overflow-y-auto px-6 md:px-16 py-12 md:py-20 scroll-smooth relative" 
-                    onScroll={handleScroll} 
+                <div
+                    className="flex-1 overflow-y-auto px-6 md:px-16 py-12 md:py-20 scroll-smooth relative"
                     ref={containerRef}
                 >
                     <div className="max-w-3xl mx-auto space-y-12">
@@ -167,11 +176,11 @@ const ArticleView = ({ articleId, onBack, onComplete }) => {
                                     {article.readTime} min read
                                 </span>
                             </div>
-                            
+
                             <h1 className="text-4xl md:text-6xl font-headline font-bold text-on-surface leading-[1.1] tracking-tight">
                                 {article.title}
                             </h1>
-                            
+
                             <p className="text-xl md:text-2xl text-on-surface-variant font-medium leading-relaxed max-w-2xl mx-auto italic opacity-70">
                                 {article.summary}
                             </p>
@@ -192,11 +201,11 @@ const ArticleView = ({ articleId, onBack, onComplete }) => {
                         {!alreadyCompleted && (
                             <div className="mt-24 p-10 md:p-16 bg-surface-container-low rounded-[48px] border border-primary/10 border-dashed text-center relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-20 translate-x-20 blur-3xl" />
-                                
+
                                 <div className="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner ring-1 ring-primary/20">
                                     <span className="material-symbols-outlined text-3xl">local_library</span>
                                 </div>
-                                
+
                                 <h3 className="text-2xl font-headline font-bold text-on-surface mb-2">Deep Learning in Progress</h3>
                                 <p className="text-on-surface-variant font-medium mb-10 max-w-sm mx-auto">
                                     Take your time to absorb the knowledge. Completing this will earn you <span className="text-primary font-bold">{article.pointsPerRead} XP</span>.
@@ -208,44 +217,40 @@ const ArticleView = ({ articleId, onBack, onComplete }) => {
                                             <span className={secondsElapsed >= minSecondsRequired ? 'text-emerald-500' : ''}>Focus Time</span>
                                             <div className={`w-2 h-2 rounded-full ${secondsElapsed >= minSecondsRequired ? 'bg-emerald-500' : 'bg-outline-variant/30 animate-pulse'}`} />
                                         </div>
-                                        <div className="flex flex-col gap-1 items-center">
-                                            <span className={scrollPercentage >= 80 ? 'text-emerald-500' : ''}>Knowledge Depth</span>
-                                            <div className={`w-2 h-2 rounded-full ${scrollPercentage >= 80 ? 'bg-emerald-500' : 'bg-outline-variant/30 animate-pulse'}`} />
-                                        </div>
                                     </div>
                                     <div className="w-56 h-1.5 bg-outline-variant/10 rounded-full overflow-hidden mt-2">
-                                         <div 
-                                            className="h-full bg-primary transition-all duration-1000" 
-                                            style={{ width: `${Math.min(100, (secondsElapsed / minSecondsRequired) * 50 + (scrollPercentage / 80) * 50)}%` }} 
-                                         />
+                                        <div
+                                            className="h-full bg-primary transition-all duration-1000"
+                                            style={{ width: `${progressPercent}%` }}
+                                        />
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         {alreadyCompleted && (
-                             <div className="mt-24 p-12 md:p-20 text-center space-y-6 bg-emerald-50/50 rounded-[56px] border border-emerald-100 relative overflow-hidden group">
+                            <div className="mt-24 p-12 md:p-20 text-center space-y-6 bg-emerald-50/50 rounded-[56px] border border-emerald-100 relative overflow-hidden group">
                                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                                
+
                                 <div className="w-24 h-24 mx-auto relative z-10">
                                     {completionAnim && <Lottie animationData={completionAnim} loop={false} />}
                                 </div>
-                                
+
                                 <div className="relative z-10">
                                     <h3 className="text-3xl md:text-4xl font-headline font-bold text-emerald-900 tracking-tight">Wisdom Unlocked!</h3>
                                     <p className="text-emerald-800/60 font-medium text-lg max-w-md mx-auto mt-2 leading-relaxed">
                                         You've successfully completed this module. Your understanding of financial concepts is growing!
                                     </p>
-                                    
-                                    <button 
-                                        onClick={onBack} 
+
+                                    <button
+                                        onClick={onBack}
                                         className="mt-10 px-10 py-4 bg-emerald-600 text-white rounded-3xl font-bold text-sm shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 hover:shadow-emerald-600/40 transition-all active:scale-95 flex items-center gap-3 mx-auto"
                                     >
                                         Explore Next Topic
                                         <span className="material-symbols-outlined text-[20px]">auto_stories</span>
                                     </button>
                                 </div>
-                             </div>
+                            </div>
                         )}
                     </div>
                     <div className="h-40 shrink-0" />

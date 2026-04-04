@@ -18,6 +18,8 @@ const AdminArticleForm = ({ initialData, onBack }) => {
         isPublished: false
     });
 
+    const [preview, setPreview] = useState(null);
+
     // Initialize BlockNote editor
     const editor = useCreateBlockNote();
 
@@ -31,6 +33,7 @@ const AdminArticleForm = ({ initialData, onBack }) => {
                 pointsPerRead: initialData.pointsPerRead || 50,
                 isPublished: initialData.isPublished || false
             });
+            setPreview(initialData.thumbnail || null);
 
             // Load content into editor
             if (initialData.content) {
@@ -49,6 +52,18 @@ const AdminArticleForm = ({ initialData, onBack }) => {
             }
         }
     }, [initialData, editor]);
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFormData({ ...formData, thumbnail: file });
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const handleSubmit = async (e, shouldPublish = null) => {
         if (e) e.preventDefault();
@@ -193,23 +208,44 @@ const AdminArticleForm = ({ initialData, onBack }) => {
                             </div>
 
                             {/* Thumbnail */}
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] uppercase font-bold tracking-widest text-on-surface/50 px-1">Thumbnail URL (Optional)</label>
-                                <input
-                                    type="text"
-                                    value={formData.thumbnail}
-                                    onChange={(e) => setFormData({ ...formData, thumbnail: e.target.value })}
-                                    placeholder="https://images.unsplash.com/..."
-                                    className="w-full px-4 py-3 bg-surface-bright rounded-2xl border border-outline-variant/20 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium"
-                                />
-                                {formData.thumbnail && (
-                                    <div className="mt-4 rounded-2xl border border-outline-variant/10 overflow-hidden aspect-video relative group">
-                                        <img src={formData.thumbnail} alt="Preview" className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-widest">
-                                            Preview Thumbnail
-                                        </div>
+                            <div className="space-y-3">
+                                <label className="text-[10px] uppercase font-bold tracking-widest text-on-surface/50 px-1">Article Thumbnail</label>
+                                <div className="space-y-4">
+                                    <div className={`relative group w-full ${preview ? 'aspect-video' : 'aspect-[21/9]'} rounded-2xl overflow-hidden border border-outline-variant/20 bg-surface-bright transition-all`}>
+                                        {preview ? (
+                                            <>
+                                                <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => { setPreview(null); setFormData({...formData, thumbnail: ''}); }}
+                                                        className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 transition-all flex items-center justify-center"
+                                                    >
+                                                        <span className="material-symbols-outlined">delete</span>
+                                                    </button>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="w-full h-full flex flex-col items-center justify-center text-on-surface/30">
+                                                <span className="material-symbols-outlined text-4xl mb-2">image</span>
+                                                <p className="text-[10px] font-bold uppercase tracking-widest">No Image Selected</p>
+                                            </div>
+                                        )}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleFileChange}
+                                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                        />
                                     </div>
-                                )}
+                                    <button
+                                        type="button"
+                                        className="w-full py-3 bg-surface-bright rounded-2xl border border-outline-variant/20 text-[10px] font-bold uppercase tracking-widest text-on-surface/60 hover:bg-surface hover:text-primary transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <span className="material-symbols-outlined text-[18px]">cloud_upload</span>
+                                        {preview ? 'Change Image' : 'Upload Image'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
