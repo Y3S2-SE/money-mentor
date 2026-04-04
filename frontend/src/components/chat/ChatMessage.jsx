@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import ChatBadgeCard from './ChatBadgeCard';
+import { addToast } from '../../store/slices/toastSlice';
 
 function LinkPreviewCard({ preview }) {
   if (!preview?.url) return null;
@@ -49,14 +51,21 @@ function DeleteModal({ message, onConfirm, onCancel, isDeleting }) {
 export default function ChatMessage({ message, isOwn, groupId, onDelete }) {
   const [showModal, setShowModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const dispatch = useDispatch();
 
   const time = new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   const handleDeleteConfirm = async () => {
     setIsDeleting(true);
-    try { await onDelete(groupId, message._id); setShowModal(false); }
-    catch (err) { console.error('Delete failed:', err); }
-    finally { setIsDeleting(false); }
+    try {
+      await onDelete(groupId, message._id);
+      setShowModal(false);
+      dispatch(addToast({ type: 'success', message: 'Message deleted', subMessage: 'Your message has been removed' }));
+    } catch (err) {
+      dispatch(addToast({ type: 'error', message: 'Failed to delete message', subMessage: 'Please try again later' }));
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Badge message
