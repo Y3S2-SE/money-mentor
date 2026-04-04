@@ -20,6 +20,7 @@ import chatRoutes from './routes/chat.route.js';
 import youtubeRoutes from './routes/youtube.route.js';
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import chatRoomRoutes from "./routes/chatRoom.route.js";
+import articleRoutes from './routes/article.route.js';
 import { apiLimiter, authLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
@@ -60,6 +61,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/youtube', youtubeRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/chat-room", chatRoomRoutes);
+app.use('/api/articles', articleRoutes);
 
 // Error handling 
 app.use(notFound);

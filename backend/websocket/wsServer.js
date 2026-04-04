@@ -8,6 +8,8 @@ import {
   getOnlineUsers,
 } from "./roomManager.js";
 import Message from "../models/message.model.js";
+import GamificationProfile from "../models/gamification.model.js";
+import BadgeDefinition from "../models/badge.model.js";
 import { logger } from "../utils/logger.js";
 import { getLinkPreview } from "../utils/getLinkPreview.js";
 
@@ -16,16 +18,17 @@ const MSG = {
   // Inbound (client → server)
   SEND_MESSAGE: "send_message",
   TYPING_START: "typing_start",
-  TYPING_STOP: "typing_stop",
+  TYPING_STOP:  "typing_stop",
+  SHARE_BADGE:  "share_badge",    // ← NEW
 
   // Outbound (server → client)
-  NEW_MESSAGE: "new_message",
-  USER_JOINED: "user_joined",
-  USER_LEFT: "user_left",
+  NEW_MESSAGE:  "new_message",
+  USER_JOINED:  "user_joined",
+  USER_LEFT:    "user_left",
   ONLINE_USERS: "online_users",
-  TYPING: "typing",
-  ERROR: "error",
-  CONNECTED: "connected",
+  TYPING:       "typing",
+  ERROR:        "error",
+  CONNECTED:    "connected",
 };
 
 // ─── URL extractor ────────────────────────────────────────────────────────────
@@ -40,10 +43,10 @@ export const initWebSocketServer = (httpServer) => {
   logger.info("WebSocket server initialized at path /ws");
 
   wss.on("connection", async (ws, request) => {
-    let user = null;
+    let user  = null;
     let group = null;
 
-    // ── Authenticate ────────────────────────────────────────────────────────
+    // ── Authenticate ─────────────────────────────────────────────────────────
     try {
       ({ user, group } = await authenticateWsConnection(request));
     } catch (err) {
@@ -52,14 +55,13 @@ export const initWebSocketServer = (httpServer) => {
       return;
     }
 
-    const userId = user._id.toString();
+    const userId  = user._id.toString();
     const groupId = group._id.toString();
 
-    // ── Join room ────────────────────────────────────────────────────────────
+    // ── Join room ─────────────────────────────────────────────────────────────
     joinRoom(groupId, userId, ws);
-    logger.info(`User ${user.name} (${userId}) joined room ${group.name} (${groupId})`);
+    logger.info(`User ${user.username} (${userId}) joined room ${group.name} (${groupId})`);
 
-    // Confirm connection to the joining user
     ws.send(
       JSON.stringify({
         type: MSG.CONNECTED,
@@ -69,19 +71,18 @@ export const initWebSocketServer = (httpServer) => {
       })
     );
 
-    // Notify others in the room
     broadcastToRoom(
       groupId,
       {
         type: MSG.USER_JOINED,
         userId,
-        userName: user.name,
+        userName: user.username,
         onlineUsers: getOnlineUsers(groupId),
       },
       userId
     );
 
-    // ── Handle incoming messages ─────────────────────────────────────────────
+    // ── Handle incoming messages ──────────────────────────────────────────────
     ws.on("message", async (raw) => {
       let data;
 
@@ -92,7 +93,8 @@ export const initWebSocketServer = (httpServer) => {
       }
 
       switch (data.type) {
-        // ── Chat message ───────────────────────────────────────────────────
+
+        // ── Chat message ────────────────────────────────────────────────────
         case MSG.SEND_MESSAGE: {
           const content = data.content?.trim();
           if (!content) {
@@ -107,35 +109,33 @@ export const initWebSocketServer = (httpServer) => {
           }
 
           try {
-            // ── Fetch link preview if URL is present ─────────────────────
-            const url = extractUrl(content);
+            const url         = extractUrl(content);
             const linkPreview = url ? await getLinkPreview(url) : null;
 
-            // ── Persist to DB ─────────────────────────────────────────────
             const savedMessage = await Message.create({
               groupId,
               sender: userId,
               content,
               type: "text",
               readBy: [userId],
-              linkPreview,  // null if no URL, preview object if URL found
+              linkPreview,
             });
 
-            const populated = await savedMessage.populate("sender", "name avatar");
+            const populated = await savedMessage.populate("sender", "username");
 
             const payload = {
               type: MSG.NEW_MESSAGE,
               message: {
-                _id: populated._id,
-                content: populated.content,
-                sender: populated.sender,
+                _id:         populated._id,
+                content:     populated.content,
+                sender:      populated.sender,
                 groupId,
-                createdAt: populated.createdAt,
-                linkPreview: populated.linkPreview ?? null, // 👈 include in broadcast
+                type:        "text",
+                createdAt:   populated.createdAt,
+                linkPreview: populated.linkPreview ?? null,
               },
             };
 
-            // Send to everyone in the room (including sender for confirmation)
             broadcastToRoom(groupId, payload);
             sendToUser(groupId, userId, payload);
           } catch (err) {
@@ -145,15 +145,94 @@ export const initWebSocketServer = (httpServer) => {
           break;
         }
 
-        // ── Typing indicators ──────────────────────────────────────────────
+        // ── Share badge ─────────────────────────────────────────────────────
+        case MSG.SHARE_BADGE: {
+          const { badgeId } = data;
+
+          if (!badgeId) {
+            return ws.send(
+              JSON.stringify({ type: MSG.ERROR, message: "badgeId is required" })
+            );
+          }
+
+          try {
+            // 1. Verify the user actually owns this badge
+            const profile = await GamificationProfile.findOne({ user: userId });
+            if (!profile) {
+              return ws.send(
+                JSON.stringify({ type: MSG.ERROR, message: "Gamification profile not found" })
+              );
+            }
+
+            const owns = profile.earnedBadges.some(
+              (b) => b.badge.toString() === badgeId
+            );
+            if (!owns) {
+              return ws.send(
+                JSON.stringify({ type: MSG.ERROR, message: "You have not earned this badge" })
+              );
+            }
+
+            // 2. Fetch badge definition for display data
+            const badge = await BadgeDefinition.findById(badgeId);
+            if (!badge) {
+              return ws.send(
+                JSON.stringify({ type: MSG.ERROR, message: "Badge not found" })
+              );
+            }
+
+            // 3. Save as a "badge" type message
+            const savedMessage = await Message.create({
+              groupId,
+              sender:  userId,
+              content: `🏅 shared a badge: ${badge.name}`,
+              type:    "badge",
+              readBy:  [userId],
+              badgeShare: {
+                badgeId:     badge._id,
+                key:         badge.key,
+                name:        badge.name,
+                description: badge.description,
+                category:    badge.category,
+                xpReward:    badge.xpReward,
+              },
+            });
+
+            const populated = await savedMessage.populate("sender", "username");
+
+            const payload = {
+              type: MSG.NEW_MESSAGE,
+              message: {
+                _id:        populated._id,
+                content:    populated.content,
+                sender:     populated.sender,
+                groupId,
+                type:       "badge",
+                badgeShare: populated.badgeShare,
+                createdAt:  populated.createdAt,
+              },
+            };
+
+            // Broadcast to everyone including sender
+            broadcastToRoom(groupId, payload);
+            sendToUser(groupId, userId, payload);
+
+          } catch (err) {
+            logger.error("Error sharing badge:", err);
+            ws.send(JSON.stringify({ type: MSG.ERROR, message: "Failed to share badge" }));
+          }
+          break;
+        }
+
+        // ── Typing indicators ───────────────────────────────────────────────
         case MSG.TYPING_START:
         case MSG.TYPING_STOP: {
           broadcastToRoom(
             groupId,
             {
-              type: MSG.TYPING,
+              type:     MSG.TYPING,
               userId,
-              userName: user.name,
+              userName: user.username,
               isTyping: data.type === MSG.TYPING_START,
             },
             userId
@@ -162,19 +241,21 @@ export const initWebSocketServer = (httpServer) => {
         }
 
         default:
-          ws.send(JSON.stringify({ type: MSG.ERROR, message: `Unknown message type: ${data.type}` }));
+          ws.send(
+            JSON.stringify({ type: MSG.ERROR, message: `Unknown message type: ${data.type}` })
+          );
       }
     });
 
-    // ── Handle disconnect ────────────────────────────────────────────────────
+    // ── Handle disconnect ─────────────────────────────────────────────────────
     ws.on("close", () => {
       leaveRoom(groupId, userId, ws);
-      logger.info(`User ${user.name} (${userId}) left room ${group.name} (${groupId})`);
+      logger.info(`User ${user.username} (${userId}) left room ${group.name} (${groupId})`);
 
       broadcastToRoom(groupId, {
-        type: MSG.USER_LEFT,
+        type:        MSG.USER_LEFT,
         userId,
-        userName: user.name,
+        userName:    user.username,
         onlineUsers: getOnlineUsers(groupId),
       });
     });

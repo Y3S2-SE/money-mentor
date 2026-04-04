@@ -8,9 +8,14 @@ export default function TypingIndicator({ typingUsers }) {
 
   return (
     <div className="flex items-end gap-2 mb-2">
-      <div className="w-7 h-7 rounded-full bg-blue-200 flex items-center justify-center text-[11px] font-bold text-blue-800 shrink-0">
-        {typingUsers[0].userName.charAt(0).toUpperCase()}
-      </div>
+      {typingUsers.map((user) => (
+        <div
+          key={user.userId}
+          className="w-7 h-7 rounded-full bg-blue-200 flex items-center justify-center text-[11px] font-bold text-blue-800 shrink-0"
+        >
+          {(typingUsers?.userName || "?").charAt(0).toUpperCase()}
+        </div>
+      ))}
       <div className="bg-white border border-slate-100 px-4 py-2.5 rounded-2xl rounded-tl-sm shadow-sm">
         <div className="flex items-center gap-2">
           {/* Animated dots */}

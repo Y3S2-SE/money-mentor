@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Send, Wifi, WifiOff, Users } from 'lucide-react';
+import { X, Send, Wifi, WifiOff, Users, Award } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useChat } from '../../hooks/useChat';
 import ChatMessage from './ChatMessage';
 import TypingIndicator from './TypingIndicator';
+import BadgePicker from './BadgePicker';
 
 export default function ChatWindow({ group, onClose }) {
   const { user } = useSelector((state) => state.auth);
-  const [input, setInput] = useState('');
+  const [input, setInput]               = useState('');
+  const [showBadgePicker, setShowBadgePicker] = useState(false);
   const isTypingRef   = useRef(false);
   const typingTimeout = useRef(null);
   const bottomRef     = useRef(null);
@@ -20,16 +22,15 @@ export default function ChatWindow({ group, onClose }) {
     isLoading,
     error,
     sendMessage,
+    sendBadge,          // ← from useChat
     sendTypingStart,
     sendTypingStop,
   } = useChat(group._id);
 
-  // Auto-scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typingUsers]);
 
-  // ── Handle input & typing indicator ──────────────────────────────────
   const handleInputChange = (e) => {
     setInput(e.target.value);
 
@@ -38,7 +39,6 @@ export default function ChatWindow({ group, onClose }) {
       sendTypingStart();
     }
 
-    // Reset the stop-typing timer on every keystroke
     clearTimeout(typingTimeout.current);
     typingTimeout.current = setTimeout(() => {
       isTypingRef.current = false;
@@ -46,7 +46,6 @@ export default function ChatWindow({ group, onClose }) {
     }, 1500);
   };
 
-  // ── Send message ──────────────────────────────────────────────────────
   const handleSend = useCallback(() => {
     const trimmed = input.trim();
     if (!trimmed || !isConnected) return;
@@ -54,7 +53,6 @@ export default function ChatWindow({ group, onClose }) {
     sendMessage(trimmed);
     setInput('');
 
-    // Stop typing indicator immediately on send
     clearTimeout(typingTimeout.current);
     if (isTypingRef.current) {
       isTypingRef.current = false;
@@ -68,6 +66,13 @@ export default function ChatWindow({ group, onClose }) {
       handleSend();
     }
   };
+
+  // ── Badge share ───────────────────────────────────────────────────────────
+  const handleBadgeSelect = useCallback((badgeId) => {
+    if (!isConnected) return;
+    sendBadge(badgeId);
+    setShowBadgePicker(false);
+  }, [isConnected, sendBadge]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
@@ -94,12 +99,10 @@ export default function ChatWindow({ group, onClose }) {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Online count */}
             <div className="flex items-center gap-1 text-xs text-slate-400">
               <Users className="w-3.5 h-3.5" />
               <span>{onlineUsers.length} online</span>
             </div>
-            {/* Close */}
             <button
               onClick={onClose}
               className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-lg transition"
@@ -134,8 +137,6 @@ export default function ChatWindow({ group, onClose }) {
                   : msg.sender;
                 const isOwn = senderId == user?.id;
 
-                console.log('sender:', msg.sender, '| user:', user?._id, '| isOwn:', isOwn);
-
                 return (
                   <ChatMessage
                     key={msg._id}
@@ -153,6 +154,30 @@ export default function ChatWindow({ group, onClose }) {
         {/* ── Input ── */}
         <div className="bg-white border-t border-slate-100 px-4 py-3 shrink-0">
           <div className="flex items-end gap-2">
+
+            {/* Badge picker button + popover */}
+            <div className="relative shrink-0">
+              <button
+                onClick={() => setShowBadgePicker((v) => !v)}
+                disabled={!isConnected}
+                title="Share a badge"
+                className={`w-10 h-10 rounded-xl border flex items-center justify-center transition
+                  ${showBadgePicker
+                    ? 'bg-blue-950 text-white border-blue-950'
+                    : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'}
+                  disabled:opacity-40 disabled:cursor-not-allowed`}
+              >
+                <Award className="w-4 h-4" />
+              </button>
+
+              {showBadgePicker && (
+                <BadgePicker
+                  onSelect={handleBadgeSelect}
+                  onClose={() => setShowBadgePicker(false)}
+                />
+              )}
+            </div>
+
             <textarea
               value={input}
               onChange={handleInputChange}
@@ -163,6 +188,7 @@ export default function ChatWindow({ group, onClose }) {
               className="flex-1 resize-none bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-950/20 focus:border-blue-950/30 transition disabled:opacity-50 max-h-28 overflow-y-auto"
               style={{ lineHeight: '1.5' }}
             />
+
             <button
               onClick={handleSend}
               disabled={!input.trim() || !isConnected}
@@ -171,7 +197,9 @@ export default function ChatWindow({ group, onClose }) {
               <Send className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-[10px] text-slate-300 mt-1.5 ml-1">Enter to send · Shift+Enter for new line</p>
+          <p className="text-[10px] text-slate-300 mt-1.5 ml-1">
+            Enter to send · Shift+Enter for new line
+          </p>
         </div>
 
       </div>
