@@ -1,4 +1,5 @@
 import * as savingsGoalService from "../services/savingsGoal.service.js";
+import { awardActionBadge } from "../utils/gamificationEngine.js";
 
 // POST /api/dashboard/savings-goal
 export const createSavingsGoal = async (req, res, next) => {
@@ -7,6 +8,12 @@ export const createSavingsGoal = async (req, res, next) => {
       req.user._id,
       req.body
     );
+
+    try {
+      await awardActionBadge(req.user._id, 'first_saving_goal');
+    } catch (badgeErr) {
+      console.error('[Badge] first_saving_goal award failed:', badgeErr)
+    }
 
     return res.status(201).json({
       success: true,
