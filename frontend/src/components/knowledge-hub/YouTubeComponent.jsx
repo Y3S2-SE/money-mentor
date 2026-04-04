@@ -29,7 +29,7 @@ const YouTubeComponent = ({ activeChatId, refreshTrigger }) => {
   };
 
   return (
-    <div className="w-[30%] bg-surface-bright rounded-2xl border border-outline-variant/30 hidden xl:flex flex-col relative overflow-hidden shadow-sm h-full">
+    <div className="flex-1 bg-surface-bright rounded-2xl border border-outline-variant/30 flex flex-col relative overflow-hidden shadow-sm h-full w-full min-w-0">
       <div className="p-4 border-b border-outline-variant/30 bg-red-500/5 backdrop-blur-sm shrink-0 flex items-center gap-3">
         <div className="p-2 bg-red-500/10 rounded-lg text-red-500">
           <span className="material-symbols-outlined">play_circle</span>

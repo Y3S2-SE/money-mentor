@@ -47,7 +47,7 @@ const AdminPage = () => {
     }
   };
 
-  const handleBackToList = (result) => {
+  const handleBackToCourseList = (result) => {
     if (result === 'saved') {
       dispatch(addToast({
         type: 'success',
