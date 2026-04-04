@@ -5,10 +5,11 @@ import { useChat } from '../../hooks/useChat';
 import ChatMessage from './ChatMessage';
 import TypingIndicator from './TypingIndicator';
 import BadgePicker from './BadgePicker';
+import { deleteMessage } from '../../services/messageService'; // ← adjust path if needed
 
 export default function ChatWindow({ group, onClose }) {
   const { user } = useSelector((state) => state.auth);
-  const [input, setInput]               = useState('');
+  const [input, setInput]                     = useState('');
   const [showBadgePicker, setShowBadgePicker] = useState(false);
   const isTypingRef   = useRef(false);
   const typingTimeout = useRef(null);
@@ -22,9 +23,10 @@ export default function ChatWindow({ group, onClose }) {
     isLoading,
     error,
     sendMessage,
-    sendBadge,          // ← from useChat
+    sendBadge,
     sendTypingStart,
     sendTypingStop,
+    removeMessage,     
   } = useChat(group._id);
 
   useEffect(() => {
@@ -67,12 +69,21 @@ export default function ChatWindow({ group, onClose }) {
     }
   };
 
-  // ── Badge share ───────────────────────────────────────────────────────────
   const handleBadgeSelect = useCallback((badgeId) => {
     if (!isConnected) return;
     sendBadge(badgeId);
     setShowBadgePicker(false);
   }, [isConnected, sendBadge]);
+
+  // delete message handler
+  const handleDeleteMessage = useCallback(async (groupId, messageId) => {
+    try {
+      await deleteMessage(groupId, messageId);
+      removeMessage(messageId);
+    } catch (err) {
+      console.error('Delete error:', err);
+    }
+  }, [removeMessage]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
@@ -142,6 +153,8 @@ export default function ChatWindow({ group, onClose }) {
                     key={msg._id}
                     message={msg}
                     isOwn={isOwn}
+                    groupId={group._id}           
+                    onDelete={handleDeleteMessage}  
                   />
                 );
               })}
@@ -155,7 +168,6 @@ export default function ChatWindow({ group, onClose }) {
         <div className="bg-white border-t border-slate-100 px-4 py-3 shrink-0">
           <div className="flex items-end gap-2">
 
-            {/* Badge picker button + popover */}
             <div className="relative shrink-0">
               <button
                 onClick={() => setShowBadgePicker((v) => !v)}
