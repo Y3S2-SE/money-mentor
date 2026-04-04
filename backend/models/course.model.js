@@ -18,10 +18,6 @@ const questionSchema = new mongoose.Schema({
         type: Number,
         min: 0,
         required: [true, 'Correct answer index is required'],
-        validate: {
-            validator: function (v) { return v !== null && v !== undefined; },
-            message: 'Correct answer index is required'
-        }
     },
     explanation: {
         type: String,
