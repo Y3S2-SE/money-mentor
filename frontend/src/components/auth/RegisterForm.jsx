@@ -3,6 +3,95 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { register, clearMessage } from '../../store/slices/authSlice';
 
+const CHECKS = [
+    { label: 'At least 6 characters', test: (p) => p.length >= 6 },
+    { label: 'One uppercase letter',  test: (p) => /[A-Z]/.test(p) },
+    { label: 'One lowercase letter',  test: (p) => /[a-z]/.test(p) },
+    { label: 'One number',            test: (p) => /\d/.test(p) },
+];
+
+const getStrength = (password) => {
+    if (!password) return { score: 0, label: '', color: '' };
+    const passed = CHECKS.filter(c => c.test(password)).length;
+    if (passed <= 1) return { score: 1, label: 'Weak',   color: '#ef4444' };
+    if (passed === 2) return { score: 2, label: 'Fair',   color: '#f97316' };
+    if (passed === 3) return { score: 3, label: 'Good',   color: '#eab308' };
+    return             { score: 4, label: 'Strong', color: '#22c55e' };
+};
+
+const PasswordStrength = ({ password }) => {
+    if (!password) return null;
+
+    const strength = getStrength(password, CHECKS);
+
+    return (
+        <div className="mt-3 space-y-2.5">
+            {/* Strength bar */}
+            <div className="flex items-center gap-2">
+                <div className="flex gap-1 flex-1">
+                    {[1, 2, 3, 4].map((level) => (
+                        <div
+                            key={level}
+                            className="h-0.5 flex-1 rounded-full transition-all duration-300"
+                            style={{
+                                backgroundColor: strength.score >= level
+                                    ? strength.color
+                                    : 'rgba(255,255,255,0.1)',
+                            }}
+                        />
+                    ))}
+                </div>
+                <span
+                    className="font-label text-[9px] uppercase tracking-widest shrink-0 transition-colors duration-300"
+                    style={{ color: strength.color }}
+                >
+                    {strength.label}
+                </span>
+            </div>
+
+            {/* Requirement checklist */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                {CHECKS.map(({ label, test }) => {
+                    const passed = test(password);
+                    return (
+                        <div key={label} className="flex items-center gap-1.5">
+                            <div
+                                className="w-3 h-3 rounded-full flex items-center justify-center shrink-0
+                                transition-all duration-200"
+                                style={{
+                                    backgroundColor: passed
+                                        ? 'rgba(34,197,94,0.15)'
+                                        : 'rgba(255,255,255,0.05)',
+                                    border: passed
+                                        ? '1px solid rgba(34,197,94,0.4)'
+                                        : '1px solid rgba(255,255,255,0.1)',
+                                }}
+                            >
+                                {passed && (
+                                    <svg className="w-1.5 h-1.5 text-green-400" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                )}
+                            </div>
+                            <span
+                                className="font-label text-[9px] uppercase tracking-wider transition-colors duration-200"
+                                style={{
+                                    color: passed
+                                        ? 'rgba(134,239,172,0.8)'
+                                        : 'rgba(255,255,255,0.25)',
+                                }}
+                            >
+                                {label}
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
 const RegisterForm = () => {
   const [formData, setFormData] = useState({
     username: '',
@@ -130,7 +219,7 @@ const RegisterForm = () => {
         {errors.email && <p className="absolute -bottom-5 left-0 text-[9px] text-red-400 tracking-wider font-label uppercase">{errors.email}</p>}
       </div>
 
-      <div className={inputContainerStyle}>
+      <div className="relative group mb-10">
         <label htmlFor="password" className={labelStyle}>Password</label>
         <div className="relative">
           <input
@@ -157,6 +246,7 @@ const RegisterForm = () => {
         {errors.password && (
           <p className="absolute -bottom-5 left-0 text-[9px] text-red-400 tracking-wider font-label uppercase">{errors.password}</p>
         )}
+        <PasswordStrength password={formData.password}/>
       </div>
 
       <div className={inputContainerStyle}>

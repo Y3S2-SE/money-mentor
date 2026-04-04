@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminCourseList from '../components/admin/AdminCourseList';
 import AdminCourseForm from '../components/admin/AdminCourseForm';
+import { getCourseById } from '../services/courseService';
+import AdminUserList from '../components/admin/AdminUserList';
+import { addToast } from '../store/slices/toastSlice';
+import { useDispatch } from 'react-redux';
 import AdminArticleList from '../components/admin/AdminArticleList';
 import AdminArticleForm from '../components/admin/AdminArticleForm';
 
 const AdminPage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('courses');
   const [showProfile, setShowProfile] = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -14,6 +19,7 @@ const AdminPage = () => {
   // Courses state
   const [courseView, setCourseView] = useState('list'); // 'list', 'create', 'edit'
   const [editingCourse, setEditingCourse] = useState(null);
+  const [loadingCourse, setLoadingCourse] = useState(false);
 
   // Articles state
   const [articleView, setArticleView] = useState('list'); // 'list', 'create', 'edit'
@@ -24,12 +30,31 @@ const AdminPage = () => {
     setCourseView('create');
   };
 
-  const handleEditCourse = (course) => {
-    setEditingCourse(course);
-    setCourseView('edit');
+  const handleEditCourse = async (course) => {
+    setLoadingCourse(true);
+    try {
+      const res = await getCourseById(course._id);
+      setEditingCourse(res.data);
+      setCourseView('edit');
+    } catch (error) {
+      dispatch(addToast({                            
+        type: 'error',
+        message: 'Failed to load course',
+        subMessage: 'Please try again.',
+      }));
+    } finally {
+      setLoadingCourse(false);
+    }
   };
 
-  const handleBackToCourseList = () => {
+  const handleBackToList = (result) => {
+    if (result === 'saved') {
+      dispatch(addToast({
+        type: 'success',
+        message: courseView === 'edit' ? 'Course updated!' : 'Course created!',
+        subMessage: editingCourse?.title || 'Changes have been saved.',
+      }));
+    }
     setEditingCourse(null);
     setCourseView('list');
   };
@@ -185,6 +210,14 @@ const AdminPage = () => {
                 onEditCourse={handleEditCourse} 
               />
             )}
+
+            {loadingCourse && (
+              <div className="flex items-center justify-center py-20 text-on-surface/50">
+                <span className="material-symbols-outlined animate-spin mr-2">progress activity</span>
+                Loading course...
+              </div>
+            )}
+
             {(courseView === 'create' || courseView === 'edit') && (
               <AdminCourseForm 
                 initialData={editingCourse} 
@@ -212,13 +245,7 @@ const AdminPage = () => {
         )}
 
         {activeTab === 'users' && (
-          <div className="p-16 text-center bg-white rounded-3xl border border-outline-variant/20 text-on-surface/50 mt-4 shadow-sm">
-            <div className="w-20 h-20 bg-outline-variant/10 rounded-full flex items-center justify-center mx-auto mb-4">
-               <span className="material-symbols-outlined text-4xl">group</span>
-            </div>
-            <h2 className="text-xl font-headline font-bold text-on-surface mb-2">User Management</h2>
-            <p className="text-sm">This interface is currently under construction.</p>
-          </div>
+          <AdminUserList />
         )}
       </div>
     </div>

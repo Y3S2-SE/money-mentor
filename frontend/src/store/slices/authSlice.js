@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import authService from '../../services/authService';
+import { addToast } from './toastSlice';
 
 // Get user from localStorage
 const user = JSON.parse(localStorage.getItem('user'));
@@ -16,12 +17,58 @@ const initialState = {
     pendingBadges: []
 };
 
+const dispatchSequential = (thunkAPI, toasts, delayBetween = 1500) => {
+    toasts.forEach((toast, index) => {
+        if (!toast)  return;
+        setTimeout(() => {
+            thunkAPI.dispatch(addToast(toast));
+        }, index * delayBetween);
+    });
+};
+
 // Register user
 export const register = createAsyncThunk(
     'auth/register',
     async (userData, thunkAPI) => {
         try {
             const response = await authService.register(userData);
+            const reward = response.data?.dailyLogin;
+
+            const toastSequence = [];
+
+            toastSequence.push({
+                type: 'success',
+                message: 'Welcome to MoneyMentor!',
+                subMessage: 'Your account has been created successfully'
+            });
+
+            if (reward && !reward.alreadyCheckedIn) {
+                toastSequence.push({
+                    type: 'streak',
+                    message: 'Daily login reward!',
+                    subMessage: `+${reward.xpAwarded} XP awarded`
+                });
+            }
+
+
+            if (reward?.leveledUp) {
+                toastSequence.push({
+                    type: 'level',
+                    message: `Level up! You are now Level ${reward.level}`,
+                    subMessage: reward.levelTitle
+                });
+            }
+
+            reward?.newlyEarnedBadges?.forEach(badge => {
+                toastSequence.push({
+                    type: 'badge',
+                    message: `Badge unlocked: ${badge.name}!`,
+                    subMessage: `+${badge.xpReward} XP · ${badge.description}`
+                });
+            });
+
+            dispatchSequential(thunkAPI, toastSequence, 1800);
+
             return response.data;
         } catch (error) {
             const message = error.response?.data?.message || error.message || 'Registration failed';
@@ -36,6 +83,42 @@ export const login = createAsyncThunk(
     async (credentials, thunkAPI) => {
         try {
             const response = await authService.login(credentials);
+            const reward = response.data?.dailyLogin;
+
+            const toastSequence = [];
+
+            toastSequence.push({
+                type: 'info',
+                message: `Welcome back, ${response.data.user.username}!`,
+                subMessage: 'Great to see you again'
+            });
+
+            if (reward && !reward.alreadyCheckedIn) {
+                toastSequence.push({
+                    type: 'streak',
+                    message: `Day ${reward.currentStreak} streak!`,
+                    subMessage: `+${reward.xpAwarded} XP for daily login`
+                });
+            } 
+
+            if (reward?.leveledUp) {
+                toastSequence.push({
+                    type: 'level',
+                    message: `Level up! You are now Level ${reward.level}`,
+                    subMessage: reward.levelTitle
+                });
+            }
+
+            reward?.newlyEarnedBadges?.forEach(badge => {
+                toastSequence.push({
+                    type: 'badge',
+                    message: `Badge unlocked: ${badge.name}!`,
+                    subMessage: `+${badge.xpReward} XP · ${badge.description}`
+                });
+            });
+
+            dispatchSequential(thunkAPI, toastSequence, 1800);
+
             return response.data;
         } catch (error) {
             const message = error.response?.data?.message || error.message || 'Login failed';
@@ -47,9 +130,14 @@ export const login = createAsyncThunk(
 // Logout user 
 export const logout = createAsyncThunk(
     'auth/logout',
-    async () => {
+    async (_, thunkAPI) => {
         try {
             await authService.logout();
+            thunkAPI.dispatch(addToast({
+                type: 'info',
+                message: 'Logged out successfully',
+                subMessage: 'See you next time!'
+            }));
         } catch (error) {
             console.error('Logout error:', error);
         }

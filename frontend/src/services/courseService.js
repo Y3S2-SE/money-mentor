@@ -33,10 +33,13 @@ const sanitizeCourseData = (courseData) => {
     // 3. When updating, questions array contains `_id` fields. The strict validation 
     // might reject the payload if subdocuments contain un-whitelisted fields.
     if (data.questions && Array.isArray(data.questions)) {
-        data.questions = data.questions.map((q) => {
-            delete q._id; // remove auto-generated MongoDB subdoc IDs from the payload
-            return q;
-        });
+        data.questions = data.questions.map((q) => ({
+            question: q.question,
+            options: q.options,
+            correctAnswerIndex: Number(q.correctAnswerIndex ?? 0),
+            explanation: q.explanation,
+            points: q.points
+        }));
     }
 
     // Ensure we don't send any top-level DB fields that shouldn't be patched directly

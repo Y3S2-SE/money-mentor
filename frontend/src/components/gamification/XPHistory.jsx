@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Zap, ChevronDown } from 'lucide-react';
-import api from '../../services/api';
+import gamificationSerivce from '../../services/gamificationService';
 
 const SOURCE_LABELS = {
   daily_login: 'Daily Login',
   streak_7_days: '7-Day Streak Bonus',
   streak_30_days: '30-Day Streak Bonus',
   complete_goal: 'Completed Savings Goal',
+  complete_course: 'Completed Course Successfully',
   first_login: 'First Login',
   first_saving_goal: 'First Savings Goal',
   read_article: 'Read Article',
@@ -33,8 +34,8 @@ const XPHistory = () => {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const res = await api.get('/play/xp-history?limit=10');
-        setHistory(res.data.data.xpHistory || []);
+        const res = await gamificationSerivce.getXPHistory(10);
+        setHistory(res.data.xpHistory || []);
       } catch (e) {
         console.error(e);
       } finally {
@@ -48,14 +49,14 @@ const XPHistory = () => {
 
   return (
     <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
-      <div className="px-5 py-4 border-b border-outline-variant/20 flex items-center justify-between">
+      <div className="px-4 sm:px-5 py-4 border-b border-outline-variant/20 flex items-center justify-between">
         <h2 className="font-headline text-sm font-bold text-on-surface">XP History</h2>
         <span className="font-label text-[10px] text-on-surface-variant bg-surface-container-low border border-outline-variant/20 px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider">
           Recent Activity
         </span>
       </div>
 
-      <div className="px-5 divide-y divide-outline-variant/10">
+      <div className="px-4 sm:px-5 divide-y divide-outline-variant/10">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)
           : history.length === 0
@@ -66,9 +67,9 @@ const XPHistory = () => {
             </div>
           )
           : visible.map((entry, i) => (
-            <div key={i} className="flex items-center gap-3 py-3">
-              <div className="w-8 h-8 rounded-lg bg-primary-fixed border border-primary-fixed-dim flex items-center justify-center shrink-0">
-                <Zap strokeWidth={1.5} className="w-4 h-4 text-on-primary-fixed" />
+            <div key={i} className="flex items-center gap-2 sm:gap-3 py-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary-fixed border border-primary-fixed-dim flex items-center justify-center shrink-0">
+                <Zap strokeWidth={1.5} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-on-primary-fixed" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-body text-xs font-semibold text-on-surface truncate">
@@ -84,7 +85,7 @@ const XPHistory = () => {
                   })}
                 </p>
               </div>
-              <span className="font-headline text-xs font-bold text-primary shrink-0">+{entry.amount} XP</span>
+              <span className="font-headline text-xs font-bold text-primary shrink-0 ml-1">+{entry.amount} XP</span>
             </div>
           ))
         }

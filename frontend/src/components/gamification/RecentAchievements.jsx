@@ -1,8 +1,7 @@
-// src/components/gamification/RecentAchievements.jsx
 import { useState, useEffect, useRef } from 'react';
 import { ChevronRight } from 'lucide-react';
-import api from '../../services/api';
 import BadgeIcon from './BadgeIcon';
+import gamificationSerivce from '../../services/gamificationService';
 
 const SkeletonCard = () => (
   <div className="flex items-center gap-3 p-3 rounded-xl border border-outline-variant/10 animate-pulse">
@@ -46,14 +45,16 @@ const RecentAchievements = ({ onViewAll }) => {
   const [badges, setBadges] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const limit = 4;
+
   useEffect(() => {
     const fetchBadges = async () => {
       try {
-        const res = await api.get('/play/badges');
-        const earned = res.data.data
+        const res = await gamificationSerivce.getBadges(limit);
+        const earned = res.data
           .filter(b => b.earned)
           .sort((a, b) => new Date(b.earnedAt) - new Date(a.earnedAt))
-          .slice(0, 5);
+          .slice(0, limit);
         setBadges(earned);
       } catch (e) {
         console.error(e);
@@ -62,11 +63,11 @@ const RecentAchievements = ({ onViewAll }) => {
       }
     };
     fetchBadges();
-  }, []);
+  }, [limit]);
 
   return (
     <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
-      <div className="px-5 py-4 border-b border-outline-variant/20 flex items-center justify-between">
+      <div className="px-4 sm:px-5 py-4 border-b border-outline-variant/20 flex items-center justify-between">
         <h2 className="font-headline text-sm font-bold text-on-surface">Recent Achievements</h2>
         <button
           onClick={onViewAll}
@@ -81,8 +82,8 @@ const RecentAchievements = ({ onViewAll }) => {
           ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
           : badges.length === 0
           ? (
-            <div className="flex flex-col items-center justify-center py-8 gap-2">
-              <div className="w-12 h-12 rounded-xl bg-surface-container-low border border-outline-variant/20 flex items-center justify-center">
+            <div className="flex flex-col items-center justify-center py-8 gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-xl bg-surface-container-low border border-outline-variant/20 flex items-center justify-center">
                 <svg viewBox="0 0 40 40" className="w-6 h-6">
                   <circle cx="20" cy="20" r="14" fill="none" stroke="var(--color-outline-variant)" strokeWidth="2" />
                   <path d="M14 20l4 4 8-8" stroke="var(--color-outline)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />

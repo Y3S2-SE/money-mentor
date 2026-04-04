@@ -1,4 +1,5 @@
 import * as transactionService from "../services/transaction.service.js";
+import { awardActionBadge } from "../utils/gamificationEngine.js";
 
 // POST /api/transactions
 export const createTransaction = async (req, res, next) => {
@@ -7,6 +8,18 @@ export const createTransaction = async (req, res, next) => {
       req.user.id,
       req.body
     );
+
+    if (transaction.type === 'income') {
+      try {
+        const incomeCount = await transactionService.countTrasactionsByType(req.user.id, 'income');
+
+        if (incomeCount === 1) {
+          await awardActionBadge(req.user._id, 'first_investment');
+        }
+      } catch (badgeErr) {
+        console.error('[Badge] first_investment award failed:', badgeErr);
+      }
+    }
 
     return res.status(201).json({
       success: true,

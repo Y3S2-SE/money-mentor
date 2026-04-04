@@ -1,5 +1,6 @@
 import GamificationProfile from "../models/gamification.model.js";
 import BadgeDefinition from "../models/badge.model.js";
+import { getMonthlySavings } from "../services/dashboard.service.js";
 
 export const XP_REWARDS = {
     daily_login: 5,
@@ -55,18 +56,43 @@ export const processDailyLogin = async (userId, { silent = false } = {}) => {
         const streakResult = profile.updateStreak();
  
         if (!streakResult.streakUpdated) {
+            const today = new Date();
+            if (today.getDate() === 1) {
+                const monthlyBadges = await evaluateBadges(profile);
+                await profile.save();
+
+                return {
+                    alreadyCheckedIn: true,
+                    xpAwarded: 0,
+                    totalXP: profile.totalXP,
+                    level: profile.level,
+                    levelTitle: profile.levelTitle,
+                    leveledUp: false,
+                    currentStreak: profile.currentStreak,
+                    longestStreak: profile.longestStreak,
+                    newlyEarnedBadges: monthlyBadges.map(b => ({
+                        key: b.key,
+                        name: b.name,
+                        description: b.description,
+                        category: b.category,
+                        xpReward: b.xpReward  
+                    }))
+                };
+            }
+
             return {
-                alreadyCheckedIn:  true,
-                xpAwarded:         0,
-                totalXP:           profile.totalXP,
-                level:             profile.level,
-                levelTitle:        profile.levelTitle,
-                leveledUp:         false,
-                currentStreak:     profile.currentStreak,
-                longestStreak:     profile.longestStreak,
+                alreadyCheckedIn: true,
+                xpAwarded: 0,
+                totalXP: profile.totalXP,
+                level: profile.level,
+                levelTitle: profile.levelTitle,
+                leveledUp: false,
+                currentStreak: profile.currentStreak,
+                longestStreak: profile.longestStreak,
                 newlyEarnedBadges: []
             };
         }
+
  
         await profile.save();
  
@@ -90,6 +116,17 @@ export const processDailyLogin = async (userId, { silent = false } = {}) => {
             const badge = await awardActionBadge(userId, 'streak_30_days');
             if (badge) actionBadges.push(badge);
         }
+
+        const today = new Date();
+        if (today.getDate() === 1) {
+            const updatedProfile = await GamificationProfile.findOne({ user: userId });
+            if (updatedProfile) {
+                const monthlyBadges = await evaluateBadges(updatedProfile);
+                await updatedProfile.save();
+                // Add monthly badges to the returned list
+                monthlyBadges.forEach(b => actionBadges.push(b));
+            }
+        }
  
         const updated = await GamificationProfile.findOne({ user: userId });
  
@@ -98,18 +135,19 @@ export const processDailyLogin = async (userId, { silent = false } = {}) => {
  
         return {
             alreadyCheckedIn:  false,
-            xpAwarded:         XP_REWARDS.daily_login,
-            totalXP:           updated.totalXP,
-            level:             updated.level,
-            levelTitle:        updated.levelTitle,
-            leveledUp:         xpResult?.leveledUp ?? false,
-            currentStreak:     updated.currentStreak,
-            longestStreak:     updated.longestStreak,
+            xpAwarded: XP_REWARDS.daily_login,
+            totalXP: updated.totalXP,
+            level: updated.level,
+            levelTitle: updated.levelTitle,
+            leveledUp: xpResult?.leveledUp ?? false,
+            currentStreak: updated.currentStreak,
+            longestStreak: updated.longestStreak,
             newlyEarnedBadges: allEarnedBadges.map(b => ({
-                key:         b.key,
-                name:        b.name,
+                key: b.key,
+                name: b.name,
                 description: b.description,
-                category:    b.category
+                category: b.category,
+                xpReward: b.xpReward ?? 0
             }))
         };
     } catch (err) {
@@ -143,6 +181,18 @@ export const evaluateBadges = async (profile) => {
             case 'level':
                 qualifies = profile.level >= def.condition.threshold;
                 break;
+            case 'monthly_savings': {
+                const now = new Date();
+                const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                const monthStr = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, '0')}`;
+
+                const mongoose = await import('mongoose');
+                const userObjectId = new mongoose.default.Types.ObjectId(profile.user.toString());
+                const savings = await getMonthlySavings(userObjectId, monthStr);
+                
+                qualifies = savings >= def.condition.threshold;
+                break;
+            }
             case 'action':
                 break;
         }
@@ -189,3 +239,12 @@ export const awardActionBadge = async (userId, actionKey) => {
     await profile.save();
     return def;
 };
+
+export const syncBadgesForUser = async (userId) => {
+    let profile = await GamificationProfile.findOne({ user: userId });
+    if (!profile) return null;
+
+    const newlyEarned = await evaluateBadges(profile);
+    await profile.save();
+    return newlyEarned;
+}

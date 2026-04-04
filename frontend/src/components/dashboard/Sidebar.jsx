@@ -3,8 +3,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../store/slices/authSlice";
 
-import { LayoutDashboard, Wallet, Gamepad2, BookOpen, Users, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
-import api from "../../services/api";
+import { Wallet, Gamepad2, BookOpen, Users, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { addToast } from "../../store/slices/toastSlice";
+import gamificationSerivce from "../../services/gamificationService";
+import { fetchProfile } from "../../store/slices/gamingSlice";
 
 const navItems = [
     { label: 'My Wallet', icon: Wallet, path: '/dashboard' },
@@ -19,19 +21,32 @@ const Sidebar = ({ children }) => {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const [profile, setProfile] = useState(null);
+    const { profile, lastFetched } = useSelector(state => state.gamification);
+
+    const CACHE_DURATION = 5 * 60 * 1000;
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const res = await api.get('/play/profile');
-                setProfile(res.data.data);
-            } catch (e) {
-                console.error(e);
-            }
-        };
-        fetchData();
-    }, []);
+        const shouldFetch = !lastFetched || 
+            (Date.now() - lastFetched > CACHE_DURATION);
+
+        if (shouldFetch) {
+            dispatch(fetchProfile(true)).then((action) => {
+                if (action.payload) {
+                    // Handle newly unlocked badges
+                    const newlyUnlocked = action.payload.newlyUncloked || [];
+                    newlyUnlocked.forEach((badge, index) => {
+                        setTimeout(() => {
+                            dispatch(addToast({
+                                type: 'badge',
+                                message: `Badge unlocked: ${badge.name}!`,
+                                subMessage: `+${badge.xpReward} XP . ${badge.description}`
+                            }));
+                        }, index * 1800);
+                    });
+                }
+            });
+        }
+    }, [dispatch, lastFetched]);
 
     const handleLogout = async () => {
         await dispatch(logout());
@@ -56,7 +71,7 @@ const Sidebar = ({ children }) => {
             // trigger animation
             setPrevXP(currentXP);
         }
-    }, [currentXP]);
+    }, [currentXP, prevXP]);
 
     return (
         <div className="flex h-screen bg-surface-bright overflow-hidden">
@@ -113,7 +128,12 @@ const Sidebar = ({ children }) => {
                 <div className="px-5 pb-6 mt-auto flex flex-col gap-4">
                     {/* Level Card */}
                     {!isCollapsed ? (
-                        <div className="bg-blue-950 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden group transition-all duration-300">
+                        <div 
+                            onClick={() => navigate('/profile')}
+                            role="button"
+                            tabIndex={0}
+                            className="bg-blue-950 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden group transition-all duration-300 cursor-pointer hover:shadow-xl hover:scale-[1.02]"
+                        >
                             {/* Decorative background element */}
                             <div className="absolute top-0 right-0 w-16 h-16 bg-white/5 rounded-bl-[64px] pointer-events-none" />
 
@@ -129,15 +149,21 @@ const Sidebar = ({ children }) => {
                             </div>
                         </div>
                     ) : (
-                        <div className="w-10 h-10 mx-auto bg-blue-950 rounded-xl flex flex-col items-center justify-center shrink-0 shadow-lg cursor-help transition-all duration-300 hover:bg-[#17153b]" title="Level 4 - 850 XP (150 XP to Level 5)">
-                            <span className="text-[8px] font-bold text-white mb-0.5">LVL {profile.level}</span>
+                        <div 
+                            onClick={() => navigate('/profile')}
+                            role="button"
+                            tabIndex={0}
+                            className="w-10 h-10 mx-auto bg-blue-950 rounded-xl flex flex-col items-center justify-center shrink-0 shadow-lg cursor-pointer transition-all duration-300 hover:bg-[#17153b]" 
+                            title={`Level ${level} - ${currentXP} XP. Click to view profile.`}
+                        >
+                            <span className="text-[8px] font-bold text-white mb-0.5">LVL {level}</span>
                             <div className="w-6 bg-black/40 h-1 rounded-full overflow-hidden">
-                                <div className="bg-[#85a4d5] h-full rounded-full" style={{ width: '85%' }}></div>
+                                <div className="bg-[#85a4d5] h-full rounded-full" style={{ width: `${progressPercent}%` }}></div>
                             </div>
                         </div>
                     )}
 
-                    {/* Logout Button */}
+                    {/* Desktop Logout Button */}
                     <button
                         onClick={handleLogout}
                         className={`flex items-center outline-none ${isCollapsed ? 'justify-center px-0 w-10 h-10 mx-auto' : 'gap-3 px-3 w-full'} py-2.5 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors duration-200`}
@@ -150,8 +176,54 @@ const Sidebar = ({ children }) => {
             </aside>
 
             {/* Page content */}
-            <div className="flex-1 overflow-auto bg-[#F8F9FA] pb-16 lg:pb-0">
-                {children}
+            <div className="flex-1 overflow-auto bg-[#F8F9FA] pb-16 lg:pb-0 relative flex flex-col">
+                
+                {/* NEW: Updated Mobile Top Header */}
+                <header className="lg:hidden sticky top-0 z-40 bg-white border-b border-gray-200/60 px-4 py-3 flex items-center justify-between shadow-sm shrink-0">
+                    
+                    {/* Left: Brand Identity */}
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-blue-950 flex items-center justify-center shrink-0">
+                            <Wallet className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-blue-950 font-extrabold text-[17px] tracking-tight leading-none">MoneyMentor</span>
+                    </div>
+
+                    {/* Right: Status Pill & Action */}
+                    <div className="flex items-center gap-2">
+                        
+                        {/* Compact Level/XP Pill */}
+                        <div 
+                            onClick={() => navigate('/profile')}
+                            role="button"
+                            tabIndex={0}
+                            className="flex items-center bg-gray-50 rounded-full p-1 pr-3 border border-gray-200/80 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors"
+                        >
+                            <div className="w-6 h-6 rounded-full bg-blue-950 flex items-center justify-center shrink-0 mr-2 shadow-inner">
+                                <span className="text-[10px] font-bold text-white leading-none">{level}</span>
+                            </div>
+                            <div className="flex flex-col justify-center w-[4.5rem]">
+                                <span className="text-[9px] font-bold text-blue-950 leading-tight mb-0.5">{currentXP} XP</span>
+                                <div className="w-full bg-gray-200 h-1 rounded-full overflow-hidden">
+                                    <div className="bg-[#85a4d5] h-full rounded-full transition-all duration-1000" style={{ width: `${progressPercent}%` }}></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Mobile Logout Button */}
+                        <button
+                            onClick={handleLogout}
+                            className="p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-xl transition-colors duration-200 outline-none focus:ring-2 focus:ring-red-100 shrink-0"
+                            title="Log Out"
+                        >
+                            <LogOut className="w-5 h-5" />
+                        </button>
+                    </div>
+                </header>
+
+                <div className="flex-1 overflow-auto">
+                    {children}
+                </div>
             </div>
 
             {/* Mobile bottom navigation */}

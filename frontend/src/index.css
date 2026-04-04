@@ -94,19 +94,19 @@
 }
 
 .hero-bg-overlay {
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 21, 41, 0.7) 0%,      /* --color-primary */
-    rgba(8, 32, 59, 0.85) 100%    /* --color-primary-container */
-  );
+  background: linear-gradient(to bottom,
+      rgba(0, 21, 41, 0.7) 0%,
+      /* --color-primary */
+      rgba(8, 32, 59, 0.85) 100%
+      /* --color-primary-container */
+    );
 }
 
 .hero-glow {
-  background: radial-gradient(
-    ellipse at 60% 40%,
-    rgba(29, 91, 226, 0.15) 0%,    /* blue-600 */
-    transparent 70%
-  );
+  background: radial-gradient(ellipse at 60% 40%,
+      rgba(29, 91, 226, 0.15) 0%,
+      /* blue-600 */
+      transparent 70%);
 }
 
 .text-gradient {
@@ -114,4 +114,26 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes tabSlideIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
 }

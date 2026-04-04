@@ -1,10 +1,14 @@
-// src/components/gamification/Leaderboard.jsx
 import { useState, useEffect } from 'react';
-import { Trophy } from 'lucide-react';
-import api from '../../services/api';
 import { useSelector } from 'react-redux';
+import { UsersRound } from 'lucide-react';
+import gamificationSerivce from '../../services/gamificationService';
 
 const MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' };
+
+const PROMO_MESSAGES = [
+    "Your leaderboard shows friends from your groups. Join more groups to grow your circle!",
+    "Daily logins, goals, and courses all earn XP. Keep the streak alive!"
+];
 
 const initials = (name) => name?.slice(0, 2).toUpperCase() || '??';
 
@@ -25,6 +29,9 @@ const Leaderboard = ({ compact = false, full = false }) => {
   const [myRank, setMyRank] = useState(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [promoIndex, setPromoIndex] = useState(0);
+  const [fade, setFade] = useState(true);
+
   const { user } = useSelector((state) => state.auth);
 
   const limit = 5;
@@ -32,10 +39,10 @@ const Leaderboard = ({ compact = false, full = false }) => {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const res = await api.get(`/play/leaderboard?limit=${limit}`);
-        setLeaderboard(res.data.data.leaderboard);
-        setMyRank(res.data.data.myRank);
-        setTotal(res.data.data.totalParticipants);
+        const res = await gamificationSerivce.getLeaderboard(limit);
+        setLeaderboard(res.data.leaderboard);
+        setMyRank(res.data.myRank);
+        setTotal(res.data.totalParticipants);
       } catch (e) {
         console.error(e);
       } finally {
@@ -45,9 +52,21 @@ const Leaderboard = ({ compact = false, full = false }) => {
     fetch();
   }, [limit]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setPromoIndex(prev => (prev + 1) % PROMO_MESSAGES.length);
+        setFade(true);
+      }, 700);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
-      <div className="px-5 py-4 border-b border-outline-variant/20 flex items-center justify-between">
+      <div className="px-4 sm:px-5 py-4 border-b border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h2 className="font-headline text-sm font-bold text-on-surface">Top Savers</h2>
           {!loading && (
@@ -69,8 +88,8 @@ const Leaderboard = ({ compact = false, full = false }) => {
           : leaderboard.length === 0
           ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
-              <Trophy strokeWidth={1.5} className="w-8 h-8 text-outline-variant" />
-              <p className="font-body text-sm text-on-surface-variant text-center">No rankings yet.<br />Earn XP to appear here!</p>
+              <UsersRound strokeWidth={1.5} className="w-8 h-8 text-outline-variant" />
+              <p className="font-body text-sm text-on-surface-variant text-center">No friends yet.<br />Join or create a group to compete!</p>
             </div>
           )
           : leaderboard.map((entry) => {
@@ -78,7 +97,7 @@ const Leaderboard = ({ compact = false, full = false }) => {
             return (
               <div
                 key={entry.rank}
-                className={`flex items-center gap-3 px-5 py-3 transition-colors ${
+                className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-3 transition-colors ${
                   isMe ? 'bg-primary-fixed/20' : 'hover:bg-surface-container-low'
                 }`}
               >
@@ -96,7 +115,7 @@ const Leaderboard = ({ compact = false, full = false }) => {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className={`font-body text-xs font-bold truncate ${isMe ? 'text-primary' : 'text-on-surface'}`}>
+                    <p className={`font-body text-xs font-bold truncate max-w-25 sm:max-w-none ${isMe ? 'text-primary' : 'text-on-surface'}`}>
                       {entry.username}
                     </p>
                     {isMe && (
@@ -134,11 +153,12 @@ const Leaderboard = ({ compact = false, full = false }) => {
       )}
 
       {compact && (
-        <div className="m-4 rounded-xl p-4 relative overflow-hidden hero-bg-overlay border border-outline-variant/20">
+        <div className="m-3 sm:m-4 rounded-xl p-3 sm:p-4 relative overflow-hidden hero-bg-overlay border border-outline-variant/20">
           <div className="absolute right-3 bottom-2 text-4xl opacity-20 select-none">🏆</div>
           <p className="font-headline text-on-primary text-xs font-bold mb-1">Climb the ranks!</p>
-          <p className="font-body text-inverse-primary text-[11px] leading-relaxed">
-            Daily logins, goals, and courses all earn XP.
+          <p className="font-body text-inverse-primary text-[11px] leading-relaxed transition-opacity duration-700"
+            style={{ opacity: fade ? 1 : 0 }}>
+            {PROMO_MESSAGES[promoIndex]}
           </p>
         </div>
       )}

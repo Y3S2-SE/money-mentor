@@ -33,7 +33,7 @@ const badgeDefinitionSchema = new mongoose.Schema(
         condition: {
             type: {
                 type: String,
-                enum: ['action', 'xp_total', 'streak_days', 'level'],
+                enum: ['action', 'xp_total', 'streak_days', 'level', 'monthly_savings'],
                 required: true
             },
             threshold: {

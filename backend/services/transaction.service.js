@@ -106,3 +106,8 @@ export const deleteTransaction = async (transactionId, userId) => {
 
   return transaction;
 };
+
+// Count transactions by type for a user
+export const countTrasactionsByType = async (userId, type) => {
+  return await Transaction.countDocuments({ userId, type })
+};
