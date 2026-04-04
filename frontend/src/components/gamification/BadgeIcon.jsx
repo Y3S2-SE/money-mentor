@@ -9,7 +9,7 @@ const loadLottie = async (badgeKey) => {
         case 'first_investment': return (await import('../../assets/lottie/investment.json')).default;
         case 'milestone_level5': return (await import('../../assets/lottie/rising_star.json')).default;
         case 'milestone_super_saver': return (await import('../../assets/lottie/super_saver.json')).default;
-        case 'milestone_budget_master': return (await import('../../assets/lottie/budget_master.json')).default;
+        case 'milestone_budget_master': return (await import('../../assets/lottie/chest.json')).default;
         case 'milestone_1000xp': return (await import('../../assets/lottie/milestone_1000.json')).default; 
         case 'milestone_100xp': return (await import('../../assets/lottie/milestone_100.json')).default; 
         case 'streak_3_days': return (await import('../../assets/lottie/streak_3.json')).default;
@@ -25,6 +25,8 @@ const LoadingPlaceholder = () => (
     </div>
 );
 
+const PREVIEW_FRAME = 12;
+
 const BadgeIcon = forwardRef(({ badgeKey, earned }, ref) => {
     const [animData, setAnimData] = useState(null);
     const [isVisible, setIsVisible] = useState(false);
@@ -33,9 +35,11 @@ const BadgeIcon = forwardRef(({ badgeKey, earned }, ref) => {
     const lottieRef = useRef();
 
     useImperativeHandle(ref, () => ({
-        play: () => { if (earned) lottieRef.current?.play(); },
+        play: () => {
+            if (earned) lottieRef.current?.goToAndPlay(0, true);
+        },
         pause: () => lottieRef.current?.pause(),
-        reset: () => lottieRef.current?.goToAndStop(0, true),
+        reset: () => lottieRef.current?.goToAndStop(PREVIEW_FRAME, true), 
     }), [earned]);
 
     useEffect(() => {
@@ -64,12 +68,25 @@ const BadgeIcon = forwardRef(({ badgeKey, earned }, ref) => {
 
     useEffect(() => {
         if (!animData) return;
+
+        const t = setTimeout(() => {
+            lottieRef.current?.goToAndStop(PREVIEW_FRAME, true);
+        }, 50);
+
         const observer = new IntersectionObserver(
-            ([entry]) => { if (!entry.isIntersecting) lottieRef.current?.pause(); },
+            ([entry]) => {
+                if (!entry.isIntersecting) {
+                    lottieRef.current?.pause();
+                    lottieRef.current?.goToAndStop(PREVIEW_FRAME, true);
+                }
+            },
             { threshold: 0.1 }
         );
         if (containerRef.current) observer.observe(containerRef.current);
-        return () => observer.disconnect();
+        return () => {
+            clearTimeout(t);
+            observer.disconnect();
+        };
     }, [animData]);
 
     return (
@@ -101,5 +118,4 @@ const BadgeIcon = forwardRef(({ badgeKey, earned }, ref) => {
     );
 });
 
-BadgeIcon.displayName = 'BadgeIcon';
 export default BadgeIcon;
