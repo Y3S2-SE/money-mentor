@@ -246,3 +246,24 @@ export const convertCurrency = async (amount, from = "LKR", to = "USD") => {
     date: data.date,
   };
 };
+
+export const getMonthlySavings = async (userId, month) => {
+  const [year, mon] = month.split('-');
+  const start = new Date(year, mon - 1, 1);
+  const end = new Date(year, mon, 1);
+
+  const result = await Transaction.aggregate([
+    {
+      $match: { userId, date: { $gte: start, $lt: end } }
+    },
+    {
+      $group: { _id: '$type', total: { $sum: '$amount' } }
+    }
+  ]);
+
+  const income = result.find(r => r._id === 'income')?.total || 0;
+  const expense = result.find(r => r._id === 'expense')?.total || 0;
+  const save = income - expense;
+  
+  return save;
+}
