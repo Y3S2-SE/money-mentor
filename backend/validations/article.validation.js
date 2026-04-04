@@ -27,8 +27,7 @@ export const createArticleRules = [
         .withMessage('Difficulty must be one of: beginner, intermediate, advanced'),
 
     body('thumbnail')
-        .optional()
-        .isURL().withMessage('Thumbnail must be a valid URL'),
+        .optional(),
 
     body('pointsPerRead')
         .optional()
