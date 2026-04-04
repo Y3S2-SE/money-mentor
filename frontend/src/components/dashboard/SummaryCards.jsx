@@ -29,7 +29,7 @@ const getHealthBg = (score) => {
 const SummaryCards = ({ summary, loading }) => {
     if (loading) {
         return (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[...Array(4)].map((_, i) => (
                     <div key={i} className="bg-white rounded-2xl p-5 border border-gray-100 animate-pulse">
                         <div className="h-4 bg-gray-100 rounded w-20 mb-3" />
@@ -87,28 +87,30 @@ const SummaryCards = ({ summary, loading }) => {
     ];
 
     return (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {cards.map((card, i) => {
                 const Icon = card.icon;
                 return (
                     <div
                         key={i}
-                        className={`bg-white rounded-2xl p-5 border ${card.border} hover:shadow-sm transition-shadow duration-200`}
+                        className={`bg-white rounded-2xl p-4 sm:p-5 border ${card.border} hover:shadow-sm transition-shadow duration-200 flex flex-col justify-between`}
                     >
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        <div className="flex items-start justify-between mb-3 gap-2">
+                            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider font-label break-words">
                                 {card.label}
                             </span>
-                            <div className={`w-8 h-8 rounded-xl ${card.iconBg} flex items-center justify-center`}>
+                            <div className={`w-8 h-8 rounded-xl shrink-0 ${card.iconBg} flex items-center justify-center`}>
                                 <Icon className={`w-4 h-4 ${card.iconColor}`} />
                             </div>
                         </div>
-                        <p className="text-xl font-bold text-gray-900 mb-1 truncate">
-                            {card.value}
-                        </p>
-                        <p className={`text-xs font-medium ${card.subColor}`}>
-                            {card.sub}
-                        </p>
+                        <div>
+                            <p className="text-xl sm:text-sm font-bold text-gray-900 mb-1 truncate font-headline">
+                                {card.value}
+                            </p>
+                            <p className={`text-xs sm:text-sm font-medium ${card.subColor} font-body truncate`}>
+                                {card.sub}
+                            </p>
+                        </div>
                     </div>
                 );
             })}
