@@ -19,26 +19,19 @@ export default function ChatBadgeCard({ badgeShare, isOwn }) {
 
   return (
     <div
-      className={`mt-1 rounded-2xl border bg-gradient-to-br ${colors} px-4 py-3 flex items-center gap-3 min-w-[220px] max-w-xs`}
+      className={`rounded-xl border bg-gradient-to-br ${colors} px-3 py-2.5 flex items-center gap-3 min-w-[190px] max-w-[240px]`}
       onMouseEnter={() => lottieRef.current?.play()}
       onMouseLeave={() => lottieRef.current?.pause()}
     >
-      {/* Lottie animation */}
-      <div className="w-16 h-16 shrink-0">
+      <div className="w-12 h-12 shrink-0">
         <BadgeIcon ref={lottieRef} badgeKey={badgeShare.key} earned={true} />
       </div>
-
-      {/* Info */}
       <div className="flex flex-col min-w-0">
-        <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">
+        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-0.5">
           {CATEGORY_LABELS[badgeShare.category] ?? 'Badge'}
         </span>
-        <span className="text-sm font-bold text-slate-800 leading-tight">
-          {badgeShare.name}
-        </span>
-        <span className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">
-          {badgeShare.description}
-        </span>
+        <span className="text-sm font-bold text-slate-800 leading-tight">{badgeShare.name}</span>
+        <span className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{badgeShare.description}</span>
       </div>
     </div>
   );
