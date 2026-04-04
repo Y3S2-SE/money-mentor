@@ -8,6 +8,8 @@ import BadgePicker from './BadgePicker';
 import { deleteMessage } from '../../services/messageService';
 import { useCopy } from '../../hooks/useCopy';
 import { leaveGroup, deleteGroup, regenerateInvite } from '../../services/groupService';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../store/slices/toastSlice';
 
 export default function ChatPanel({ group, currentUserId, onRefresh, onBack }) {
   const { user } = useSelector((state) => state.auth);
@@ -19,7 +21,7 @@ export default function ChatPanel({ group, currentUserId, onRefresh, onBack }) {
   const typingTimeout = useRef(null);
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
-
+  const dispatch = useDispatch();
   const isAdmin = group.admin?._id === currentUserId || group.admin === currentUserId;
 
   const {
@@ -32,7 +34,6 @@ export default function ChatPanel({ group, currentUserId, onRefresh, onBack }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typingUsers]);
 
-  // Reset input when group changes
   useEffect(() => {
     setInput('');
     setShowBadgePicker(false);
@@ -40,10 +41,8 @@ export default function ChatPanel({ group, currentUserId, onRefresh, onBack }) {
 
   const handleInputChange = (e) => {
     setInput(e.target.value);
-    // auto-grow
     e.target.style.height = 'auto';
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-
     if (!isTypingRef.current) { isTypingRef.current = true; sendTypingStart(); }
     clearTimeout(typingTimeout.current);
     typingTimeout.current = setTimeout(() => { isTypingRef.current = false; sendTypingStop(); }, 1500);
@@ -77,8 +76,12 @@ export default function ChatPanel({ group, currentUserId, onRefresh, onBack }) {
   const handleLeave = async () => {
     setShowGroupMenu(false);
     if (!window.confirm('Leave this group?')) return;
-    try { await leaveGroup(group._id); onRefresh(); onBack(); }
-    catch (err) { alert(err.response?.data?.message || 'Failed to leave'); }
+    try {
+      await leaveGroup(group._id);
+      dispatch(addToast({ type: 'info', message: 'You left the group', subMessage: 'You have been removed from this group' }));
+      onRefresh();
+      onBack();
+    } catch (err) { alert(err.response?.data?.message || 'Failed to leave'); }
   };
 
   const handleDelete = async () => {
@@ -98,19 +101,19 @@ export default function ChatPanel({ group, currentUserId, onRefresh, onBack }) {
     <div className="flex flex-col h-full bg-[#f0f2f5]">
 
       {/* ── Header ── */}
-      <div className="bg-white border-b border-slate-100 px-4 py-3 flex items-center gap-3 shrink-0">
-        {/* Back (mobile only) */}
-        <button onClick={onBack} className="md:hidden p-1 -ml-1 rounded-lg hover:bg-slate-100 text-slate-500 transition">
+      <div className="bg-[#0f172a] px-4 py-3 flex items-center gap-3 shrink-0">
+        {/* Back (mobile) */}
+        <button onClick={onBack} className="md:hidden p-1 -ml-1 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition">
           <ArrowLeft className="w-5 h-5" />
         </button>
 
-        {/* Group avatar */}
+        {/* Avatar */}
         <div className="relative shrink-0">
-          <div className="w-10 h-10 rounded-full bg-[#0f172a] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
             <span className="text-white font-bold text-sm">{group.name.charAt(0).toUpperCase()}</span>
           </div>
           {isAdmin && (
-            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-amber-400 border-2 border-white flex items-center justify-center">
+            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-amber-400 border-2 border-[#0f172a] flex items-center justify-center">
               <Crown className="w-2 h-2 text-white" />
             </div>
           )}
@@ -118,53 +121,53 @@ export default function ChatPanel({ group, currentUserId, onRefresh, onBack }) {
 
         {/* Name + status */}
         <div className="flex-1 min-w-0">
-          <h2 className="font-semibold text-slate-900 text-sm truncate">{group.name}</h2>
+          <h2 className="font-semibold text-white text-sm truncate">{group.name}</h2>
           <div className="flex items-center gap-2 mt-0.5">
             <div className="flex items-center gap-1">
               {isConnected
-                ? <><Wifi className="w-3 h-3 text-green-500" /><span className="text-[11px] text-green-500">Connected</span></>
-                : <><WifiOff className="w-3 h-3 text-slate-400" /><span className="text-[11px] text-slate-400">Connecting…</span></>
+                ? <><Wifi className="w-3 h-3 text-green-400" /><span className="text-[11px] text-green-400">Connected</span></>
+                : <><WifiOff className="w-3 h-3 text-white/30" /><span className="text-[11px] text-white/30">Connecting…</span></>
               }
             </div>
-            <span className="text-slate-300">·</span>
-            <div className="flex items-center gap-1 text-[11px] text-slate-400">
+            <span className="text-white/20">·</span>
+            <div className="flex items-center gap-1 text-[11px] text-white/40">
               <Users className="w-3 h-3" />
               <span>{onlineUsers.length} online</span>
             </div>
           </div>
         </div>
 
-        {/* Group actions menu */}
+        {/* Menu */}
         <div className="relative shrink-0">
           <button
             onClick={() => setShowGroupMenu(v => !v)}
-            className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition"
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 text-white/50 hover:text-white transition"
           >
-            <MoreVertical className="w-4.5 h-4.5" />
+            <MoreVertical className="w-5 h-5" />
           </button>
           {showGroupMenu && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowGroupMenu(false)} />
-              <div className="absolute right-0 top-10 z-20 bg-white rounded-xl shadow-xl border border-slate-100 py-1 w-48">
+              <div className="absolute right-0 top-11 z-20 bg-white rounded-xl shadow-xl border border-slate-100 py-1 w-52 overflow-hidden">
                 <button
                   onClick={() => { copy(group.inviteCode); setShowGroupMenu(false); }}
-                  className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 transition"
+                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-xs text-slate-600 hover:bg-slate-50 transition"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
                   Copy invite: <span className="font-mono ml-1">{group.inviteCode}</span>
                 </button>
                 {isAdmin && (
-                  <button onClick={handleRegen} className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 transition">
+                  <button onClick={handleRegen} className="flex items-center gap-2.5 w-full px-4 py-2.5 text-xs text-slate-600 hover:bg-slate-50 transition">
                     <RefreshCw className="w-3.5 h-3.5" /> Regenerate code
                   </button>
                 )}
                 <div className="my-1 border-t border-slate-100" />
                 {isAdmin ? (
-                  <button onClick={handleDelete} className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition">
+                  <button onClick={handleDelete} className="flex items-center gap-2.5 w-full px-4 py-2.5 text-xs text-red-500 hover:bg-red-50 transition">
                     <Trash2 className="w-3.5 h-3.5" /> Delete group
                   </button>
                 ) : (
-                  <button onClick={handleLeave} className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition">
+                  <button onClick={handleLeave} className="flex items-center gap-2.5 w-full px-4 py-2.5 text-xs text-red-500 hover:bg-red-50 transition">
                     <LogOut className="w-3.5 h-3.5" /> Leave group
                   </button>
                 )}
@@ -179,7 +182,8 @@ export default function ChatPanel({ group, currentUserId, onRefresh, onBack }) {
         className="flex-1 overflow-y-auto px-4 py-3"
         style={{
           backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.03) 1px, transparent 1px)',
-          backgroundSize: '20px 20px'
+          backgroundSize: '20px 20px',
+          background: '#f0f2f5',
         }}
       >
         {isLoading ? (
