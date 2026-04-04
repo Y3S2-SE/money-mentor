@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminCourseList from '../components/admin/AdminCourseList';
 import AdminCourseForm from '../components/admin/AdminCourseForm';
+import AdminArticleList from '../components/admin/AdminArticleList';
+import AdminArticleForm from '../components/admin/AdminArticleForm';
 
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -13,6 +15,10 @@ const AdminPage = () => {
   const [courseView, setCourseView] = useState('list'); // 'list', 'create', 'edit'
   const [editingCourse, setEditingCourse] = useState(null);
 
+  // Articles state
+  const [articleView, setArticleView] = useState('list'); // 'list', 'create', 'edit'
+  const [editingArticle, setEditingArticle] = useState(null);
+
   const handleAddCourse = () => {
     setEditingCourse(null);
     setCourseView('create');
@@ -23,9 +29,24 @@ const AdminPage = () => {
     setCourseView('edit');
   };
 
-  const handleBackToList = () => {
+  const handleBackToCourseList = () => {
     setEditingCourse(null);
     setCourseView('list');
+  };
+
+  const handleAddArticle = () => {
+    setEditingArticle(null);
+    setArticleView('create');
+  };
+
+  const handleEditArticle = (article) => {
+    setEditingArticle(article);
+    setArticleView('edit');
+  };
+
+  const handleBackToArticleList = () => {
+    setEditingArticle(null);
+    setArticleView('list');
   };
 
   const handleLogout = () => {
@@ -58,6 +79,17 @@ const AdminPage = () => {
           >
             Manage Courses
             {activeTab === 'courses' && (
+              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-primary rounded-t-full" />
+            )}
+          </button>
+          <button
+            onClick={() => { setActiveTab('articles'); setArticleView('list'); }}
+            className={`font-label uppercase tracking-widest text-[11px] font-bold transition-all relative py-6 ${
+              activeTab === 'articles' ? 'text-primary' : 'text-on-surface/50 hover:text-on-surface'
+            }`}
+          >
+            Manage Articles
+            {activeTab === 'articles' && (
               <div className="absolute bottom-0 left-0 w-full h-[3px] bg-primary rounded-t-full" />
             )}
           </button>
@@ -118,18 +150,26 @@ const AdminPage = () => {
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto p-6 md:p-10 w-full max-w-[1600px] mx-auto">
         {/* Mobile quick tabs since absolute centering hides on very small screens */}
-        <div className="flex md:hidden gap-4 border-b border-outline-variant/30 mb-6">
+        <div className="flex md:hidden gap-4 border-b border-outline-variant/30 mb-6 overflow-x-auto scrollbar-hide">
           <button
             onClick={() => { setActiveTab('courses'); setCourseView('list'); }}
-            className={`pb-3 font-label uppercase tracking-widest text-[10px] font-bold ${
+            className={`pb-3 font-label uppercase tracking-widest text-[10px] font-bold whitespace-nowrap ${
               activeTab === 'courses' ? 'text-primary border-b-2 border-primary' : 'text-on-surface/50'
             }`}
           >
             Courses
           </button>
           <button
+            onClick={() => { setActiveTab('articles'); setArticleView('list'); }}
+            className={`pb-3 font-label uppercase tracking-widest text-[10px] font-bold whitespace-nowrap ${
+              activeTab === 'articles' ? 'text-primary border-b-2 border-primary' : 'text-on-surface/50'
+            }`}
+          >
+            Articles
+          </button>
+          <button
             onClick={() => setActiveTab('users')}
-            className={`pb-3 font-label uppercase tracking-widest text-[10px] font-bold ${
+            className={`pb-3 font-label uppercase tracking-widest text-[10px] font-bold whitespace-nowrap ${
               activeTab === 'users' ? 'text-primary border-b-2 border-primary' : 'text-on-surface/50'
             }`}
           >
@@ -148,7 +188,24 @@ const AdminPage = () => {
             {(courseView === 'create' || courseView === 'edit') && (
               <AdminCourseForm 
                 initialData={editingCourse} 
-                onBack={handleBackToList} 
+                onBack={handleBackToCourseList} 
+              />
+            )}
+          </>
+        )}
+
+        {activeTab === 'articles' && (
+          <>
+            {articleView === 'list' && (
+              <AdminArticleList 
+                onAddArticle={handleAddArticle} 
+                onEditArticle={handleEditArticle} 
+              />
+            )}
+            {(articleView === 'create' || articleView === 'edit') && (
+              <AdminArticleForm 
+                initialData={editingArticle} 
+                onBack={handleBackToArticleList} 
               />
             )}
           </>
