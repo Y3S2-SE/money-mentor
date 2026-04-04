@@ -1,11 +1,23 @@
 import Article from '../models/article.model.js';
+import { uploadToCloudinary } from '../middleware/upload.middleware.js';
 
 // @desc    Create a new article
 // @route   POST /api/articles/create
 // @access  Private/Admin
 export const createArticle = async (req, res) => {
     try {
-        const { title, summary, content, category, difficulty, thumbnail, pointsPerRead } = req.body;
+        let { title, summary, content, category, difficulty, thumbnail, pointsPerRead } = req.body;
+
+        // Handle file upload for thumbnail
+        if (req.file) {
+            const uploadResult = await uploadToCloudinary(req.file.buffer, 'money_mentor/articles');
+            thumbnail = uploadResult.secure_url;
+        }
+
+        // Multer might send regular fields as strings
+        if (typeof content === 'string') {
+            content = JSON.parse(content);
+        }
 
         const article = await Article.create({
             title,
@@ -148,21 +160,33 @@ export const updateArticle = async (req, res) => {
     try {
         const allowedFields = ['title', 'summary', 'content', 'category', 'difficulty', 'thumbnail', 'pointsPerRead', 'isPublished'];
 
-        const updates = {};
-        for (const field of allowedFields) {
-            if (req.body[field] !== undefined) {
-                updates[field] = req.body[field];
-            }
+        const data = { ...req.body };
+
+        // Handle file upload for thumbnail
+        if (req.file) {
+            const uploadResult = await uploadToCloudinary(req.file.buffer, 'money_mentor/articles');
+            data.thumbnail = uploadResult.secure_url;
         }
 
-        // If content is being updated, recalculate wordCount and readTime
-        if (updates.content) {
+        // Multer might send regular fields as strings (especially from FormData)
+        if (typeof data.content === 'string') {
+            data.content = JSON.parse(data.content);
+        }
+
+        // Check if content is being updated to trigger wordCount/readTime logic
+        if (data.content) {
             const article = await Article.findById(req.params.id);
             if (!article) {
                 return res.status(404).json({ success: false, message: 'Article not found' });
             }
-            // Apply content update then trigger pre-save hook logic inline
-            article.set(updates);
+            
+            // Apply updates
+            for (const field of allowedFields) {
+                if (data[field] !== undefined) {
+                    article[field] = data[field];
+                }
+            }
+
             const saved = await article.save();
             return res.status(200).json({
                 success: true,
@@ -173,7 +197,7 @@ export const updateArticle = async (req, res) => {
 
         const article = await Article.findByIdAndUpdate(
             req.params.id,
-            updates,
+            data,
             { new: true, runValidators: false }
         );
 
