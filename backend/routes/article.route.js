@@ -11,14 +11,15 @@ import {
     completeArticle,
     getUserReadPoints
 } from '../controllers/article.controller.js';
+import upload from '../middleware/upload.middleware.js';
 
 const router = express.Router();
 
 router.use(protect);
 
 // Admin-only mutations
-router.post('/create', authorize('admin'), createArticleRules, validate, createArticle);
-router.put('/:id', authorize('admin'), updateArticleRules, validate, updateArticle);
+router.post('/create', authorize('admin'), upload.single('thumbnail'), createArticleRules, validate, createArticle);
+router.put('/:id', authorize('admin'), upload.single('thumbnail'), updateArticleRules, validate, updateArticle);
 router.delete('/:id', authorize('admin'), deleteArticle);
 
 // User endpoints — order matters: specific routes before :id
