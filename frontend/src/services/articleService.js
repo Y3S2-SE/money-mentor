@@ -42,31 +42,47 @@ export const getUserReadPoints = async () => {
  * Helper to sanitize article data for strict backend validation
  */
 const sanitizeArticleData = (articleData) => {
-    const data = JSON.parse(JSON.stringify(articleData)); // Deep clone
+    // 1. We must NOT use JSON.stringify as it strips out File objects (thumbnails)
+    const data = { ...articleData };
 
-    // Remove empty thumbnail to satisfy backend .isURL() which fails on empty strings
-    if (!data.thumbnail || data.thumbnail.trim() === '') {
+    // 2. Remove empty thumbnail to satisfy backend .isURL() which fails on empty strings.
+    // If it's a File object (from upload), we also bypass this string check.
+    if (!data.thumbnail || (typeof data.thumbnail === 'string' && data.thumbnail.trim() === '')) {
         delete data.thumbnail;
     }
 
-    // Clean up DB fields that shouldn't be in the payload
-    delete data._id;
-    delete data.createdAt;
-    delete data.updatedAt;
-    delete data.__v;
-    delete data.createdBy;
-    delete data.wordCount;
-    delete data.readTime;
-    delete data.completions;
+    // 3. Clean up DB fields that shouldn't be in the payload
+    const cleanData = { ...data };
+    delete cleanData._id;
+    delete cleanData.createdAt;
+    delete cleanData.updatedAt;
+    delete cleanData.__v;
+    delete cleanData.createdBy;
+    delete cleanData.wordCount;
+    delete cleanData.readTime;
+    delete cleanData.completions;
 
-    return data;
+    return cleanData;
 };
 
 /**
  * Create a new article (Admin only)
  */
 export const createArticle = async (articleData) => {
-    const response = await api.post('/articles/create', sanitizeArticleData(articleData));
+    const data = sanitizeArticleData(articleData);
+    const formData = new FormData();
+
+    Object.keys(data).forEach(key => {
+        if (key === 'content') {
+            formData.append(key, JSON.stringify(data[key]));
+        } else if (data[key] !== undefined) {
+            formData.append(key, data[key]);
+        }
+    });
+
+    const response = await api.post('/articles/create', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
     return response.data;
 };
 
@@ -74,7 +90,20 @@ export const createArticle = async (articleData) => {
  * Update an existing article (Admin only)
  */
 export const updateArticle = async (id, articleData) => {
-    const response = await api.put(`/articles/${id}`, sanitizeArticleData(articleData));
+    const data = sanitizeArticleData(articleData);
+    const formData = new FormData();
+
+    Object.keys(data).forEach(key => {
+        if (key === 'content') {
+            formData.append(key, JSON.stringify(data[key]));
+        } else if (data[key] !== undefined) {
+            formData.append(key, data[key]);
+        }
+    });
+
+    const response = await api.put(`/articles/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
     return response.data;
 };
 
