@@ -72,14 +72,14 @@ const TransactionList = ({ transactions, pagination, loading, onEdit, onRefresh 
     }
 
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden font-body">
             {/* Table header */}
             <div className="hidden md:grid grid-cols-12 gap-3 px-5 py-3 border-b border-gray-50 bg-gray-50/50">
-                <span className="col-span-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Transaction</span>
-                <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Category</span>
-                <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Date</span>
-                <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider">Type</span>
-                <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider text-right">Amount</span>
+                <span className="col-span-4 text-xs font-medium text-gray-400 uppercase tracking-wider font-label">Transaction</span>
+                <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider font-label">Category</span>
+                <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider font-label">Date</span>
+                <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider font-label">Type</span>
+                <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider text-right font-label">Amount</span>
             </div>
 
             {/* Rows */}
@@ -87,20 +87,20 @@ const TransactionList = ({ transactions, pagination, loading, onEdit, onRefresh 
                 {transactions.map((tx) => (
                     <div
                         key={tx._id}
-                        className="grid grid-cols-12 gap-3 px-5 py-3.5 items-center hover:bg-gray-50/50 transition-colors duration-150 group"
+                        className="grid grid-cols-12 gap-3 px-4 sm:px-5 py-3 sm:py-3.5 items-center hover:bg-gray-50/50 transition-colors duration-150 group"
                     >
                         {/* Description / category avatar */}
                         <div className="col-span-8 md:col-span-4 flex items-center gap-3">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${getCategoryColor(tx.category)}`}>
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 font-headline ${getCategoryColor(tx.category)}`}>
                                 {tx.category?.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
-                                <p className="text-sm font-medium text-gray-800 truncate">
+                                <p className="text-sm font-medium text-gray-800 truncate font-headline">
                                     {tx.description || tx.category}
                                 </p>
-                                <p className="text-xs text-gray-400 md:hidden">
+                                <p className="text-xs text-gray-400 md:hidden font-label mt-0.5">
                                     {format(new Date(tx.date), 'MMM d, yyyy')} ·{' '}
-                                    <span className={tx.type === 'income' ? 'text-emerald-500' : 'text-red-400'}>
+                                    <span className={tx.type === 'income' ? 'text-emerald-500 font-medium' : 'text-red-400 font-medium'}>
                                         {tx.type}
                                     </span>
                                 </p>
