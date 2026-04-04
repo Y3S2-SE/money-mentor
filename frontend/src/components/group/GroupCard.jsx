@@ -35,7 +35,7 @@ export default function GroupCard({ group, currentUserId, onRefresh, isSelected,
   return (
     <div
       onClick={onSelect}
-      className={`relative flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-colors
+      className={`relative flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-colors border-b border-slate-100
         ${isSelected ? 'bg-slate-100' : 'hover:bg-slate-50'}
       `}
     >
@@ -67,7 +67,7 @@ export default function GroupCard({ group, currentUserId, onRefresh, isSelected,
             {group.description || `${group.members.length} member${group.members.length !== 1 ? 's' : ''}`}
           </span>
         </div>
-        {/* Thin progress bar */}
+        {/* Progress bar */}
         <div className="mt-1.5 w-full bg-slate-200 rounded-full h-0.5">
           <div
             className="bg-blue-500 h-0.5 rounded-full transition-all"
@@ -87,7 +87,6 @@ export default function GroupCard({ group, currentUserId, onRefresh, isSelected,
 
         {menuOpen && (
           <>
-            {/* Backdrop */}
             <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
             <div className="absolute right-0 top-8 z-20 bg-white rounded-xl shadow-xl border border-slate-100 py-1 w-44 overflow-hidden">
               <button
@@ -98,10 +97,7 @@ export default function GroupCard({ group, currentUserId, onRefresh, isSelected,
                 Copy invite code
               </button>
               {isAdmin && (
-                <button
-                  onClick={handleRegen}
-                  className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 transition"
-                >
+                <button onClick={handleRegen} className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 transition">
                   <RefreshCw className="w-3.5 h-3.5" /> Regenerate code
                 </button>
               )}
