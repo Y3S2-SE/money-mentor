@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Plus, LayoutDashboard, Wallet } from 'lucide-react';
-import { format } from 'date-fns';
+import { Plus, LayoutDashboard, Wallet, CalendarDays } from 'lucide-react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import Sidebar from '../components/dashboard/Sidebar';
+import useSwipeTabs from '../hooks/useSwipeTabs';
 
 // Dashboard components
 import SummaryCards from '../components/dashboard/SummaryCards';
@@ -18,7 +18,7 @@ import RecentTransactions from '../components/dashboard/RecentTransactions';
 import CurrencyConverter from '../components/dashboard/CurrencyConverter';
 
 // Transaction components
-import TransactionFilters from '../components/transactions/TransactionFilters';
+import TransactionFilters, { MonthCalendarPicker, formatDisplay, CURRENT_MONTH_VALUE } from '../components/transactions/TransactionFilters';
 import TransactionList from '../components/transactions/TransactionList';
 import TransactionModal from '../components/transactions/TransactionModal';
 
@@ -26,24 +26,10 @@ import TransactionModal from '../components/transactions/TransactionModal';
 import dashboardService from '../services/dashboardService';
 import transactionService from '../services/transactionService';
 
-const getCurrentMonth = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-};
-
-const formatMonthLabel = (month) => {
-    try {
-        const [year, mon] = month.split('-');
-        return format(new Date(year, mon - 1, 1), 'MMMM yyyy');
-    } catch {
-        return month;
-    }
-};
-
 const Dashboard = () => {
     const { user } = useSelector((state) => state.auth);
     const [activeTab, setActiveTab] = useState('overview');
-    const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+    const [selectedMonth, setSelectedMonth] = useState(CURRENT_MONTH_VALUE);
 
     // ── Dashboard state ──────────────────────────────────────────
     const [summary, setSummary] = useState(null);
@@ -67,9 +53,11 @@ const Dashboard = () => {
     const [transactions, setTransactions] = useState([]);
     const [pagination, setPagination] = useState(null);
     const [txLoading, setTxLoading] = useState(false);
-    const [filters, setFilters] = useState({ month: getCurrentMonth(), page: 1, limit: 10 });
+    const [filters, setFilters] = useState({ month: CURRENT_MONTH_VALUE, page: 1, limit: 10 });
     const [modalOpen, setModalOpen] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState(null);
+    const [calOpen, setCalOpen] = useState(false);
+    const monthBtnRef = useRef(null);
 
     // ── Fetch dashboard data ──────────────────────────────────────
     const fetchSummary = useCallback(async (month) => {
@@ -180,8 +168,8 @@ const Dashboard = () => {
     }, [activeTab, filters]);
 
     // ── Handlers ──────────────────────────────────────────────────
-    const handleMonthChange = (e) => {
-        setSelectedMonth(e.target.value);
+    const handleMonthChange = (val) => {
+        setSelectedMonth(val);
     };
 
     const handleCategoryTypeChange = (type) => {
@@ -194,7 +182,7 @@ const Dashboard = () => {
     };
 
     const handleFilterReset = () => {
-        const reset = { month: getCurrentMonth(), page: 1, limit: 10 };
+        const reset = { month: CURRENT_MONTH_VALUE, page: 1, limit: 10 };
         setFilters(reset);
     };
 
@@ -228,166 +216,230 @@ const Dashboard = () => {
     };
 
     const tabs = [
-        { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-        { id: 'wallet', label: 'My Wallet', icon: Wallet },
+        { id: 'overview', label: 'Overview', short: 'Overview', icon: LayoutDashboard },
+        { id: 'wallet', label: 'My Wallet', short: 'Wallet', icon: Wallet },
     ];
+
+    const TAB_KEYS = tabs.map(t => t.id);
+    const { handleTouchStart, handleTouchEnd } = useSwipeTabs(TAB_KEYS, activeTab, setActiveTab);
 
     return (
         <Sidebar>
-            <div className="min-h-screen bg-gray-50">
+            <div className="flex flex-col h-full min-h-screen bg-gray-50 font-body px-0 sm:px-1">
                 {/* Page header */}
-                <div className="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-20">
-                    <div className="flex items-center justify-between">
+                <div className="bg-white px-4 sm:px-6 pt-4 sticky top-0 z-20 shrink-0">
+                    <div className='mb-7'>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
                         <div>
-                            <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
-                            <p className="text-xs text-gray-400 mt-0.5">
-                                Wealth status for {formatMonthLabel(selectedMonth)}
+                            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 font-headline">Dashboard</h1>
+                            <p className="text-xs sm:text-sm text-gray-400 mt-0.5 font-body">
+                                Wealth status for {formatDisplay(selectedMonth)}
                             </p>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            {/* Month picker */}
-                            <input
-                                type="month"
-                                value={selectedMonth}
-                                onChange={handleMonthChange}
-                                max={getCurrentMonth()}
-                                className="text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-950/20 focus:border-blue-950"
-                            />
-
+                        <div className="flex items-center justify-end w-full sm:w-auto mt-3 px-4 sm:mt-0">
                             {/* Add transaction button — visible on both tabs */}
                             <button
                                 onClick={handleOpenAdd}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-950 text-white text-sm font-medium rounded-xl hover:bg-blue-900 transition-colors duration-150"
+                                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-950 text-white text-sm font-label font-medium rounded-xl hover:bg-blue-900 transition-colors duration-150 w-full sm:w-auto"
                             >
                                 <Plus className="w-4 h-4" />
-                                <span className="hidden sm:inline">Add Transaction</span>
+                                <span className="inline">Add Transaction</span>
                             </button>
                         </div>
                     </div>
+                    </div>
 
                     {/* Tabs */}
-                    <div className="flex gap-1 mt-4">
-                        {tabs.map(({ id, label, icon: Icon }) => (
+                    <div className="flex gap-6 border-b border-outline-variant/30 px-2 overflow-x-auto scrollbar-none whitespace-nowrap scroll-smooth snap-x snap-mandatory">
+                        {tabs.map(({ id, label, short, icon: Icon }) => (
                             <button
                                 key={id}
                                 onClick={() => setActiveTab(id)}
-                                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-150 ${
-                                    activeTab === id
-                                        ? 'bg-blue-950 text-white'
-                                        : 'text-gray-500 hover:bg-gray-100'
-                                }`}
+                                className={`pb-3 px-2 font-label tracking-widest uppercase text-[11px] font-bold 
+                                    transition-all relative flex items-center gap-2 shrink-0 snap-start ${activeTab === id
+                                        ? 'text-blue-950'
+                                        : 'text-gray-500 hover:text-gray-800'
+                                    }`}
                             >
-                                <Icon className="w-4 h-4" />
-                                {label}
+                                <Icon strokeWidth={2} className="w-4 h-4" />
+                                <span className="hidden sm:inline">{label}</span>
+                                <span className="sm:hidden">{short}</span>
+
+                                {activeTab === id && (
+                                    <div className="absolute bottom-0 left-0 w-full h-[2px] bg-blue-950 rounded-t" />
+                                )}
                             </button>
                         ))}
                     </div>
                 </div>
 
-                {/* ── OVERVIEW TAB ───────────────────────────────────── */}
-                {activeTab === 'overview' && (
-                    <div className="p-6">
-                        <div className="flex gap-6">
-                            {/* Main content (left/center — 2/3 width) */}
-                            <div className="flex-1 min-w-0 space-y-5">
-                                {/* Summary cards */}
-                                <SummaryCards
-                                    summary={summary}
-                                    loading={dashLoading.summary}
-                                />
+                {/* Content Area */}
+                <div
+                    className="flex-1 overflow-y-auto p-4 sm:p-6"
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
+                >
+                    <div key={activeTab} style={{ animation: 'tabSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) both' }}>
+                        {/* ── OVERVIEW TAB ───────────────────────────────────── */}
+                        {activeTab === 'overview' && (
+                            <div className="flex flex-col lg:flex-row gap-6">
+                                {/* Main content (left/center — 2/3 width) */}
+                                <div className="flex-1 min-w-0 space-y-5">
+                                    
+                                    {/* Month Picker wrapper */}
+                                    <div className="flex flex-col gap-1 w-full sm:w-[220px] shrink-0 relative z-10 bg-white rounded-2xl p-4 border border-gray-100">
+                                        <label className="text-xs font-label text-gray-400 font-medium">Overview Month</label>
+                                        <button
+                                            ref={monthBtnRef}
+                                            type="button"
+                                            onClick={() => setCalOpen(p => !p)}
+                                            className={`w-full flex items-center gap-2.5 px-4 py-[9px] rounded-xl border
+                                                text-sm font-body text-left bg-white transition-all focus:outline-none shadow-sm
+                                                ${calOpen
+                                                    ? 'border-primary/40 ring-2 ring-primary/10'
+                                                    : 'border-outline-variant/30 hover:border-outline-variant/60'
+                                                }`}
+                                        >
+                                            <CalendarDays
+                                                className={`w-4 h-4 shrink-0 transition-colors
+                                                    ${calOpen ? 'text-primary' : 'text-on-surface/35'}`}
+                                            />
+                                            <span className={`flex-1 truncate font-bold
+                                                ${calOpen ? 'text-primary' : 'text-on-surface'}`}>
+                                                {formatDisplay(selectedMonth)}
+                                            </span>
+                                            <span
+                                                className={`material-symbols-outlined pointer-events-none text-[18px]
+                                                    transition-transform duration-200
+                                                    ${calOpen
+                                                        ? 'rotate-180 text-primary/60'
+                                                        : 'text-on-surface/40'}`}
+                                            >
+                                                expand_more
+                                            </span>
+                                        </button>
 
-                                {/* Monthly flow */}
-                                <MonthlyFlow
-                                    summary={summary}
-                                    categoryBreakdown={categoryBreakdown}
-                                    loading={dashLoading.summary}
-                                />
+                                        {calOpen && (
+                                            <MonthCalendarPicker
+                                                value={selectedMonth}
+                                                onChange={(val) => handleMonthChange(val)}
+                                                onClose={() => setCalOpen(false)}
+                                                anchorRef={monthBtnRef}
+                                            />
+                                        )}
+                                    </div>
 
-                                {/* Trends chart */}
-                                <MonthlyTrendsChart
-                                    trends={trends}
-                                    loading={dashLoading.trends}
-                                />
+                                    {/* Mobile: AI Insight Top */}
+                                    <div className="block lg:hidden">
+                                        <FinancialInsight
+                                            insight={insight}
+                                            loading={dashLoading.insight}
+                                            selectedMonth={selectedMonth}
+                                            onRefresh={fetchInsight}
+                                        />
+                                    </div>
 
-                                {/* Category breakdown */}
-                                <CategoryBreakdown
-                                    breakdown={categoryBreakdown}
-                                    loading={dashLoading.breakdown}
-                                    onTypeChange={handleCategoryTypeChange}
-                                />
+                                    {/* Summary cards */}
+                                    <SummaryCards
+                                        summary={summary}
+                                        loading={dashLoading.summary}
+                                    />
+
+                                    {/* Monthly flow */}
+                                    <MonthlyFlow
+                                        summary={summary}
+                                        categoryBreakdown={categoryBreakdown}
+                                        loading={dashLoading.summary}
+                                    />
+
+                                    {/* Trends chart */}
+                                    <MonthlyTrendsChart
+                                        trends={trends}
+                                        loading={dashLoading.trends}
+                                    />
+
+                                    {/* Category breakdown */}
+                                    <CategoryBreakdown
+                                        breakdown={categoryBreakdown}
+                                        loading={dashLoading.breakdown}
+                                        onTypeChange={handleCategoryTypeChange}
+                                    />
+                                </div>
+
+                                {/* Right panel (1/3 width) */}
+                                <div className="w-full lg:w-80 shrink-0 space-y-4">
+                                    {/* AI Insight (Desktop) */}
+                                    <div className="hidden lg:block">
+                                        <FinancialInsight
+                                            insight={insight}
+                                            loading={dashLoading.insight}
+                                            selectedMonth={selectedMonth}
+                                            onRefresh={fetchInsight}
+                                        />
+                                    </div>
+
+                                    {/* Savings goal */}
+                                    <SavingsGoalWidget
+                                        progress={savingsGoalProgress}
+                                        loading={dashLoading.savings}
+                                        selectedMonth={selectedMonth}
+                                        onGoalUpdated={handleGoalUpdated}
+                                    />
+
+                                    {/* Recent transactions */}
+                                    <RecentTransactions
+                                        transactions={recentTransactions}
+                                        loading={dashLoading.recent}
+                                    />
+
+                                    {/* Currency converter */}
+                                    <CurrencyConverter />
+                                </div>
+                            </div> 
+                        )}
+
+                                {/* ── MY WALLET TAB ──────────────────────────────────── */}
+                                {activeTab === 'wallet' && (
+                                    <div className="space-y-4">
+                                        {/* Filters */}
+                                        <TransactionFilters
+                                            filters={filters}
+                                            onChange={handleFilterChange}
+                                            onReset={handleFilterReset}
+                                        />
+
+                                        {/* Transaction list */}
+                                        <TransactionList
+                                            transactions={transactions}
+                                            pagination={pagination}
+                                            loading={txLoading}
+                                            onEdit={handleEditTransaction}
+                                            onRefresh={handlePageChange}
+                                        />
+                                    </div>
+                                )}
                             </div>
+                </div>
 
-                            {/* Right panel (1/3 width) */}
-                            <div className="w-80 shrink-0 space-y-4">
-                                {/* AI Insight */}
-                                <FinancialInsight
-                                    insight={insight}
-                                    loading={dashLoading.insight}
-                                    selectedMonth={selectedMonth}
-                                    onRefresh={fetchInsight}
-                                />
+                {/* Transaction modal */}
+                <TransactionModal
+                    isOpen={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    transaction={editingTransaction}
+                    onSuccess={handleTransactionSuccess}
+                />
 
-                                {/* Savings goal */}
-                                <SavingsGoalWidget
-                                    progress={savingsGoalProgress}
-                                    loading={dashLoading.savings}
-                                    selectedMonth={selectedMonth}
-                                    onGoalUpdated={handleGoalUpdated}
-                                />
-
-                                {/* Recent transactions */}
-                                <RecentTransactions
-                                    transactions={recentTransactions}
-                                    loading={dashLoading.recent}
-                                />
-
-                                {/* Currency converter */}
-                                <CurrencyConverter />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* ── MY WALLET TAB ──────────────────────────────────── */}
-                {activeTab === 'wallet' && (
-                    <div className="p-6 space-y-4">
-                        {/* Filters */}
-                        <TransactionFilters
-                            filters={filters}
-                            onChange={handleFilterChange}
-                            onReset={handleFilterReset}
-                        />
-
-                        {/* Transaction list */}
-                        <TransactionList
-                            transactions={transactions}
-                            pagination={pagination}
-                            loading={txLoading}
-                            onEdit={handleEditTransaction}
-                            onRefresh={handlePageChange}
-                        />
-                    </div>
-                )}
+                <ToastContainer
+                    position="bottom-right"
+                    autoClose={3000}
+                    hideProgressBar={false}
+                    closeOnClick
+                    pauseOnHover
+                    theme="light"
+                    toastClassName="text-sm"
+                />
             </div>
-
-            {/* Transaction modal */}
-            <TransactionModal
-                isOpen={modalOpen}
-                onClose={() => setModalOpen(false)}
-                transaction={editingTransaction}
-                onSuccess={handleTransactionSuccess}
-            />
-
-            <ToastContainer
-                position="bottom-right"
-                autoClose={3000}
-                hideProgressBar={false}
-                closeOnClick
-                pauseOnHover
-                theme="light"
-                toastClassName="text-sm"
-            />
         </Sidebar>
     );
 };
