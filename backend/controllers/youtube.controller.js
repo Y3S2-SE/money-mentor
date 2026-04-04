@@ -15,8 +15,10 @@ const isStale = (cachedAt) => {
 
 // Fetch videos from YouTube API for a single keyword and cache the result
 const fetchAndCache = async (keyword) => {
+    // Enhance query for informational content and filter for long videos (>20 mins)
+    const enhancedQuery = `${keyword} informational tutorial`;
     const response = await fetch(
-        `${YOUTUBE_API_URL}?part=snippet&type=video&maxResults=${MAX_RESULTS_PER_KEYWORD}&q=${encodeURIComponent(keyword)}&key=${process.env.YOUTUBE_API_KEY}`
+        `${YOUTUBE_API_URL}?part=snippet&type=video&videoDuration=long&maxResults=${MAX_RESULTS_PER_KEYWORD}&q=${encodeURIComponent(enhancedQuery)}&key=${process.env.YOUTUBE_API_KEY}`
     );
     const data = await response.json();
 
@@ -115,7 +117,7 @@ export const getVideoSuggestions = async (req, res) => {
             data: {
                 keywords: chat.youtubeKeywords,
                 videos: allVideos, // Will now be max 5
-                cacheStats 
+                cacheStats
             }
         });
     } catch (error) {
