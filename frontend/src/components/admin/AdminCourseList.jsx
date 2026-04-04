@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { getCourses, updateCourse, deleteCourse } from '../../services/courseService';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../store/slices/toastSlice';
+import useConfirm from '../../hooks/useConfirm';
+import ConfirmWindow from '../ui/ConfirmWindow';
 
 const AdminCourseList = ({ onAddCourse, onEditCourse }) => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const { confirm, modalProps } = useConfirm();
 
   const fetchCourses = async () => {
     setLoading(true);
@@ -22,27 +28,68 @@ const AdminCourseList = ({ onAddCourse, onEditCourse }) => {
   }, []);
 
   const handleTogglePublish = async (course) => {
+    const confirmed = await confirm({
+      title: course.isPublished ? 'Unpublish Course?' : 'Publish Course?',
+      description: course.isPublished
+        ? 'Users will no longer see this course.'
+        : 'This course will be visible to all users.',
+      confirmLabel: course.isPublished ? 'Unpublish' : 'Publish',
+      variant: course.isPublished ? 'warning' : 'success',
+      icon: course.isPublished ? 'visibility_off' : 'visibility',
+    });
+    if (!confirmed) return;
+
     try {
       await updateCourse(course._id, { isPublished: !course.isPublished });
-      setCourses(courses.map(c => c._id === course._id ? { ...c, isPublished: !c.isPublished } : c));
+      setCourses(courses.map(c =>
+        c._id === course._id ? { ...c, isPublished: !c.isPublished } : c
+      ));
+      dispatch(addToast({
+        type: 'success',
+        message: course.isPublished ? 'Course unpublished' : 'Course published!',
+        subMessage: course.title,
+      }));
     } catch (error) {
-      alert('Failed to update published status');
+      dispatch(addToast({
+        type: 'error',
+        message: 'Failed to update course',
+        subMessage: 'Please try again.',
+      }));
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this course?')) return;
+  const handleDelete = async (id, title) => {
+    const confirmed = await confirm({
+      title: 'Delete Course?',
+      description: `"${title}" will be permanently removed including all its content.`,
+      confirmLabel: 'Delete',
+      cancelLabel: 'Keep',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
+
+    setLoading(true);
     try {
       await deleteCourse(id);
       setCourses(courses.filter(c => c._id !== id));
+      dispatch(addToast({
+        type: 'success',
+        message: 'Course deleted',
+        subMessage: 'The course has been removed.',
+      }));
     } catch (error) {
-      alert('Failed to delete course');
+      dispatch(addToast({
+        type: 'error',
+        message: 'Failed to delete course',
+        subMessage: 'Please try again.',
+      }));
     }
   };
 
   if (loading) return <div className="p-8 text-on-surface/60">Loading courses...</div>;
 
   return (
+    <>
     <div className="space-y-6">
       <div className="flex justify-between items-end mb-6 border-b border-outline-variant/30 pb-4">
         <div>
@@ -137,7 +184,7 @@ const AdminCourseList = ({ onAddCourse, onEditCourse }) => {
                     <span className="material-symbols-outlined text-[14px]">edit</span> Edit
                   </button>
                   <button 
-                    onClick={() => handleDelete(course._id)}
+                    onClick={() => handleDelete(course._id, course.title)}
                     className="py-2.5 bg-red-500/10 text-red-500 rounded-lg font-label text-[10px] uppercase tracking-wider font-bold hover:bg-red-500/20 transition-colors flex justify-center items-center gap-1"
                   >
                     <span className="material-symbols-outlined text-[14px]">delete</span> Delete
@@ -149,6 +196,8 @@ const AdminCourseList = ({ onAddCourse, onEditCourse }) => {
         </div>
       )}
     </div>
+    <ConfirmWindow {...modalProps} />
+    </>
   );
 };
 

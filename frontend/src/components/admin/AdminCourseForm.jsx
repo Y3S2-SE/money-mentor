@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { createCourse, updateCourse } from '../../services/courseService';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../store/slices/toastSlice';
 
 const AdminCourseForm = ({ initialData, onBack }) => {
+  const dispatch = useDispatch();
   const isEditing = !!initialData;
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -12,7 +15,13 @@ const AdminCourseForm = ({ initialData, onBack }) => {
     thumbnail: initialData?.thumbnail || '',
     passingScore: initialData?.passingScore || 70,
     isPublished: initialData?.isPublished || false,
-    questions: initialData?.questions || []
+    questions: initialData?.questions?.map(q => ({
+      question: q.question,
+      options: [...q.options],
+      correctAnswerIndex: q.correctAnswerIndex ?? 0,
+      explanation: q.explanation || '',
+      points: q.points ?? 10
+    })) || []
   });
 
   const handleAddQuestion = () => {
@@ -48,7 +57,11 @@ const AdminCourseForm = ({ initialData, onBack }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.questions.length === 0) {
-      alert("Please add at least one question.");
+      dispatch(addToast({                     
+        type: 'error',
+        message: 'No questions added',
+        subMessage: 'Please add at least one question.',
+      }));
       return;
     }
     setLoading(true);
@@ -58,10 +71,14 @@ const AdminCourseForm = ({ initialData, onBack }) => {
       } else {
         await createCourse(formData);
       }
-      onBack(); // return to list on success
+      onBack('saved'); // return to list on success
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Failed to save course.");
+      dispatch(addToast({                        
+        type: 'error',
+        message: 'Failed to save course',
+        subMessage: error.response?.data?.message || 'Please try again.',
+      }));
     } finally {
       setLoading(false);
     }
@@ -181,10 +198,11 @@ const AdminCourseForm = ({ initialData, onBack }) => {
                     <div>
                       <label className="block text-[10px] font-label uppercase tracking-widest text-on-surface/70 mb-2 font-bold">Correct Option</label>
                       <select value={q.correctAnswerIndex} onChange={e => handleQuestionChange(qIndex, 'correctAnswerIndex', Number(e.target.value))} className="w-full bg-surface border border-outline-variant/30 rounded-lg px-3 py-2 text-sm">
-                        <option value={0}>Option 1</option>
-                        <option value={1}>Option 2</option>
-                        <option value={2}>Option 3</option>
-                        <option value={3}>Option 4</option>
+                        {q.options.map((opt, optIndex) => (
+                          <option key={optIndex} value={optIndex}>
+                            Option {optIndex + 1}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div>
