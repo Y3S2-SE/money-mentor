@@ -7,7 +7,7 @@ const MSG = {
   SEND_MESSAGE: 'send_message',
   TYPING_START:  'typing_start',
   TYPING_STOP:   'typing_stop',
-  SHARE_BADGE:   'share_badge',   // ← NEW
+  SHARE_BADGE:   'share_badge',
   NEW_MESSAGE:   'new_message',
   USER_JOINED:   'user_joined',
   USER_LEFT:     'user_left',
@@ -123,7 +123,6 @@ export const useChat = (groupId) => {
     wsRef.current.send(JSON.stringify({ type: MSG.SEND_MESSAGE, content: content.trim() }));
   }, []);
 
-  // ── NEW: share a badge by its DB _id ──────────────────────────────────────
   const sendBadge = useCallback((badgeId) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
     wsRef.current.send(JSON.stringify({ type: MSG.SHARE_BADGE, badgeId }));
@@ -137,6 +136,11 @@ export const useChat = (groupId) => {
   const sendTypingStop = useCallback(() => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
     wsRef.current.send(JSON.stringify({ type: MSG.TYPING_STOP }));
+  }, []);
+
+  // ── Remove a message from local state after successful delete ─────────────
+  const removeMessage = useCallback((messageId) => {
+    setMessages((prev) => prev.filter((m) => m._id !== messageId));
   }, []);
 
   const disconnect = useCallback(() => {
@@ -171,8 +175,9 @@ export const useChat = (groupId) => {
     isLoading,
     error,
     sendMessage,
-    sendBadge,          // ← exported
+    sendBadge,
     sendTypingStart,
     sendTypingStop,
+    removeMessage,    
   };
 };
