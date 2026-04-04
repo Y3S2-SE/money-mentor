@@ -29,7 +29,7 @@ const youtubeCacheSchema = new mongoose.Schema({
 });
 
 // Index on keyword for fast lookups
-youtubeCacheSchema.index({ keyword: 1 });
+//youtubeCacheSchema.index({ keyword: 1 });
 
 const YoutubeCache = mongoose.model('YoutubeCache', youtubeCacheSchema);
 
