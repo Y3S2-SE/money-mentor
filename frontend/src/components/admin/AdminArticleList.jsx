@@ -110,7 +110,7 @@ const AdminArticleList = ({ onAddArticle, onEditArticle }) => {
                                                         )}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="font-bold text-sm text-on-surface truncate max-w-[200px] md:max-w-[300px]">
+                                                        <p className="font-bold text-sm text-on-surface truncate max-w-50 md:max-w-75">
                                                             {article.title}
                                                         </p>
                                                         <p className="text-[10px] text-on-surface/40 uppercase font-bold tracking-widest mt-0.5">

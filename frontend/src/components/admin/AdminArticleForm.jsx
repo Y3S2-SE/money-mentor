@@ -215,7 +215,7 @@ const AdminArticleForm = ({ initialData, onBack }) => {
                             <div className="space-y-3">
                                 <label className="text-[10px] uppercase font-bold tracking-widest text-on-surface/50 px-1">Article Thumbnail</label>
                                 <div className="space-y-4">
-                                    <div className={`relative group w-full ${preview ? 'aspect-video' : 'aspect-[21/9]'} rounded-2xl overflow-hidden border border-outline-variant/20 bg-surface-bright transition-all`}>
+                                    <div className={`relative group w-full ${preview ? 'aspect-video' : 'aspect-21/9'} rounded-2xl overflow-hidden border border-outline-variant/20 bg-surface-bright transition-all`}>
                                         {preview ? (
                                             <>
                                                 <img src={preview} alt="Preview" className="w-full h-full object-cover" />
@@ -256,7 +256,7 @@ const AdminArticleForm = ({ initialData, onBack }) => {
 
                     {/* Right Column - Editor */}
                     <div className="lg:col-span-8">
-                        <div className="bg-white rounded-3xl border border-outline-variant/20 shadow-sm min-h-[600px] flex flex-col overflow-hidden">
+                        <div className="bg-white rounded-3xl border border-outline-variant/20 shadow-sm min-h-150 flex flex-col overflow-hidden">
                             <div className="shrink-0 p-6 border-b border-outline-variant/10 flex items-center justify-between bg-surface-bright/50">
                                 <h3 className="text-sm font-bold uppercase tracking-widest text-on-surface/40 flex items-center gap-2">
                                     <span className="material-symbols-outlined text-[20px]">article</span>
@@ -267,12 +267,12 @@ const AdminArticleForm = ({ initialData, onBack }) => {
                                     Use / for commands
                                 </div>
                             </div>
-                            <div className="flex-1 p-4 md:p-8 overflow-y-auto max-h-[800px]">
+                            <div className="flex-1 p-4 md:p-8 overflow-y-auto max-h-200">
                                 <div className="prose prose-lg prose-primary max-w-none">
                                     <BlockNoteView
                                         editor={editor}
                                         theme="light"
-                                        className="min-h-[400px]"
+                                        className="min-h-100"
                                     />
                                 </div>
                             </div>

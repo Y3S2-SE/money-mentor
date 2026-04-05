@@ -74,7 +74,7 @@ const ArticleList = ({ onSelectArticle }) => {
                             key={article._id}
                             onClick={() => onSelectArticle(article)}
                             style={{ animationDelay: `${i * 50}ms` }}
-                            className="group relative bg-white rounded-[32px] border border-outline-variant/10 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 cursor-pointer flex flex-col animate-in slide-in-from-bottom-4 h-full"
+                            className="group relative bg-white rounded-4xl border border-outline-variant/10 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 cursor-pointer flex flex-col animate-in slide-in-from-bottom-4 h-full"
                         >
                             {/* Read Status Badge Overlay (No Image) */}
                             {article.isRead && !article.thumbnail && (

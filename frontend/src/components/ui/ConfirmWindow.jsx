@@ -73,7 +73,7 @@ const ConfirmWindow = ({
 
     const modalContent = (
         <div
-            className="fixed inset-0 z-[9999] flex items-end sm:items-center
+            className="fixed inset-0 z-9999 flex items-end sm:items-center
             justify-center sm:p-4 bg-black/40 backdrop-blur-sm"
             onClick={handleBackdropClick}
             style={{ animation: 'fadeIn 0.15s ease forwards' }}

@@ -206,7 +206,7 @@ const Sidebar = ({ children }) => {
                             <div className="w-6 h-6 rounded-full bg-blue-950 flex items-center justify-center shrink-0 mr-2 shadow-inner">
                                 <span className="text-[10px] font-bold text-white leading-none">{level}</span>
                             </div>
-                            <div className="flex flex-col justify-center w-[4.5rem]">
+                            <div className="flex flex-col justify-center w-18">
                                 <span className="text-[9px] font-bold text-blue-950 leading-tight mb-0.5">{currentXP} XP</span>
                                 <div className="w-full bg-gray-200 h-1 rounded-full overflow-hidden">
                                     <div className="bg-[#85a4d5] h-full rounded-full transition-all duration-1000" style={{ width: `${progressPercent}%` }}></div>

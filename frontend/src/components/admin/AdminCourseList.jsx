@@ -132,13 +132,13 @@ const AdminCourseList = ({ onAddCourse, onEditCourse }) => {
                 </div>
               ) : (
                 <div className={`h-32 flex items-center justify-center relative overflow-hidden transition-transform duration-500 ${
-                  course.category === 'budgeting' ? 'bg-gradient-to-br from-blue-500/20 to-indigo-500/10' :
-                  course.category === 'investing' ? 'bg-gradient-to-br from-emerald-500/20 to-teal-500/10' :
-                  course.category === 'saving' ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/10' :
-                  course.category === 'debt' ? 'bg-gradient-to-br from-rose-500/20 to-red-500/10' :
-                  course.category === 'taxes' ? 'bg-gradient-to-br from-purple-500/20 to-fuchsia-500/10' :
-                  course.category === 'crypto' ? 'bg-gradient-to-br from-violet-500/20 to-purple-500/10' :
-                  'bg-gradient-to-br from-primary/20 to-secondary/10'
+                  course.category === 'budgeting' ? 'bg-linear-to-br from-blue-500/20 to-indigo-500/10' :
+                  course.category === 'investing' ? 'bg-linear-to-br from-emerald-500/20 to-teal-500/10' :
+                  course.category === 'saving' ? 'bg-linear-to-br from-amber-500/20 to-orange-500/10' :
+                  course.category === 'debt' ? 'bg-linear-to-br from-rose-500/20 to-red-500/10' :
+                  course.category === 'taxes' ? 'bg-linear-to-br from-purple-500/20 to-fuchsia-500/10' :
+                  course.category === 'crypto' ? 'bg-linear-to-br from-violet-500/20 to-purple-500/10' :
+                  'bg-linear-to-br from-primary/20 to-secondary/10'
                 }`}>
                   <span className={`material-symbols-outlined text-[48px] opacity-40 group-hover:scale-110 transition-transform duration-500 ${
                      course.category === 'budgeting' ? 'text-blue-500' :

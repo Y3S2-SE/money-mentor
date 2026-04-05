@@ -128,10 +128,10 @@ const ChatComponent = ({ activeChatId, setActiveChatId, onMessageSent }) => {
     <div className="flex flex-1 h-full relative border border-outline-variant/30 rounded-2xl overflow-hidden bg-surface-bright shadow-sm">
       {/* LEFT: Conversation History Sidebar - Connected */}
       <div
-        className={`bg-surface-bright border-r border-outline-variant/30 flex flex-col relative transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${isSidebarOpen ? 'w-[200px] sm:w-[250px] opacity-100' : 'w-0 border-none opacity-0'
+        className={`bg-surface-bright border-r border-outline-variant/30 flex flex-col relative transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${isSidebarOpen ? 'w-50 sm:w-62.5 opacity-100' : 'w-0 border-none opacity-0'
           }`}
       >
-        <div className="p-3 sm:p-4 border-b border-outline-variant/30 shrink-0 w-full min-w-[200px] sm:min-w-[250px]">
+        <div className="p-3 sm:p-4 border-b border-outline-variant/30 shrink-0 w-full min-w-50 sm:min-w-62.5">
           <button
             onClick={handleNewChat}
             className="w-full py-2.5 sm:py-3 bg-primary text-white rounded-xl font-label text-[10px] sm:text-[11px] uppercase tracking-wider font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
@@ -140,7 +140,7 @@ const ChatComponent = ({ activeChatId, setActiveChatId, onMessageSent }) => {
             New Chat
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1.5 sm:space-y-2 w-full min-w-[200px] sm:min-w-[250px]">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1.5 sm:space-y-2 w-full min-w-50 sm:min-w-62.5">
           {conversations.map(chat => (
             <div
               key={chat._id}

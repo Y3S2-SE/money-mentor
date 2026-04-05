@@ -112,7 +112,7 @@ const CourseList = () => {
             <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] uppercase font-bold tracking-widest rounded-lg border border-primary/20">
               {courseDetails.category}
             </span>
-            <span className="px-3 py-1 bg-surface-container-high text-on-surface/60 text-[10px] uppercase font-bold tracking-widest rounded-lg border border-outline-variant/20 capitalize">
+            <span className="px-3 py-1 bg-surface-container-high text-on-surface/60 text-[10px] uppercase font-bold tracking-widest rounded-lg border border-outline-variant/20">
               {courseDetails.difficulty}
             </span>
           </div>
@@ -121,7 +121,7 @@ const CourseList = () => {
         </div>
 
         {result ? (
-          <div className={`p-8 rounded-[32px] border ${result.data.passed ? 'bg-primary-fixed-dim/5 border-primary/20' : 'bg-red-50 border-red-100'}`}>
+          <div className={`p-8 rounded-4xl border ${result.data.passed ? 'bg-primary-fixed-dim/5 border-primary/20' : 'bg-red-50 border-red-100'}`}>
             <div className="flex flex-col items-center text-center mb-10">
               {result.data.passed ? (
                 <div className="w-24 h-24 mb-4">
@@ -187,7 +187,7 @@ const CourseList = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-6">
               {courseDetails.questions.map((q, qIndex) => (
-                <div key={qIndex} className="bg-surface-bright p-6 md:p-8 rounded-[32px] border border-outline-variant/10 shadow-sm hover:border-primary/20 transition-colors">
+                <div key={qIndex} className="bg-surface-bright p-6 md:p-8 rounded-4xl border border-outline-variant/10 shadow-sm hover:border-primary/20 transition-colors">
                   <p className="font-bold mb-6 font-body text-on-surface text-lg leading-snug">
                     <span className="text-primary mr-2">0{qIndex + 1}.</span> {q.question}
                   </p>
@@ -240,7 +240,7 @@ const CourseList = () => {
   const CourseCard = ({ course, isCompleted }) => (
     <div
       key={course._id}
-      className={`group relative bg-white rounded-[32px] border ${isCompleted ? 'border-primary/10' : 'border-outline-variant/10'} overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 cursor-pointer flex flex-col h-full`}
+      className={`group relative bg-white rounded-4xl border ${isCompleted ? 'border-primary/10' : 'border-outline-variant/10'} overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 cursor-pointer flex flex-col h-full`}
       onClick={() => isCompleted ? setCompletedPopup(course) : handleSelectCourse(course._id)}
     >
       {course.thumbnail && (
@@ -358,7 +358,7 @@ const CourseList = () => {
       </div>
 
       {courses.length === 0 ? (
-        <div className="py-20 text-center bg-white rounded-[32px] border border-outline-variant/10 text-on-surface/30">
+        <div className="py-20 text-center bg-white rounded-4xl border border-outline-variant/10 text-on-surface/30">
           <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="material-symbols-outlined text-4xl">inventory_2</span>
           </div>
@@ -383,7 +383,7 @@ const CourseList = () => {
             </div>
 
             {newCourses.length === 0 ? (
-              <div className="pb-10 text-center bg-surface-container-low rounded-[32px] border border-dashed border-primary/20 text-on-surface/40 flex flex-col items-center">
+              <div className="pb-10 text-center bg-surface-container-low rounded-4xl border border-dashed border-primary/20 text-on-surface/40 flex flex-col items-center">
                 <div className="w-54 h-54 mb-2">
                   {lotties.coins && <Lottie animationData={lotties.coins} loop={true} />}
                 </div>
@@ -418,7 +418,7 @@ const CourseList = () => {
 
       {/* Completed Course Popup Modal */}
       {completedPopup && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white border border-outline-variant/10 p-10 rounded-[40px] shadow-2xl max-w-sm w-full relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-16 translate-x-16 blur-2xl transition-colors group-hover:bg-primary/10" />
 
