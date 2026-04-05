@@ -110,12 +110,12 @@ const AdminCourseForm = ({ initialData, onBack }) => {
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-label uppercase tracking-wider text-on-surface/70 mb-2 font-bold">Course Title</label>
-              <input required type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary/20" placeholder="e.g. Budgeting 101" />
+              <input required type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary/20" placeholder="e.g. Budgeting 101" maxLength={100} />
             </div>
 
             <div>
               <label className="block text-xs font-label uppercase tracking-wider text-on-surface/70 mb-2 font-bold">Description</label>
-              <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary/20 min-h-[100px]" placeholder="Brief course overview..." />
+              <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary/20 min-h-[100px]" placeholder="Brief course overview..." maxLength={500} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -207,7 +207,7 @@ const AdminCourseForm = ({ initialData, onBack }) => {
                     </div>
                     <div>
                       <label className="block text-[10px] font-label uppercase tracking-widest text-on-surface/70 mb-2 font-bold">Point Value</label>
-                      <input required type="number" min="0" value={q.points} onChange={e => handleQuestionChange(qIndex, 'points', Number(e.target.value))} className="w-full bg-surface border border-outline-variant/30 rounded-lg px-3 py-2 text-sm" />
+                      <input required type="number" min="1" value={q.points} onChange={e => handleQuestionChange(qIndex, 'points', Number(e.target.value))} className="w-full bg-surface border border-outline-variant/30 rounded-lg px-3 py-2 text-sm" />
                     </div>
                     <div className="md:col-span-3">
                       <label className="block text-[10px] font-label uppercase tracking-widest text-on-surface/70 mb-2 font-bold">Explanation (Optional)</label>

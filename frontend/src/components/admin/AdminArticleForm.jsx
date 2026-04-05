@@ -38,10 +38,10 @@ const AdminArticleForm = ({ initialData, onBack }) => {
             // Load content into editor
             if (initialData.content) {
                 try {
-                    const blocks = typeof initialData.content === 'string' 
-                        ? JSON.parse(initialData.content) 
+                    const blocks = typeof initialData.content === 'string'
+                        ? JSON.parse(initialData.content)
                         : initialData.content;
-                    
+
                     const initialBlocks = blocks.content || (Array.isArray(blocks) ? blocks : []);
                     if (initialBlocks.length > 0) {
                         editor.replaceBlocks(editor.topLevelBlocks, initialBlocks);
@@ -67,13 +67,13 @@ const AdminArticleForm = ({ initialData, onBack }) => {
 
     const handleSubmit = async (e, shouldPublish = null) => {
         if (e) e.preventDefault();
-        
+
         // Validation
         if (!formData.title.trim()) return toast.error('Title is required');
         if (!formData.summary.trim()) return toast.error('Summary is required');
 
         const content = editor.topLevelBlocks; // BlockNote content as JSON blocks
-        
+
         const payload = {
             ...formData,
             content: content,
@@ -154,7 +154,7 @@ const AdminArticleForm = ({ initialData, onBack }) => {
                     <div className="lg:col-span-4 space-y-6">
                         <div className="bg-white p-6 rounded-3xl border border-outline-variant/20 shadow-sm space-y-6">
                             <h3 className="text-sm font-bold uppercase tracking-widest text-on-surface/40 border-b border-outline-variant/10 pb-4">Article Details</h3>
-                            
+
                             {/* Title */}
                             <div className="space-y-1.5">
                                 <label className="text-[10px] uppercase font-bold tracking-widest text-on-surface/50 px-1">Article Title</label>
@@ -164,6 +164,7 @@ const AdminArticleForm = ({ initialData, onBack }) => {
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     placeholder="Enter exploring title..."
                                     className="w-full px-4 py-3 bg-surface-bright rounded-2xl border border-outline-variant/20 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium"
+                                    maxLength={150}
                                 />
                             </div>
 
@@ -176,6 +177,7 @@ const AdminArticleForm = ({ initialData, onBack }) => {
                                     placeholder="Briefly describe what this article covers..."
                                     rows="3"
                                     className="w-full px-4 py-3 bg-surface-bright rounded-2xl border border-outline-variant/20 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium resize-none"
+                                    maxLength={300}
                                 />
                             </div>
 
@@ -198,6 +200,8 @@ const AdminArticleForm = ({ initialData, onBack }) => {
                                     <div className="relative">
                                         <input
                                             type="number"
+                                            min={1}
+                                            max={100}
                                             value={formData.pointsPerRead}
                                             onChange={(e) => setFormData({ ...formData, pointsPerRead: parseInt(e.target.value) })}
                                             className="w-full pl-4 pr-10 py-3 bg-surface-bright rounded-2xl border border-outline-variant/20 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-bold"
@@ -216,9 +220,9 @@ const AdminArticleForm = ({ initialData, onBack }) => {
                                             <>
                                                 <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                                                    <button 
+                                                    <button
                                                         type="button"
-                                                        onClick={() => { setPreview(null); setFormData({...formData, thumbnail: ''}); }}
+                                                        onClick={() => { setPreview(null); setFormData({ ...formData, thumbnail: '' }); }}
                                                         className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 transition-all flex items-center justify-center"
                                                     >
                                                         <span className="material-symbols-outlined">delete</span>
@@ -265,8 +269,8 @@ const AdminArticleForm = ({ initialData, onBack }) => {
                             </div>
                             <div className="flex-1 p-4 md:p-8 overflow-y-auto max-h-[800px]">
                                 <div className="prose prose-lg prose-primary max-w-none">
-                                    <BlockNoteView 
-                                        editor={editor} 
+                                    <BlockNoteView
+                                        editor={editor}
                                         theme="light"
                                         className="min-h-[400px]"
                                     />
