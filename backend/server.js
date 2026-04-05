@@ -16,7 +16,7 @@ const startServer = async () => {
 
         initWebSocketServer(server);
 
-        server.listen(PORT, () => {
+        server.listen(PORT, "0.0.0.0", () => {
             logger.success(`server running on port ${PORT}`);
             logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
         })
