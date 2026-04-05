@@ -1,5 +1,6 @@
 import Article from '../models/article.model.js';
 import { uploadToCloudinary } from '../middleware/upload.middleware.js';
+import { awardActionBadge, processXPEvent } from '../utils/gamificationEngine.js';
 
 // @desc    Create a new article
 // @route   POST /api/articles/create
@@ -284,21 +285,45 @@ export const completeArticle = async (req, res) => {
         });
         await article.save();
 
-        // Calculate new total article points for this user
-        const allArticles = await Article.find({ 'completions.user': req.user._id });
-        const totalArticlePoints = allArticles.reduce((total, a) => {
-            const completion = a.completions.find(
-                (c) => c.user.toString() === req.user._id.toString()
-            );
-            return total + (completion?.pointsEarned || 0);
-        }, 0);
+        // Award Xp through gamification engine
+        const { xpResult, newlyEarnedBadges } = await processXPEvent(
+            req.user._id,
+            'read_article',
+            pointsEarned,
+            `Read article: ${article.title}`
+        );
 
+        // Check how many articles this user has completed
+        const totalCompleted = await Article.countDocuments({
+            'completions.user': req.user._id
+        });
+
+        // Award badge if they just completed 5 articles
+        const actionBadges = [];
+        if (totalCompleted === 5) {
+            const badge = await awardActionBadge(req.user._id, 'read_5_articles');
+            if (badge) actionBadges.push(badge);
+        }
+
+        // Combine all newly earned badges
+        const allBadges = [...newlyEarnedBadges, ...actionBadges].map(b => ({
+            key: b.key,
+            name: b.name,
+            description: b.description,
+            category: b.category,
+            xpReward: b.xpReward ?? 0,
+        }));
+
+        
         res.status(200).json({
             success: true,
             message: `Great job! You earned ${pointsEarned} points for reading this article.`,
             data: {
                 pointsEarned,
-                totalArticlePoints
+                totalArticlePoints: totalCompleted,
+                leveledUp: xpResult?.leveledUp ?? false,
+                level: xpResult?.newLevel ?? null,
+                newlyEarnedBadges: allBadges,
             }
         });
     } catch (error) {

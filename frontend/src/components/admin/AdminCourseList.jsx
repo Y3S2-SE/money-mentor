@@ -83,10 +83,18 @@ const AdminCourseList = ({ onAddCourse, onEditCourse }) => {
         message: 'Failed to delete course',
         subMessage: 'Please try again.',
       }));
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return <div className="p-8 text-on-surface/60">Loading courses...</div>;
+  if (loading) {
+        return (
+            <div className="flex items-center justify-center py-20">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
   return (
     <>

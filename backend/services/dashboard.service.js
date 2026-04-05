@@ -1,5 +1,6 @@
 import Transaction from "../models/transaction.model.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import InsightCache from "../models/insightCache.model.js";
 
 // Helper to get start and end of a month
 const getMonthRange = (month) => {
@@ -167,43 +168,206 @@ export const getMonthlyTrends = async (userId) => {
   return result;
 };
 
+const FIVE_DAYS_MS = 5 * 24 * 60 * 60 * 1000;
+const MAX_CALLS_PER_MONTH = 5;
+const END_OF_MONTH_DAY = 28;
+
+/**
+ * Decides whether a new Gemini call is allowed right now.
+ * Returns { shouldCall: bool, reason: string }
+ */
+const shouldCallGemini = (cached, now) => {
+  if (!cached) {
+    return { shouldCall: true, reason: 'first_call' };
+  }
+
+  const todayDate = now.getDate();
+  const isEndOfMonthWindow = todayDate >= END_OF_MONTH_DAY;
+
+  if (isEndOfMonthWindow && !cached.isEndOfMonth) {
+    return { shouldCall: true, reason: 'end_of_month' }; 
+  }
+
+  if (cached.isEndOfMonth) {
+    return { shouldCall: false, reason: 'end_of_month_done' };
+  }
+
+  if (cached.callCount >= MAX_CALLS_PER_MONTH) {
+    return { shouldCall: false, reason: 'monthly_cap_reached' };
+  }
+
+  if (cached.nextCallAllowedAt && now < new Date(cached.nextCallAllowedAt)) {
+    return { shouldCall: false, reason: 'within_5_day_window' };
+  }
+
+  return { shouldCall: true, reason: 'cycle_refresh' };
+};
+
+/**
+ * Generate a rule-based insight from real financial data.
+ * Used when Gemini is unavailable OR between Gemini cycles to keep
+ * the displayed insight feeling fresh even without an API call.
+ */
+const generateRuleBasedInsight = (summary, topCategory) => {
+    if (summary.totalIncome === 0 && summary.totalExpense === 0) {
+        return 'Add your income and expenses this month to get personalized financial tips!';
+    }
+    if (summary.totalExpense > summary.totalIncome) {
+        return `Your expenses exceeded your income by ${(summary.totalExpense - summary.totalIncome).toLocaleString()} this month. Your biggest spending area is ${topCategory || 'general expenses'} - even a small reduction there would help.`;
+    }
+    if (summary.savingsRate >= 30) {
+        return `Outstanding! You're saving ${summary.savingsRate}% of your income. You're well ahead of the recommended 20% target - consider putting the surplus toward a specific goal.`;
+    }
+    if (summary.savingsRate >= 20) {
+        return `Great discipline - you saved ${summary.savingsRate}% of your income this month. Keep this habit consistent and your financial position will compound over time.`;
+    }
+    if (summary.savingsRate >= 10) {
+        return `You saved ${summary.savingsRate}% this month - solid progress. Trimming a little from ${topCategory || 'your top spending area'} could push you past the 20% mark next month.`;
+    }
+    return `You saved ${summary.savingsRate}% this month. Even small consistent savings build meaningful wealth over time. Try setting a specific savings target for next month.`;
+};
+
 // GET /api/dashboard/insight
 // Uses Gemini API to generate a personalized financial tip
 export const getFinancialInsight = async (userId, filters = {}) => {
-  const summary = await getSummary(userId, filters);
-  const categoryData = await getCategoryBreakdown(userId, filters);
+    const { month } = filters;
+    const now = new Date();
+    const period = month || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-  const topCategories = categoryData.breakdown
-    .slice(0, 3)
-    .map((c) => `${c.category} (${c.percentage}%)`)
-    .join(", ");
+    // Always fetch fresh financial data — this is cheap (your own DB)
+    const summary = await getSummary(userId, filters);
+    const categoryData = await getCategoryBreakdown(userId, filters);
+    const topCategory = categoryData.breakdown[0]?.category || null;
 
-  const prompt = `
+    // Check existing cache for this user+month
+    const cached = await InsightCache.findOne({ userId, month: period });
+
+    const { shouldCall, reason } = shouldCallGemini(cached, now);
+
+    let insight;
+    let callCount = cached?.callCount || 0;
+    let isEndOfMonth = cached?.isEndOfMonth || false;
+
+    if (!shouldCall) {
+        // Within cache window — use cached Gemini insight if available,
+        // otherwise generate rule-based from fresh data
+        insight = cached?.insight || generateRuleBasedInsight(summary, topCategory);
+
+        return {
+            period,
+            summary,          // always fresh from DB
+            insight,          // cached Gemini text or rule-based
+            fromCache: true,
+            cacheReason: reason,
+            callCount,
+            nextRefresh: cached?.nextCallAllowedAt || null,
+        };
+    }
+
+    // Gemini call is allowed — build prompt
+    const topCategories = categoryData.breakdown
+        .slice(0, 3)
+        .map((c) => `${c.category} (${c.percentage}%)`)
+        .join(', ');
+
+    const isEndOfMonthCall = reason === 'end_of_month';
+
+    const prompt = isEndOfMonthCall
+        ? `
 You are a friendly financial coach helping a young person manage their money.
 
-Here is their financial summary for this month:
+It's the end of the month. Here is their complete financial picture:
 - Total Income: ${summary.totalIncome}
 - Total Expenses: ${summary.totalExpense}
 - Net Savings: ${summary.netSavings}
 - Savings Rate: ${summary.savingsRate}%
 - Financial Health Score: ${summary.financialHealthScore}/100
-- Top spending categories: ${topCategories || "No expenses recorded"}
-${summary.spendingWarning ? `- Warning: ${summary.spendingWarning}` : ""}
+- Top spending categories: ${topCategories || 'No expenses recorded'}
+${summary.spendingWarning ? `- Warning: ${summary.spendingWarning}` : ''}
+
+Give a brief end-of-month financial summary and one specific actionable goal for next month.
+Keep it encouraging, simple, and under 3 sentences.
+        `.trim()
+        : `
+You are a friendly financial coach helping a young person manage their money.
+
+Here is their financial summary so far this month:
+- Total Income: ${summary.totalIncome}
+- Total Expenses: ${summary.totalExpense}
+- Net Savings: ${summary.netSavings}
+- Savings Rate: ${summary.savingsRate}%
+- Financial Health Score: ${summary.financialHealthScore}/100
+- Top spending categories: ${topCategories || 'No expenses recorded'}
+${summary.spendingWarning ? `- Warning: ${summary.spendingWarning}` : ''}
 
 Give a short, friendly, and motivating financial tip (2-3 sentences max) tailored to this data.
 Keep it simple and encouraging for a young person. Do not use technical jargon.
-  `.trim();
+        `.trim();
 
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_2);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-  const result = await model.generateContent(prompt);
-  const insight = result.response.text();
+    try {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_2);
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        const result = await model.generateContent(prompt);
+        insight = result.response.text();
 
-  return {
-    period: summary.period,
-    summary,
-    insight,
-  };
+        // Update call count and schedule next allowed call
+        callCount = (cached?.callCount || 0) + 1;
+        isEndOfMonth = isEndOfMonthCall;
+
+        const nextCallAllowedAt = isEndOfMonthCall
+            ? null  // end of month call — no more calls this month
+            : new Date(now.getTime() + FIVE_DAYS_MS);
+
+        // Upsert — update existing or create new
+        await InsightCache.findOneAndUpdate(
+            { userId, month: period },
+            {
+                userId,
+                month: period,
+                insight,
+                summary,
+                callCount,
+                isEndOfMonth,
+                generatedAt: now,
+                nextCallAllowedAt,
+            },
+            { upsert: true, new: true }
+        );
+
+    } catch (err) {
+        console.error('[getFinancialInsight] Gemini error:', err.message);
+
+        // Gemini failed — generate rule-based from real data
+        // Still cache it so we don't retry Gemini on every request
+        insight = generateRuleBasedInsight(summary, topCategory);
+
+        const nextCallAllowedAt = new Date(now.getTime() + FIVE_DAYS_MS);
+
+        await InsightCache.findOneAndUpdate(
+            { userId, month: period },
+            {
+                userId,
+                month: period,
+                insight,
+                summary,
+                callCount: cached?.callCount || 1,
+                isEndOfMonth: false,
+                generatedAt: now,
+                nextCallAllowedAt,
+            },
+            { upsert: true, new: true }
+        );
+    }
+
+    return {
+        period,
+        summary,            // always fresh
+        insight,
+        fromCache: false,
+        cacheReason: reason,
+        callCount,
+        nextRefresh: isEndOfMonth ? null : new Date(now.getTime() + FIVE_DAYS_MS),
+    };
 };
 
 // GET /api/dashboard/recent-transactions

@@ -6,8 +6,12 @@ import { MantineProvider } from "@mantine/core";
 import { getArticleById, completeArticle } from '../../services/articleService';
 import { toast } from 'react-hot-toast';
 import Lottie from 'lottie-react';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../store/slices/toastSlice';
 
 const ArticleView = ({ articleId, onBack, onComplete }) => {
+    const dispatch = useDispatch();
+    
     const [article, setArticle] = useState(null);
     const [loading, setLoading] = useState(true);
     const [secondsElapsed, setSecondsElapsed] = useState(0);
@@ -32,17 +36,54 @@ const ArticleView = ({ articleId, onBack, onComplete }) => {
             const res = await completeArticle(articleId, secondsElapsedRef.current);
             setAlreadyCompleted(true);
             clearInterval(timerRef.current);
-            toast.success(`Module Mastered! +${res.data.pointsEarned} XP`, { icon: '🚀' });
+            
+            const { 
+                pointsEarned,
+                leveledUp,
+                level, 
+                newlyEarnedBadges = [],
+            } = res.data;
+
+            dispatch(addToast({
+                type: 'xp',
+                message: `${pointsEarned} XP Earned!`,
+                subMessage: 'Article mastered',
+            }));
+
+            if (leveledUp) {
+                setTimeout(() => {
+                    dispatch(addToast({
+                        type: 'level',
+                        message: `Level Up! You're Level ${level}`,
+                        subMessage: 'Keep reading to grow knowledge!',
+                    }));
+                }, 900);
+            }
+
+            newlyEarnedBadges.forEach((badge, i) => {
+                setTimeout(() => {
+                    dispatch(addToast({
+                        type: 'badge',
+                        message: `Badge Unlocked: ${badge.name}!`,
+                        subMessage: `+${badge.xpReward} XP. ${badge.description}`,
+                    }));
+                }, 1400 + i * 700);
+            });
+
             if (onComplete) onComplete(res.data);
         } catch (error) {
             console.error('Completion error:', error);
             if (error.response?.status !== 400) {
-                toast.error('Failed to record article completion');
+                dispatch(addToast({
+                    type: 'error',
+                    message: 'Could not record completion',
+                    subMessage: 'Please check you connection',
+                }));
             }
         } finally {
             setIsCompleting(false);
         }
-    }, [articleId, isCompleting, onComplete]);
+    }, [articleId, isCompleting, onComplete, dispatch]);
 
     useEffect(() => {
         // FIX BUG 3: clear any existing interval before starting a new one,
@@ -86,13 +127,16 @@ const ArticleView = ({ articleId, onBack, onComplete }) => {
                 }, 1000);
             }
         } catch (error) {
-            toast.error('Failed to load article');
+            dispatch(addToast({
+                type: 'error',
+                message: 'Failed to load article',
+                subMessage: 'Please try again!',
+            }));
             onBack();
         } finally {
             setLoading(false);
         }
     };
-
 
 
     // Trigger completion purely on time — once the required seconds elapse, call the endpoint.
