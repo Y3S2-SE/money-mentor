@@ -37,7 +37,7 @@ const BadgeModal = ({ badge, onClose }) => {
     const modalContent = (
         <div
             data-no-swipe
-            className="fixed inset-0 z-[9998] flex items-end sm:items-center justify-center
+            className="fixed inset-0 z-9998 flex items-end sm:items-center justify-center
             sm:p-4 bg-black/40 backdrop-blur-sm"
             onClick={handleBackdropClick}
         >

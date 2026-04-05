@@ -18,10 +18,10 @@ const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
         return (
-            <div className="bg-white border border-gray-100 rounded-xl shadow-lg p-3 text-xs font-body">
-                <p className="font-semibold text-gray-800 mb-1 font-headline">{data.category}</p>
-                <p className="text-gray-500 font-label">{formatCurrency(data.total)}</p>
-                <p className="text-gray-400 font-label">{data.percentage}% of total</p>
+            <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-lg p-3 text-xs font-body">
+                <p className="font-headline font-semibold text-on-surface mb-1">{data.category}</p>
+                <p className="text-on-surface-variant font-label">{formatCurrency(data.total)}</p>
+                <p className="text-on-surface-variant/70 font-label">{data.percentage}% of total</p>
             </div>
         );
     }
@@ -38,13 +38,13 @@ const CategoryBreakdown = ({ breakdown, loading, onTypeChange }) => {
 
     if (loading) {
         return (
-            <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 animate-pulse font-body">
-                <div className="h-5 bg-gray-100 rounded w-40 mb-6" />
+            <div className="bg-surface-container-lowest rounded-2xl p-4 sm:p-6 border border-outline-variant/30 animate-pulse font-body">
+                <div className="h-5 bg-surface-variant rounded w-40 mb-6" />
                 <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="w-36 h-36 bg-gray-100 rounded-full mx-auto sm:mx-0 shrink-0" />
+                    <div className="w-36 h-36 bg-surface-variant rounded-full mx-auto sm:mx-0 shrink-0" />
                     <div className="flex-1 space-y-2">
                         {[...Array(4)].map((_, i) => (
-                            <div key={i} className="h-3 bg-gray-100 rounded" />
+                            <div key={i} className="h-3 bg-surface-variant rounded" />
                         ))}
                     </div>
                 </div>
@@ -55,27 +55,27 @@ const CategoryBreakdown = ({ breakdown, loading, onTypeChange }) => {
     const data = breakdown?.breakdown || [];
 
     return (
-        <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 font-body">
+        <div className="bg-surface-container-lowest rounded-2xl p-4 sm:p-6 border border-outline-variant/30 font-body hover:border-outline-variant/50 transition-all">
             {/* Header */}
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 mb-5">
-                <h3 className="text-base font-semibold text-gray-800 font-headline">Category Breakdown</h3>
-                <div className="flex bg-gray-100 rounded-lg p-0.5 text-xs self-start font-label">
+                <h3 className="text-sm font-headline font-bold text-on-surface">Category Breakdown</h3>
+                <div className="flex bg-surface-container-low rounded-lg p-0.5 text-xs self-start font-label border border-outline-variant/20">
                     <button
                         onClick={() => handleTypeChange('expense')}
-                        className={`px-3 py-1 rounded-md font-medium transition-all duration-150 ${
+                        className={`px-3 py-1 rounded-md font-bold uppercase tracking-wider text-[10px] transition-all duration-150 ${
                             activeType === 'expense'
-                                ? 'bg-white text-gray-800 shadow-sm font-semibold'
-                                : 'text-gray-400'
+                                ? 'bg-surface-container-lowest text-on-surface shadow-sm'
+                                : 'text-on-surface-variant'
                         }`}
                     >
                         Expenses
                     </button>
                     <button
                         onClick={() => handleTypeChange('income')}
-                        className={`px-3 py-1 rounded-md font-medium transition-all duration-150 ${
+                        className={`px-3 py-1 rounded-md font-bold uppercase tracking-wider text-[10px] transition-all duration-150 ${
                             activeType === 'income'
-                                ? 'bg-white text-gray-800 shadow-sm font-semibold'
-                                : 'text-gray-400'
+                                ? 'bg-surface-container-lowest text-on-surface shadow-sm'
+                                : 'text-on-surface-variant'
                         }`}
                     >
                         Income
@@ -84,7 +84,7 @@ const CategoryBreakdown = ({ breakdown, loading, onTypeChange }) => {
             </div>
 
             {data.length === 0 ? (
-                <div className="h-40 flex items-center justify-center text-sm text-gray-400 font-label">
+                <div className="h-40 flex items-center justify-center text-sm font-body text-on-surface-variant">
                     No {activeType} data for this period
                 </div>
             ) : (
@@ -103,10 +103,7 @@ const CategoryBreakdown = ({ breakdown, loading, onTypeChange }) => {
                                     dataKey="total"
                                 >
                                     {data.map((_, index) => (
-                                        <Cell
-                                            key={`cell-${index}`}
-                                            fill={COLORS[index % COLORS.length]}
-                                        />
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
                                 <Tooltip content={<CustomTooltip />} />
@@ -123,9 +120,9 @@ const CategoryBreakdown = ({ breakdown, loading, onTypeChange }) => {
                                         className="w-2.5 h-2.5 rounded-full shrink-0"
                                         style={{ backgroundColor: COLORS[index % COLORS.length] }}
                                     />
-                                    <span className="text-xs text-gray-600 truncate font-label">{item.category}</span>
+                                    <span className="text-xs font-body text-on-surface-variant truncate">{item.category}</span>
                                 </div>
-                                <span className="text-xs font-semibold text-gray-800 shrink-0 font-label">
+                                <span className="text-xs font-label font-bold text-on-surface shrink-0">
                                     {item.percentage}%
                                 </span>
                             </div>

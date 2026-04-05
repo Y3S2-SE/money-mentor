@@ -19,7 +19,7 @@ export default function ChatBadgeCard({ badgeShare, isOwn }) {
 
   return (
     <div
-      className={`rounded-xl border bg-gradient-to-br ${colors} px-3 py-2.5 flex items-center gap-3 min-w-[190px] max-w-[240px]`}
+      className={`rounded-xl border bg-linear-to-br ${colors} px-3 py-2.5 flex items-center gap-3 min-w-47.5 max-w-60`}
       onMouseEnter={() => lottieRef.current?.play()}
       onMouseLeave={() => lottieRef.current?.pause()}
     >

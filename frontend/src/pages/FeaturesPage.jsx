@@ -188,20 +188,20 @@ const FeaturesPage = () => {
           </div>
 
           {/* Right 3D Money Element */}
-          <div className="w-full lg:w-1/2 hidden md:flex relative h-[380px] items-center justify-center feat-hero-image transform-gpu" style={{ perspective: '1000px' }}>
+          <div className="w-full lg:w-1/2 hidden md:flex relative h-95 items-center justify-center feat-hero-image transform-gpu" style={{ perspective: '1000px' }}>
             {/* Base glow */}
             <div className="absolute w-56 h-56 bg-blue-400/20 rounded-full blur-[70px]" />
 
             {/* 3D Coin 1 */}
-            <div className="absolute top-4 right-12 xl:right-28 w-20 h-20 rounded-full bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 shadow-[0_12px_25px_rgba(0,0,0,0.4),inset_0_-4px_12px_rgba(0,0,0,0.2),inset_0_4px_12px_rgba(255,255,255,0.4)] flex items-center justify-center border-[3px] border-yellow-200/40 transform rotate-12 money-float-1 z-20">
-              <div className="w-12 h-12 rounded-full border-2 border-yellow-200/30 flex items-center justify-center bg-gradient-to-tl from-amber-600/30 to-transparent">
+            <div className="absolute top-4 right-12 xl:right-28 w-20 h-20 rounded-full bg-linear-to-br from-amber-300 via-yellow-500 to-amber-600 shadow-[0_12px_25px_rgba(0,0,0,0.4),inset_0_-4px_12px_rgba(0,0,0,0.2),inset_0_4px_12px_rgba(255,255,255,0.4)] flex items-center justify-center border-[3px] border-yellow-200/40 transform rotate-12 money-float-1 z-20">
+              <div className="w-12 h-12 rounded-full border-2 border-yellow-200/30 flex items-center justify-center bg-linear-to-tl from-amber-600/30 to-transparent">
                 <span className="text-yellow-100 text-3xl font-bold font-headline drop-shadow-md">$</span>
               </div>
             </div>
 
             {/* 3D Coin 2 */}
-            <div className="absolute bottom-8 left-8 xl:left-20 w-24 h-24 rounded-full bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 shadow-[0_15px_30px_rgba(0,0,0,0.4),inset_0_-6px_15px_rgba(0,0,0,0.2),inset_0_6px_15px_rgba(255,255,255,0.4)] flex items-center justify-center border-4 border-yellow-200/40 transform -rotate-12 money-float-2 z-20">
-              <div className="w-16 h-16 rounded-full border-2 border-yellow-200/30 flex items-center justify-center bg-gradient-to-tl from-amber-600/30 to-transparent">
+            <div className="absolute bottom-8 left-8 xl:left-20 w-24 h-24 rounded-full bg-linear-to-br from-amber-300 via-yellow-500 to-amber-600 shadow-[0_15px_30px_rgba(0,0,0,0.4),inset_0_-6px_15px_rgba(0,0,0,0.2),inset_0_6px_15px_rgba(255,255,255,0.4)] flex items-center justify-center border-4 border-yellow-200/40 transform -rotate-12 money-float-2 z-20">
+              <div className="w-16 h-16 rounded-full border-2 border-yellow-200/30 flex items-center justify-center bg-linear-to-tl from-amber-600/30 to-transparent">
                 <span className="text-yellow-100 text-4xl font-bold font-headline drop-shadow-lg">$</span>
               </div>
             </div>
@@ -211,10 +211,10 @@ const FeaturesPage = () => {
             <div className="absolute w-60 h-64 bg-blue-800/40 rounded-3xl transform rotate-2 translate-x-1 translate-y-1 blur-[1px] border border-white/10" />
 
             {/* Main abstract 3D Card / Wallet */}
-            <div className="relative w-60 h-64 bg-gradient-to-br from-blue-400 via-blue-600 to-blue-800 rounded-3xl shadow-[0_25px_50px_rgba(0,0,0,0.6),inset_2px_2px_12px_rgba(255,255,255,0.6),inset_-2px_-2px_12px_rgba(0,0,0,0.3)] border border-white/30 transform -rotate-6 money-float-main overflow-hidden backdrop-blur-md z-10 transition-transform duration-700 hover:rotate-0">
+            <div className="relative w-60 h-64 bg-linear-to-br from-blue-400 via-blue-600 to-blue-800 rounded-3xl shadow-[0_25px_50px_rgba(0,0,0,0.6),inset_2px_2px_12px_rgba(255,255,255,0.6),inset_-2px_-2px_12px_rgba(0,0,0,0.3)] border border-white/30 transform -rotate-6 money-float-main overflow-hidden backdrop-blur-md z-10 transition-transform duration-700 hover:rotate-0">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-2xl transform translate-x-8 -translate-y-8" />
               <div className="absolute bottom-0 left-0 w-40 h-40 bg-black/20 rounded-full blur-2xl transform -translate-x-8 translate-y-8" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
+              <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
 
               <div className="p-6 h-full flex flex-col justify-between relative z-10">
                 <div className="flex justify-between items-start">
@@ -225,9 +225,9 @@ const FeaturesPage = () => {
                   </div>
                 </div>
                 <div>
-                  <div className="relative w-12 h-8 rounded-lg bg-gradient-to-br from-yellow-100 via-yellow-300 to-amber-500 mb-5 shadow-md overflow-hidden border border-yellow-100/50">
-                    <div className="absolute inset-x-0 h-[1px] top-1/2 bg-yellow-600/30" />
-                    <div className="absolute inset-y-0 w-[1px] left-1/3 bg-yellow-600/30" />
+                  <div className="relative w-12 h-8 rounded-lg bg-linear-to-br from-yellow-100 via-yellow-300 to-amber-500 mb-5 shadow-md overflow-hidden border border-yellow-100/50">
+                    <div className="absolute inset-x-0 h-px top-1/2 bg-yellow-600/30" />
+                    <div className="absolute inset-y-0 w-px left-1/3 bg-yellow-600/30" />
                   </div>
                   <p className="text-white/90 font-mono tracking-widest text-xs mb-1 drop-shadow-md">**** **** **** 8842</p>
                   <p className="text-white/70 text-[9px] uppercase tracking-[0.2em] font-label drop-shadow-sm">MoneyMentor</p>
@@ -240,10 +240,10 @@ const FeaturesPage = () => {
 
       {/* Feature Grid */}
       <section className="py-24 px-6 md:px-16">
-        <div className="max-w-[1400px] mx-auto">
+        <div className="max-w-350 mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             {features.map(({ id, icon, tag, title, color, accent, items }) => (
-              <div key={id} className={`feat-card group rounded-2xl overflow-hidden border border-white/5 bg-gradient-to-br ${color} backdrop-blur-sm hover:scale-[1.02] transition-all duration-500 cursor-default`}>
+              <div key={id} className={`feat-card group rounded-2xl overflow-hidden border border-white/5 bg-linear-to-br ${color} backdrop-blur-sm hover:scale-[1.02] transition-all duration-500 cursor-default`}>
                 <div className="p-8 h-full flex flex-col gap-6">
                   {/* Top row */}
                   <div className="flex items-start justify-between">
@@ -298,10 +298,10 @@ const FeaturesPage = () => {
 
       {/* Footer */}
       <footer className="bg-white py-12 px-8 md:px-16 border-t border-outline-variant/10">
-        <div className="flex flex-col md:flex-row justify-between items-end w-full max-w-[1920px] mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-end w-full max-w-480 mx-auto">
           <div className="flex flex-col gap-4 mb-8 md:mb-0">
             <div className="text-xl font-bold text-primary font-headline tracking-tighter">MoneyMentor</div>
-            <p className="font-label text-[10px] uppercase tracking-[0.1em] text-outline">© 2024 MoneyMentor. Gamified Savings Coach.</p>
+            <p className="font-label text-[10px] uppercase tracking-widest text-outline">© 2024 MoneyMentor. Gamified Savings Coach.</p>
           </div>
           <div className="flex flex-wrap gap-10 md:gap-16">
             {['Home', 'Features', 'Contact'].map((item) => (

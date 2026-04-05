@@ -11,7 +11,7 @@ const formatCurrency = (amount) => {
 const getHealthColor = (score) => {
     if (score >= 70) return 'text-emerald-600';
     if (score >= 40) return 'text-amber-500';
-    return 'text-red-500';
+    return 'text-error';
 };
 
 const getHealthLabel = (score) => {
@@ -20,21 +20,15 @@ const getHealthLabel = (score) => {
     return 'Needs Work';
 };
 
-const getHealthBg = (score) => {
-    if (score >= 70) return 'bg-emerald-50 border-emerald-100';
-    if (score >= 40) return 'bg-amber-50 border-amber-100';
-    return 'bg-red-50 border-red-100';
-};
-
 const SummaryCards = ({ summary, loading }) => {
     if (loading) {
         return (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[...Array(4)].map((_, i) => (
-                    <div key={i} className="bg-white rounded-2xl p-5 border border-gray-100 animate-pulse">
-                        <div className="h-4 bg-gray-100 rounded w-20 mb-3" />
-                        <div className="h-7 bg-gray-100 rounded w-28 mb-2" />
-                        <div className="h-3 bg-gray-100 rounded w-16" />
+                    <div key={i} className="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30 animate-pulse">
+                        <div className="h-4 bg-surface-variant rounded w-20 mb-3" />
+                        <div className="h-7 bg-surface-variant rounded w-28 mb-2" />
+                        <div className="h-3 bg-surface-variant rounded w-16" />
                     </div>
                 ))}
             </div>
@@ -50,53 +44,49 @@ const SummaryCards = ({ summary, loading }) => {
             icon: TrendingUp,
             iconBg: 'bg-emerald-50',
             iconColor: 'text-emerald-600',
-            border: 'border-gray-100',
             sub: summary.savingsRate > 0 ? `${summary.savingsRate}% savings rate` : 'No savings this month',
-            subColor: summary.savingsRate > 0 ? 'text-emerald-500' : 'text-gray-400',
+            subColor: summary.savingsRate > 0 ? 'text-emerald-600' : 'text-on-surface-variant',
         },
         {
             label: 'Total Expenses',
             value: formatCurrency(summary.totalExpense),
             icon: TrendingDown,
-            iconBg: 'bg-red-50',
-            iconColor: 'text-red-500',
-            border: 'border-gray-100',
+            iconBg: 'bg-error-container',
+            iconColor: 'text-error',
             sub: summary.spendingWarning ? 'Overspending warning' : 'Within budget',
-            subColor: summary.spendingWarning ? 'text-red-500' : 'text-gray-400',
+            subColor: summary.spendingWarning ? 'text-error' : 'text-on-surface-variant',
         },
         {
             label: 'Net Savings',
             value: formatCurrency(summary.netSavings),
             icon: PiggyBank,
-            iconBg: summary.netSavings >= 0 ? 'bg-blue-50' : 'bg-red-50',
-            iconColor: summary.netSavings >= 0 ? 'text-blue-600' : 'text-red-500',
-            border: 'border-gray-100',
+            iconBg: summary.netSavings >= 0 ? 'bg-primary-fixed' : 'bg-error-container',
+            iconColor: summary.netSavings >= 0 ? 'text-on-primary-fixed' : 'text-error',
             sub: summary.netSavings >= 0 ? 'Positive balance' : 'Negative balance',
-            subColor: summary.netSavings >= 0 ? 'text-blue-500' : 'text-red-500',
+            subColor: summary.netSavings >= 0 ? 'text-primary' : 'text-error',
         },
         {
             label: 'Health Score',
             value: `${summary.financialHealthScore}/100`,
             icon: Activity,
-            iconBg: getHealthBg(summary.financialHealthScore).split(' ')[0],
+            iconBg: summary.financialHealthScore >= 70 ? 'bg-emerald-50' : summary.financialHealthScore >= 40 ? 'bg-amber-50' : 'bg-error-container',
             iconColor: getHealthColor(summary.financialHealthScore),
-            border: 'border-gray-100',
             sub: getHealthLabel(summary.financialHealthScore),
             subColor: getHealthColor(summary.financialHealthScore),
         },
     ];
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
             {cards.map((card, i) => {
                 const Icon = card.icon;
                 return (
                     <div
                         key={i}
-                        className={`bg-white rounded-2xl p-4 sm:p-5 border ${card.border} hover:shadow-sm transition-shadow duration-200 flex flex-col justify-between`}
+                        className="bg-surface-container-lowest rounded-2xl p-3 sm:p-4 border border-outline-variant/30 hover:border-outline-variant/50 hover:shadow-md transition-all duration-200 flex flex-col justify-between"
                     >
                         <div className="flex items-start justify-between mb-3 gap-2">
-                            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider font-label break-words">
+                            <span className="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-widest wrap-break-word">
                                 {card.label}
                             </span>
                             <div className={`w-8 h-8 rounded-xl shrink-0 ${card.iconBg} flex items-center justify-center`}>
@@ -104,10 +94,10 @@ const SummaryCards = ({ summary, loading }) => {
                             </div>
                         </div>
                         <div>
-                            <p className="text-xl sm:text-sm font-bold text-gray-900 mb-1 truncate font-headline">
+                            <p className="text-xl sm:text-sm font-headline font-bold text-on-surface mb-1 truncate">
                                 {card.value}
                             </p>
-                            <p className={`text-xs sm:text-sm font-medium ${card.subColor} font-body truncate`}>
+                            <p className={`text-[10px] font-body font-medium ${card.subColor} truncate`}>
                                 {card.sub}
                             </p>
                         </div>

@@ -115,7 +115,7 @@ const AdminCourseForm = ({ initialData, onBack }) => {
 
             <div>
               <label className="block text-xs font-label uppercase tracking-wider text-on-surface/70 mb-2 font-bold">Description</label>
-              <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary/20 min-h-[100px]" placeholder="Brief course overview..." maxLength={500} />
+              <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-surface border border-outline-variant/30 rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary/20 min-h-25" placeholder="Brief course overview..." maxLength={500} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -66,7 +66,7 @@ export default function GroupPage() {
 
         {/* ── LEFT PANEL ── */}
         <div className={`
-          flex flex-col w-full md:w-[320px] lg:w-[360px] shrink-0
+          flex flex-col w-full md:w-[320px] lg:w-90 shrink-0
           border-r border-slate-100 bg-white
           ${showMobileChat ? 'hidden md:flex' : 'flex'}
         `}>

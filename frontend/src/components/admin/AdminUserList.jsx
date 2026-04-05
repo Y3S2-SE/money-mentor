@@ -149,7 +149,7 @@ const AdminUserList = () => {
                     <button
                         type="button"
                         onClick={() => setIsStatusOpen(!isStatusOpen)}
-                        className="w-full sm:w-[140px] px-4 py-2.5 pr-10 rounded-xl border border-outline-variant/30 bg-white
+                        className="w-full sm:w-35 px-4 py-2.5 pr-10 rounded-xl border border-outline-variant/30 bg-white
                             text-sm font-body text-left text-on-surface focus:outline-none focus:border-primary/40
                             focus:ring-2 focus:ring-primary/10 flex items-center justify-between"
                     >

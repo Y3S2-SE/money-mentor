@@ -79,7 +79,7 @@ const KnowledgeHub = () => {
                                         <span className="hidden sm:inline">{tab.label}</span>
                                         <span className="sm:hidden">{tab.short}</span>
                                         {activeTab === tab.id && (
-                                            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-blue-900 rounded-t" />
+                                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-900 rounded-t" />
                                         )}
                                     </button>
                                 ))}

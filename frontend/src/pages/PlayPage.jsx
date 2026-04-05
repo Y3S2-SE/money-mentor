@@ -38,7 +38,7 @@ const LevelProgressCard = ({ profile }) => {
   return (
     <div className="bg-primary rounded-2xl p-6 text-on-primary relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-[80px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/[0.03] rounded-tr-[60px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/3 rounded-tr-[60px] pointer-events-none" />
 
       <div className="relative z-10 flex items-start justify-between mb-4">
         <div>
@@ -160,7 +160,7 @@ const PlayPage = () => {
                 <span className="sm:hidden">{short}</span>
 
                 {activeTab === id && (
-                  <div className="absolute bottom-0 left-0 w-full h-[2px] bg-blue-900 rounded-t" />
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-900 rounded-t" />
                 )}
               </button>
             ))}
