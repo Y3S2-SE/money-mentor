@@ -4,7 +4,6 @@ import { useCreateBlockNote } from "@blocknote/react";
 import "@blocknote/mantine/style.css";
 import { MantineProvider } from "@mantine/core";
 import { getArticleById, completeArticle } from '../../services/articleService';
-import { toast } from 'react-hot-toast';
 import Lottie from 'lottie-react';
 import { useDispatch } from 'react-redux';
 import { addToast } from '../../store/slices/toastSlice';
