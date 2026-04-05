@@ -45,19 +45,19 @@ const CurrencyConverter = () => {
     };
 
     return (
-        <div className="bg-white rounded-2xl p-5 border border-gray-100">
+        <div className="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30 hover:border-outline-variant/50 transition-all">
             {/* Header */}
             <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
-                    <ArrowLeftRight className="w-3.5 h-3.5 text-blue-950" />
+                <div className="w-7 h-7 rounded-lg bg-primary-fixed flex items-center justify-center">
+                    <ArrowLeftRight className="w-3.5 h-3.5 text-on-primary-fixed" />
                 </div>
-                <span className="text-sm font-semibold text-gray-800">Currency Converter</span>
+                <span className="text-sm font-headline font-bold text-on-surface">Currency Converter</span>
             </div>
 
             <form onSubmit={handleConvert} className="space-y-3">
                 {/* Amount input */}
                 <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Amount</label>
+                    <label className="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-wider mb-1 block">Amount</label>
                     <input
                         type="number"
                         min="0.01"
@@ -65,55 +65,55 @@ const CurrencyConverter = () => {
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="0.00"
-                        className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-950/20 focus:border-blue-950"
+                        className="w-full text-sm border border-outline-variant/30 bg-surface-bright rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-on-surface"
                     />
                 </div>
 
                 {/* From / Swap / To */}
                 <div className="flex items-center gap-2">
                     <div className="flex-1">
-                        <label className="text-xs text-gray-400 mb-1 block">From</label>
+                        <label className="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-wider mb-1 block">From</label>
                         <input
                             type="text"
                             maxLength={3}
                             value={from}
                             onChange={(e) => setFrom(e.target.value.toUpperCase())}
                             placeholder="LKR"
-                            className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-950/20 focus:border-blue-950 uppercase font-semibold tracking-wider"
+                            className="w-full text-sm border border-outline-variant/30 bg-surface-bright rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary uppercase font-label font-bold tracking-wider text-on-surface"
                         />
                     </div>
 
                     <button
                         type="button"
                         onClick={handleSwap}
-                        className="mt-5 w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors duration-150 shrink-0"
+                        className="mt-5 w-8 h-8 rounded-xl bg-surface-container-low hover:bg-surface-container border border-outline-variant/20 flex items-center justify-center transition-colors duration-150 shrink-0"
                     >
-                        <ArrowLeftRight className="w-3.5 h-3.5 text-gray-500" />
+                        <ArrowLeftRight className="w-3.5 h-3.5 text-on-surface-variant" />
                     </button>
 
                     <div className="flex-1">
-                        <label className="text-xs text-gray-400 mb-1 block">To</label>
+                        <label className="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-wider mb-1 block">To</label>
                         <input
                             type="text"
                             maxLength={3}
                             value={to}
                             onChange={(e) => setTo(e.target.value.toUpperCase())}
                             placeholder="USD"
-                            className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-950/20 focus:border-blue-950 uppercase font-semibold tracking-wider"
+                            className="w-full text-sm border border-outline-variant/30 bg-surface-bright rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary uppercase font-label font-bold tracking-wider text-on-surface"
                         />
                     </div>
                 </div>
 
                 {/* Error */}
                 {error && (
-                    <p className="text-xs text-red-500">{error}</p>
+                    <p className="text-xs font-body text-error">{error}</p>
                 )}
 
                 {/* Convert button */}
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-2.5 bg-blue-950 text-white text-sm font-medium rounded-xl hover:bg-blue-900 transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-60"
+                    className="w-full py-2.5 bg-primary text-on-primary text-xs font-label font-bold uppercase tracking-wider rounded-xl hover:bg-primary/90 transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm"
                 >
                     {loading
                         ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Converting...</>
@@ -124,12 +124,12 @@ const CurrencyConverter = () => {
 
             {/* Result */}
             {result && (
-                <div className="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                    <p className="text-xs text-blue-400 mb-1">Result</p>
-                    <p className="text-lg font-bold text-blue-950">
+                <div className="mt-4 p-3 bg-primary-fixed rounded-xl border border-primary-fixed-dim">
+                    <p className="text-[10px] font-label font-bold text-on-primary-fixed/60 uppercase tracking-wider mb-1">Result</p>
+                    <p className="text-lg font-headline font-bold text-on-primary-fixed">
                         {result.convertedAmount.toLocaleString()} {result.to}
                     </p>
-                    <p className="text-xs text-blue-400 mt-1">
+                    <p className="text-[10px] font-body text-on-primary-fixed/70 mt-1">
                         1 {result.from} = {result.rate} {result.to} · {result.date}
                     </p>
                 </div>
