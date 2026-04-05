@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
-// ─── helpers ────────────────────────────────────────────────────────────────
+// helpers 
 
 export const NOW = new Date();
 export const CURRENT_MONTH_VALUE = `${NOW.getFullYear()}-${String(NOW.getMonth() + 1).padStart(2, '0')}`;
@@ -11,7 +11,7 @@ export const MONTH_NAMES_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug
 export const MONTH_NAMES_LONG  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 export const toValue = (year, month) =>
-    `${year}-${String(month + 1).padStart(2, '0')}`;   // month 0-indexed
+    `${year}-${String(month + 1).padStart(2, '0')}`;
 
 export const fromValue = (value) => {
     if (!value) return { year: NOW.getFullYear(), month: NOW.getMonth() };
@@ -25,7 +25,7 @@ export const formatDisplay = (value) => {
     return `${MONTH_NAMES_LONG[month]} ${year}`;
 };
 
-// ─── TYPE OPTIONS ────────────────────────────────────────────────────────────
+// TYPE OPTIONS 
 
 export const TYPE_OPTIONS = [
     { label: 'All types', value: '' },
@@ -33,7 +33,7 @@ export const TYPE_OPTIONS = [
     { label: 'Expense',   value: 'expense' },
 ];
 
-// ─── MonthCalendarPicker ─────────────────────────────────────────────────────
+// MonthCalendarPicker 
 
 export const MonthCalendarPicker = ({ value, onChange, onClose, anchorRef }) => {
     const init       = fromValue(value || CURRENT_MONTH_VALUE);
@@ -42,7 +42,6 @@ export const MonthCalendarPicker = ({ value, onChange, onClose, anchorRef }) => 
     const [pos, setPos]    = useState({ top: 0, left: 0, width: 280 });
     const [isMobile, setIsMobile] = useState(false);
 
-    // ── detect mobile ────────────────────────────────────────────
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 640);
         check();
@@ -50,7 +49,6 @@ export const MonthCalendarPicker = ({ value, onChange, onClose, anchorRef }) => 
         return () => window.removeEventListener('resize', check);
     }, []);
 
-    // ── position under anchor on desktop ────────────────────────
     useEffect(() => {
         if (isMobile || !anchorRef?.current) return;
         const rect = anchorRef.current.getBoundingClientRect();
@@ -61,7 +59,6 @@ export const MonthCalendarPicker = ({ value, onChange, onClose, anchorRef }) => 
         });
     }, [isMobile, anchorRef]);
 
-    // ── close on outside click / Escape ─────────────────────────
     useEffect(() => {
         const onKey = (e) => { if (e.key === 'Escape') onClose(); };
         const onMouse = (e) => {
@@ -89,7 +86,6 @@ export const MonthCalendarPicker = ({ value, onChange, onClose, anchorRef }) => 
         onClose();
     };
 
-    // ── shared calendar body ─────────────────────────────────────
     const CalendarBody = () => (
         <div className="p-4 select-none">
             {/* Year nav */}
@@ -147,10 +143,9 @@ export const MonthCalendarPicker = ({ value, onChange, onClose, anchorRef }) => 
                             ].join(' ')}
                         >
                             {name}
-                            {/* dot for current month (unselected) */}
                             {isNow && !selected && (
-                                <span className="absolute bottom-[5px] left-1/2 -translate-x-1/2
-                                    w-[5px] h-[5px] rounded-full bg-primary/50" />
+                                <span className="absolute bottom-1.25 left-1/2 -translate-x-1/2
+                                    w-1.25 h-1.25 rounded-full bg-primary/50" />
                             )}
                         </button>
                     );
@@ -171,46 +166,35 @@ export const MonthCalendarPicker = ({ value, onChange, onClose, anchorRef }) => 
         </div>
     );
 
-    // ── MOBILE: bottom sheet ─────────────────────────────────────
+    // MOBILE: bottom sheet 
     if (isMobile) {
         return createPortal(
-            <div className="fixed inset-0 z-[9999] flex flex-col justify-end">
-                {/* backdrop */}
+            <div className="fixed inset-0 z-9999 flex flex-col justify-end">
                 <div
                     className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
                     onClick={onClose}
                     style={{ animation: 'mcp-fade 0.18s ease both' }}
                 />
-                {/* sheet */}
                 <div
                     ref={popoverRef}
-                    className="relative bg-white rounded-t-3xl shadow-2xl"
+                    className="relative bg-surface-container-lowest rounded-t-3xl shadow-2xl"
                     style={{ animation: 'mcp-rise 0.24s cubic-bezier(0.34,1.4,0.64,1) both' }}
                 >
-                    {/* drag handle */}
                     <div className="flex justify-center pt-3 pb-1">
                         <div className="w-10 h-1 rounded-full bg-outline-variant/30" />
                     </div>
-                    {/* header */}
-                    <div className="flex items-center justify-between px-5 py-3
-                        border-b border-outline-variant/20">
-                        <span className="text-sm font-headline font-bold text-on-surface">
-                            Select Month
-                        </span>
+                    <div className="flex items-center justify-between px-5 py-3 border-b border-outline-variant/20">
+                        <span className="text-sm font-headline font-bold text-on-surface">Select Month</span>
                         <button
                             type="button"
                             onClick={onClose}
                             className="w-7 h-7 rounded-lg flex items-center justify-center
-                                text-on-surface/40 hover:bg-outline-variant/15 transition-colors
-                                focus:outline-none"
+                                text-on-surface/40 hover:bg-outline-variant/15 transition-colors focus:outline-none"
                         >
                             <X className="w-4 h-4" />
                         </button>
                     </div>
-
                     <CalendarBody />
-
-                    {/* safe-area spacer */}
                     <div style={{ height: 'env(safe-area-inset-bottom, 12px)' }} />
                 </div>
 
@@ -226,7 +210,7 @@ export const MonthCalendarPicker = ({ value, onChange, onClose, anchorRef }) => 
         );
     }
 
-    // ── DESKTOP: floating popover ────────────────────────────────
+    // DESKTOP: floating popover 
     return createPortal(
         <>
             <div
@@ -239,7 +223,7 @@ export const MonthCalendarPicker = ({ value, onChange, onClose, anchorRef }) => 
                     zIndex:   9999,
                     animation: 'mcp-pop 0.2s cubic-bezier(0.34,1.4,0.64,1) both',
                 }}
-                className="bg-white rounded-2xl border border-outline-variant/25 shadow-xl"
+                className="bg-surface-container-lowest rounded-2xl border border-outline-variant/25 shadow-xl"
             >
                 <CalendarBody />
             </div>
@@ -254,7 +238,7 @@ export const MonthCalendarPicker = ({ value, onChange, onClose, anchorRef }) => 
     );
 };
 
-// ─── CustomDropdown ───────────────────────────────────────────────────────────
+// CustomDropdown 
 
 const CustomDropdown = ({ label, value, options, onChange }) => {
     const [open, setOpen] = useState(false);
@@ -274,14 +258,14 @@ const CustomDropdown = ({ label, value, options, onChange }) => {
     return (
         <div className="flex flex-col gap-1" ref={ref}>
             {label && (
-                <label className="text-xs font-label text-gray-400 font-medium">{label}</label>
+                <label className="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-wider">{label}</label>
             )}
             <div className="relative">
                 <button
                     type="button"
                     onClick={() => setOpen(p => !p)}
-                    className={`w-full px-4 py-[9px] pr-10 rounded-xl border text-sm font-body
-                        text-left text-on-surface bg-white focus:outline-none transition-all
+                    className={`w-full px-4 py-2.25 pr-10 rounded-xl border text-sm font-body
+                        text-left text-on-surface bg-surface-bright focus:outline-none transition-all
                         ${open
                             ? 'border-primary/40 ring-2 ring-primary/10'
                             : 'border-outline-variant/30 hover:border-outline-variant/60'
@@ -298,7 +282,7 @@ const CustomDropdown = ({ label, value, options, onChange }) => {
                 </button>
 
                 {open && (
-                    <div className="absolute z-20 w-full mt-2 bg-white border border-outline-variant/30
+                    <div className="absolute z-20 w-full mt-2 bg-surface-container-lowest border border-outline-variant/30
                         rounded-xl shadow-lg overflow-hidden top-full">
                         {options.map((opt) => (
                             <button
@@ -322,7 +306,7 @@ const CustomDropdown = ({ label, value, options, onChange }) => {
     );
 };
 
-// ─── TransactionFilters ───────────────────────────────────────────────────────
+// TransactionFilters 
 
 const TransactionFilters = ({ filters, onChange, onReset }) => {
     const [calOpen, setCalOpen] = useState(false);
@@ -340,18 +324,18 @@ const TransactionFilters = ({ filters, onChange, onReset }) => {
     const activeMonth = filters.month || CURRENT_MONTH_VALUE;
 
     return (
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 font-body">
+        <div className="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/30 font-body">
             <div className="flex flex-wrap sm:flex-nowrap items-start gap-4">
 
-                {/* ── Month (custom calendar) ──────────────────────── */}
-                <div className="flex flex-col gap-1 w-full sm:w-[220px] shrink-0">
-                    <label className="text-xs font-label text-gray-400 font-medium">Month</label>
+                {/* Month (custom calendar) */}
+                <div className="flex flex-col gap-1 w-full sm:w-55 shrink-0">
+                    <label className="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-wider">Month</label>
                     <button
                         ref={monthBtnRef}
                         type="button"
                         onClick={() => setCalOpen(p => !p)}
-                        className={`w-full flex items-center gap-2.5 px-4 py-[9px] rounded-xl border
-                            text-sm font-body text-left bg-white transition-all focus:outline-none
+                        className={`w-full flex items-center gap-2.5 px-4 py-2.25 rounded-xl border
+                            text-sm font-body text-left bg-surface-bright transition-all focus:outline-none
                             ${calOpen
                                 ? 'border-primary/40 ring-2 ring-primary/10'
                                 : 'border-outline-variant/30 hover:border-outline-variant/60'
@@ -368,9 +352,7 @@ const TransactionFilters = ({ filters, onChange, onReset }) => {
                         <span
                             className={`material-symbols-outlined pointer-events-none text-[18px]
                                 transition-transform duration-200
-                                ${calOpen
-                                    ? 'rotate-180 text-primary/60'
-                                    : 'text-on-surface/40'}`}
+                                ${calOpen ? 'rotate-180 text-primary/60' : 'text-on-surface/40'}`}
                         >
                             expand_more
                         </span>
@@ -386,8 +368,8 @@ const TransactionFilters = ({ filters, onChange, onReset }) => {
                     )}
                 </div>
 
-                {/* ── Type ─────────────────────────────────────────── */}
-                <div className="w-full sm:w-[160px] shrink-0">
+                {/* Type */}
+                <div className="w-full sm:w-40 shrink-0">
                     <CustomDropdown
                         label="Type"
                         value={filters.type || ''}
@@ -396,9 +378,9 @@ const TransactionFilters = ({ filters, onChange, onReset }) => {
                     />
                 </div>
 
-                {/* ── Category search ───────────────────────────────── */}
-                <div className="flex flex-col gap-1 w-full flex-1 min-w-[180px]">
-                    <label className="text-xs font-label text-gray-400 font-medium">Category</label>
+                {/* Category search */}
+                <div className="flex flex-col gap-1 w-full flex-1 min-w-45">
+                    <label className="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-wider">Category</label>
                     <div className="relative">
                         <span className="material-symbols-outlined absolute left-3 top-1/2
                             -translate-y-1/2 text-[18px] text-on-surface/40 pointer-events-none">
@@ -409,25 +391,25 @@ const TransactionFilters = ({ filters, onChange, onReset }) => {
                             value={filters.category || ''}
                             onChange={(e) => handleChange('category', e.target.value)}
                             placeholder="Search category..."
-                            className="w-full pl-9 pr-4 py-[9px] rounded-xl border border-outline-variant/30
-                                bg-white text-sm font-body text-on-surface placeholder:text-on-surface/40
+                            className="w-full pl-9 pr-4 py-2.25 rounded-xl border border-outline-variant/30
+                                bg-surface-bright text-sm font-body text-on-surface placeholder:text-on-surface/40
                                 focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10
                                 transition-all"
                         />
                     </div>
                 </div>
 
-                {/* ── Reset ────────────────────────────────────────── */}
+                {/* Reset */}
                 {hasActiveFilters && (
                     <div className="flex flex-col gap-1 w-full sm:w-auto shrink-0">
-                        <label className="hidden sm:block text-xs font-label
-                            text-transparent select-none">Reset</label>
+                        <label className="hidden sm:block text-[10px] font-label text-transparent select-none uppercase tracking-wider">Reset</label>
                         <button
                             onClick={onReset}
                             className="w-full sm:w-auto flex items-center justify-center gap-1.5
-                                text-sm font-label font-medium text-gray-500 hover:text-red-500
-                                bg-gray-50/50 hover:bg-red-50/50 border border-gray-200
-                                hover:border-red-200 rounded-xl px-4 py-[9px] transition-all duration-200"
+                                text-sm font-label font-bold uppercase tracking-wider text-on-surface-variant
+                                hover:text-error bg-surface-container-low hover:bg-error-container/30
+                                border border-outline-variant/30 hover:border-error/20
+                                rounded-xl px-4 py-2.25 transition-all duration-200"
                         >
                             <X className="w-4 h-4" />
                             Reset
