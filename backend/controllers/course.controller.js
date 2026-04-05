@@ -244,15 +244,15 @@ export const submitCourse = async (req, res) => {
         const scorePercent = Math.round((pointsEarned / course.totalPoints) * 100);
         const passed = scorePercent >= course.passingScore;
 
-        // Record completion
-        course.completions.push({
-            user: req.user._id,
-            score: scorePercent,
-            pointsEarned: passed ? pointsEarned : 0 // only award points if passed
-        });
-        await course.save();
-
         if (passed) {
+            // Record completion
+            course.completions.push({
+                user: req.user._id,
+                score: scorePercent,
+                pointsEarned: pointsEarned
+            });
+            await course.save();
+
             try {
                 await processXPEvent(
                     req.user._id,
