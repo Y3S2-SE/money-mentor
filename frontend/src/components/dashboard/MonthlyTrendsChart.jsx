@@ -26,16 +26,16 @@ const formatCurrency = (value) => {
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white border border-gray-100 rounded-xl shadow-lg p-3 text-xs">
-                <p className="font-semibold text-gray-700 mb-2">{formatMonth(label)} {label?.split('-')[0]}</p>
+            <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-lg p-3 text-xs font-body">
+                <p className="font-headline font-semibold text-on-surface mb-2">{formatMonth(label)} {label?.split('-')[0]}</p>
                 {payload.map((entry, i) => (
                     <div key={i} className="flex items-center gap-2 mb-1">
                         <span
                             className="w-2 h-2 rounded-full inline-block"
                             style={{ backgroundColor: entry.color }}
                         />
-                        <span className="text-gray-500 capitalize">{entry.name}:</span>
-                        <span className="font-semibold text-gray-800">
+                        <span className="text-on-surface-variant capitalize">{entry.name}:</span>
+                        <span className="font-semibold text-on-surface">
                             LKR {entry.value.toLocaleString()}
                         </span>
                     </div>
@@ -49,18 +49,18 @@ const CustomTooltip = ({ active, payload, label }) => {
 const MonthlyTrendsChart = ({ trends, loading }) => {
     if (loading) {
         return (
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 animate-pulse">
-                <div className="h-5 bg-gray-100 rounded w-36 mb-6" />
-                <div className="h-48 bg-gray-50 rounded-xl" />
+            <div className="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/30 animate-pulse">
+                <div className="h-5 bg-surface-variant rounded w-36 mb-6" />
+                <div className="h-48 bg-surface-container-low rounded-xl" />
             </div>
         );
     }
 
     if (!trends || trends.length === 0) {
         return (
-            <div className="bg-white rounded-2xl p-6 border border-gray-100">
-                <h3 className="text-base font-semibold text-gray-800 mb-4">6-Month Trends</h3>
-                <div className="h-48 flex items-center justify-center text-sm text-gray-400">
+            <div className="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/30">
+                <h3 className="text-sm font-headline font-bold text-on-surface mb-4">6-Month Trends</h3>
+                <div className="h-48 flex items-center justify-center text-sm font-body text-on-surface-variant">
                     No trend data available yet
                 </div>
             </div>
@@ -74,10 +74,10 @@ const MonthlyTrendsChart = ({ trends, loading }) => {
     }));
 
     return (
-        <div className="bg-white rounded-2xl p-6 border border-gray-100">
+        <div className="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/30 hover:border-outline-variant/50 transition-all">
             <div className="flex items-center justify-between mb-6">
-                <h3 className="text-base font-semibold text-gray-800">6-Month Trends</h3>
-                <span className="text-xs text-gray-400">Last 6 months</span>
+                <h3 className="text-sm font-headline font-bold text-on-surface">6-Month Trends</h3>
+                <span className="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-wider bg-surface-container-low border border-outline-variant/20 px-2.5 py-1 rounded-full">Last 6 months</span>
             </div>
 
             <ResponsiveContainer width="100%" height={200}>
@@ -96,54 +96,30 @@ const MonthlyTrendsChart = ({ trends, loading }) => {
                             <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                         </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
                     <XAxis
                         dataKey="label"
-                        tick={{ fontSize: 11, fill: '#9ca3af' }}
+                        tick={{ fontSize: 11, fill: 'var(--color-on-surface-variant, #6b7280)' }}
                         axisLine={false}
                         tickLine={false}
                     />
                     <YAxis
                         tickFormatter={formatCurrency}
-                        tick={{ fontSize: 10, fill: '#9ca3af' }}
+                        tick={{ fontSize: 10, fill: 'var(--color-on-surface-variant, #6b7280)' }}
                         axisLine={false}
                         tickLine={false}
                         width={60}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <Area
-                        type="monotone"
-                        dataKey="income"
-                        stroke="#1e3a5f"
-                        strokeWidth={2}
-                        fill="url(#incomeGrad)"
-                        dot={false}
-                        activeDot={{ r: 4, fill: '#1e3a5f' }}
-                    />
-                    <Area
-                        type="monotone"
-                        dataKey="expense"
-                        stroke="#f87171"
-                        strokeWidth={2}
-                        fill="url(#expenseGrad)"
-                        dot={false}
-                        activeDot={{ r: 4, fill: '#f87171' }}
-                    />
-                    <Area
-                        type="monotone"
-                        dataKey="savings"
-                        stroke="#10b981"
-                        strokeWidth={2}
-                        fill="url(#savingsGrad)"
-                        dot={false}
-                        activeDot={{ r: 4, fill: '#10b981' }}
-                    />
+                    <Area type="monotone" dataKey="income" stroke="#1e3a5f" strokeWidth={2} fill="url(#incomeGrad)" dot={false} activeDot={{ r: 4, fill: '#1e3a5f' }} />
+                    <Area type="monotone" dataKey="expense" stroke="#f87171" strokeWidth={2} fill="url(#expenseGrad)" dot={false} activeDot={{ r: 4, fill: '#f87171' }} />
+                    <Area type="monotone" dataKey="savings" stroke="#10b981" strokeWidth={2} fill="url(#savingsGrad)" dot={false} activeDot={{ r: 4, fill: '#10b981' }} />
                     <Legend
                         iconType="circle"
                         iconSize={8}
                         wrapperStyle={{ fontSize: '11px', paddingTop: '12px' }}
                         formatter={(value) => (
-                            <span style={{ color: '#6b7280', textTransform: 'capitalize' }}>{value}</span>
+                            <span style={{ color: 'var(--color-on-surface-variant, #6b7280)', textTransform: 'capitalize' }}>{value}</span>
                         )}
                     />
                 </AreaChart>

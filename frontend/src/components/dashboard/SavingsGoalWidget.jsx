@@ -47,34 +47,34 @@ const SavingsGoalWidget = ({ progress, loading, selectedMonth, onGoalUpdated }) 
 
     if (loading) {
         return (
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 animate-pulse">
-                <div className="h-4 bg-gray-100 rounded w-32 mb-4" />
-                <div className="h-2 bg-gray-100 rounded-full mb-3" />
-                <div className="h-3 bg-gray-100 rounded w-24" />
+            <div className="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30 animate-pulse">
+                <div className="h-4 bg-surface-variant rounded w-32 mb-4" />
+                <div className="h-2 bg-surface-variant rounded-full mb-3" />
+                <div className="h-3 bg-surface-variant rounded w-24" />
             </div>
         );
     }
 
     return (
-        <div className="bg-white rounded-2xl p-5 border border-gray-100">
+        <div className="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30 hover:border-outline-variant/50 transition-all">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
-                        <Target className="w-3.5 h-3.5 text-blue-950" />
+                    <div className="w-7 h-7 rounded-lg bg-primary-fixed flex items-center justify-center">
+                        <Target className="w-3.5 h-3.5 text-on-primary-fixed" />
                     </div>
-                    <span className="text-sm font-semibold text-gray-800">Savings Goal</span>
+                    <span className="text-sm font-headline font-bold text-on-surface">Savings Goal</span>
                 </div>
                 <button
                     onClick={() => {
                         setGoalAmount(progress?.goal ? String(progress.goal) : '');
                         setShowForm(!showForm);
                     }}
-                    className="w-7 h-7 rounded-lg bg-gray-50 hover:bg-gray-100 flex items-center justify-center transition-colors duration-150"
+                    className="w-7 h-7 rounded-lg bg-surface-container-low hover:bg-surface-container border border-outline-variant/20 flex items-center justify-center transition-colors duration-150"
                 >
                     {hasGoal
-                        ? <Pencil className="w-3.5 h-3.5 text-gray-400" />
-                        : <Plus className="w-3.5 h-3.5 text-gray-400" />
+                        ? <Pencil className="w-3.5 h-3.5 text-on-surface-variant" />
+                        : <Plus className="w-3.5 h-3.5 text-on-surface-variant" />
                     }
                 </button>
             </div>
@@ -90,12 +90,12 @@ const SavingsGoalWidget = ({ progress, loading, selectedMonth, onGoalUpdated }) 
                             value={goalAmount}
                             onChange={(e) => setGoalAmount(e.target.value)}
                             placeholder="Enter goal amount (LKR)"
-                            className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-950/20 focus:border-blue-950"
+                            className="flex-1 text-sm border border-outline-variant/30 bg-surface-bright rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-on-surface"
                         />
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="px-4 py-2 bg-blue-950 text-white text-sm font-medium rounded-xl hover:bg-blue-900 transition-colors duration-150 disabled:opacity-60"
+                            className="px-4 py-2 bg-primary text-on-primary text-sm font-label font-bold uppercase tracking-wider rounded-xl hover:bg-primary/90 transition-colors duration-150 disabled:opacity-60"
                         >
                             {submitting ? '...' : 'Save'}
                         </button>
@@ -106,10 +106,10 @@ const SavingsGoalWidget = ({ progress, loading, selectedMonth, onGoalUpdated }) 
             {/* No goal state */}
             {!hasGoal && !showForm && (
                 <div className="text-center py-4">
-                    <p className="text-sm text-gray-400 mb-2">No savings goal set for this month</p>
+                    <p className="text-sm font-body text-on-surface-variant mb-2">No savings goal set for this month</p>
                     <button
                         onClick={() => setShowForm(true)}
-                        className="text-sm text-blue-950 font-medium hover:underline"
+                        className="text-sm font-label font-bold text-primary hover:underline"
                     >
                         Set a goal →
                     </button>
@@ -122,24 +122,24 @@ const SavingsGoalWidget = ({ progress, loading, selectedMonth, onGoalUpdated }) 
                     {/* Amount info */}
                     <div className="flex items-end justify-between mb-2">
                         <div>
-                            <p className="text-xs text-gray-400 mb-0.5">Saved so far</p>
-                            <p className="text-lg font-bold text-gray-900">
+                            <p className="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-wider mb-0.5">Saved so far</p>
+                            <p className="text-lg font-headline font-bold text-on-surface">
                                 {formatCurrency(progress.saved)}
                             </p>
                         </div>
                         <div className="text-right">
-                            <p className="text-xs text-gray-400 mb-0.5">Goal</p>
-                            <p className="text-sm font-semibold text-gray-600">
+                            <p className="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-wider mb-0.5">Goal</p>
+                            <p className="text-sm font-headline font-semibold text-on-surface-variant">
                                 {formatCurrency(progress.goal)}
                             </p>
                         </div>
                     </div>
 
                     {/* Progress bar */}
-                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-2">
+                    <div className="w-full h-2 bg-surface-container-high rounded-full overflow-hidden mb-2">
                         <div
                             className={`h-full rounded-full transition-all duration-700 ease-out ${
-                                progress.achieved ? 'bg-emerald-500' : 'bg-blue-950'
+                                progress.achieved ? 'bg-emerald-500' : 'bg-primary'
                             }`}
                             style={{ width: `${Math.min(100, progress.percentage)}%` }}
                         />
@@ -147,11 +147,11 @@ const SavingsGoalWidget = ({ progress, loading, selectedMonth, onGoalUpdated }) 
 
                     {/* Percentage + remaining */}
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-600">
+                        <span className="text-xs font-label font-bold text-on-surface">
                             {progress.percentage}%
                         </span>
                         {!progress.achieved && (
-                            <span className="text-xs text-gray-400">
+                            <span className="text-[10px] font-body text-on-surface-variant">
                                 {formatCurrency(progress.remaining)} remaining
                             </span>
                         )}
@@ -159,10 +159,10 @@ const SavingsGoalWidget = ({ progress, loading, selectedMonth, onGoalUpdated }) 
 
                     {/* Warning / success */}
                     {progress.warning && (
-                        <div className={`mt-3 flex items-start gap-2 p-2.5 rounded-xl text-xs ${
+                        <div className={`mt-3 flex items-start gap-2 p-2.5 rounded-xl text-xs font-body ${
                             progress.achieved
-                                ? 'bg-emerald-50 text-emerald-700'
-                                : 'bg-amber-50 text-amber-700'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                : 'bg-amber-50 text-amber-700 border border-amber-100'
                         }`}>
                             {progress.achieved
                                 ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5" />

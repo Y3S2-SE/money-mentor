@@ -15,33 +15,31 @@ const getCategoryInitial = (category) => {
 
 const getCategoryColor = (category) => {
     const colors = [
-        'bg-blue-100 text-blue-700',
-        'bg-purple-100 text-purple-700',
-        'bg-amber-100 text-amber-700',
-        'bg-emerald-100 text-emerald-700',
-        'bg-rose-100 text-rose-700',
-        'bg-cyan-100 text-cyan-700',
+        'bg-primary-fixed text-on-primary-fixed',
+        'bg-secondary-fixed text-on-secondary-fixed',
+        'bg-tertiary-fixed text-on-tertiary-fixed',
+        'bg-emerald-50 text-emerald-700',
+        'bg-amber-50 text-amber-700',
+        'bg-cyan-50 text-cyan-700',
     ];
-    const index = category
-        ? category.charCodeAt(0) % colors.length
-        : 0;
+    const index = category ? category.charCodeAt(0) % colors.length : 0;
     return colors[index];
 };
 
 const RecentTransactions = ({ transactions, loading }) => {
     if (loading) {
         return (
-            <div className="bg-white rounded-2xl p-5 border border-gray-100">
-                <div className="h-4 bg-gray-100 rounded w-36 mb-4 animate-pulse" />
+            <div className="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30">
+                <div className="h-4 bg-surface-variant rounded w-36 mb-4 animate-pulse" />
                 <div className="space-y-3">
                     {[...Array(4)].map((_, i) => (
                         <div key={i} className="flex items-center gap-3 animate-pulse">
-                            <div className="w-8 h-8 bg-gray-100 rounded-xl shrink-0" />
+                            <div className="w-8 h-8 bg-surface-variant rounded-xl shrink-0" />
                             <div className="flex-1">
-                                <div className="h-3 bg-gray-100 rounded w-24 mb-1" />
-                                <div className="h-2.5 bg-gray-100 rounded w-16" />
+                                <div className="h-3 bg-surface-variant rounded w-24 mb-1" />
+                                <div className="h-2.5 bg-surface-variant rounded w-16" />
                             </div>
-                            <div className="h-3 bg-gray-100 rounded w-16" />
+                            <div className="h-3 bg-surface-variant rounded w-16" />
                         </div>
                     ))}
                 </div>
@@ -50,21 +48,21 @@ const RecentTransactions = ({ transactions, loading }) => {
     }
 
     return (
-        <div className="bg-white rounded-2xl p-5 border border-gray-100">
+        <div className="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30 hover:border-outline-variant/50 transition-all">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center">
-                        <Clock className="w-3.5 h-3.5 text-gray-400" />
+                    <div className="w-7 h-7 rounded-lg bg-surface-container-low border border-outline-variant/20 flex items-center justify-center">
+                        <Clock className="w-3.5 h-3.5 text-on-surface-variant" />
                     </div>
-                    <span className="text-sm font-semibold text-gray-800">Recent Activity</span>
+                    <span className="text-sm font-headline font-bold text-on-surface">Recent Activity</span>
                 </div>
-                <span className="text-xs text-gray-400">Last 5</span>
+                <span className="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-wider bg-surface-container-low border border-outline-variant/20 px-2.5 py-1 rounded-full">Last 5</span>
             </div>
 
             {/* Transactions */}
             {!transactions || transactions.length === 0 ? (
-                <div className="py-6 text-center text-sm text-gray-400">
+                <div className="py-6 text-center text-sm font-body text-on-surface-variant">
                     No transactions yet
                 </div>
             ) : (
@@ -78,10 +76,10 @@ const RecentTransactions = ({ transactions, loading }) => {
 
                             {/* Details */}
                             <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-gray-800 truncate">
+                                <p className="text-xs font-body font-semibold text-on-surface truncate">
                                     {tx.category}
                                 </p>
-                                <p className="text-xs text-gray-400">
+                                <p className="text-[10px] font-body text-on-surface-variant">
                                     {format(new Date(tx.date), 'MMM d')}
                                     {tx.description && ` · ${tx.description}`}
                                 </p>
@@ -91,10 +89,10 @@ const RecentTransactions = ({ transactions, loading }) => {
                             <div className="flex items-center gap-1 shrink-0">
                                 {tx.type === 'income'
                                     ? <ArrowUpRight className="w-3 h-3 text-emerald-500" />
-                                    : <ArrowDownRight className="w-3 h-3 text-red-400" />
+                                    : <ArrowDownRight className="w-3 h-3 text-error" />
                                 }
-                                <span className={`text-xs font-bold ${
-                                    tx.type === 'income' ? 'text-emerald-600' : 'text-red-500'
+                                <span className={`text-xs font-label font-bold ${
+                                    tx.type === 'income' ? 'text-emerald-600' : 'text-error'
                                 }`}>
                                     {formatCurrency(tx.amount)}
                                 </span>
