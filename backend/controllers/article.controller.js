@@ -7,7 +7,7 @@ import { awardActionBadge, processXPEvent } from '../utils/gamificationEngine.js
 // @access  Private/Admin
 export const createArticle = async (req, res) => {
     try {
-        let { title, summary, content, category, difficulty, thumbnail, pointsPerRead } = req.body;
+        let { title, summary, content, category, difficulty, thumbnail, pointsPerRead, isPublished } = req.body;
 
         // Handle file upload for thumbnail
         if (req.file) {
@@ -20,6 +20,11 @@ export const createArticle = async (req, res) => {
             content = JSON.parse(content);
         }
 
+        // Handle boolean conversion for isPublished (FormData sends strings)
+        if (typeof isPublished === 'string') {
+            isPublished = isPublished === 'true';
+        }
+
         const article = await Article.create({
             title,
             summary,
@@ -28,6 +33,7 @@ export const createArticle = async (req, res) => {
             difficulty,
             thumbnail,
             pointsPerRead,
+            isPublished: isPublished !== undefined ? isPublished : false,
             createdBy: req.user._id
         });
 
@@ -174,13 +180,18 @@ export const updateArticle = async (req, res) => {
             data.content = JSON.parse(data.content);
         }
 
+        // Handle boolean conversion for isPublished (FormData sends strings)
+        if (typeof data.isPublished === 'string') {
+            data.isPublished = data.isPublished === 'true';
+        }
+
         // Check if content is being updated to trigger wordCount/readTime logic
         if (data.content) {
             const article = await Article.findById(req.params.id);
             if (!article) {
                 return res.status(404).json({ success: false, message: 'Article not found' });
             }
-            
+
             // Apply updates
             for (const field of allowedFields) {
                 if (data[field] !== undefined) {

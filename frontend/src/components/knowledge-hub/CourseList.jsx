@@ -15,11 +15,13 @@ const CourseList = () => {
   const [result, setResult] = useState(null);
   const [completedPopup, setCompletedPopup] = useState(null);
   const [lotties, setLotties] = useState({});
+  const [filter, setFilter] = useState('all');
+  const [difficulty, setDifficulty] = useState('all');
 
   useEffect(() => {
     fetchCourses();
     loadLotties();
-  }, []);
+  }, [filter, difficulty]);
 
   const loadLotties = async () => {
     const medal = (await import('../../assets/lottie/medal.json')).default;
@@ -29,7 +31,12 @@ const CourseList = () => {
 
   const fetchCourses = async () => {
     try {
-      const res = await getCourses();
+      setLoading(true);
+      const params = {};
+      if (filter !== 'all') params.category = filter;
+      if (difficulty !== 'all') params.difficulty = difficulty;
+
+      const res = await getCourses(params);
       setCourses(res.data);
     } catch (error) {
       toast.error('Failed to fetch courses');
@@ -105,7 +112,7 @@ const CourseList = () => {
             <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] uppercase font-bold tracking-widest rounded-lg border border-primary/20">
               {courseDetails.category}
             </span>
-            <span className="px-3 py-1 bg-surface-container-high text-on-surface/60 text-[10px] uppercase font-bold tracking-widest rounded-lg border border-outline-variant/20 capitalize">
+            <span className="px-3 py-1 bg-surface-container-high text-on-surface/60 text-[10px] uppercase font-bold tracking-widest rounded-lg border border-outline-variant/20">
               {courseDetails.difficulty}
             </span>
           </div>
@@ -114,7 +121,7 @@ const CourseList = () => {
         </div>
 
         {result ? (
-          <div className={`p-8 rounded-[32px] border ${result.data.passed ? 'bg-primary-fixed-dim/5 border-primary/20' : 'bg-red-50 border-red-100'}`}>
+          <div className={`p-8 rounded-4xl border ${result.data.passed ? 'bg-primary-fixed-dim/5 border-primary/20' : 'bg-red-50 border-red-100'}`}>
             <div className="flex flex-col items-center text-center mb-10">
               {result.data.passed ? (
                 <div className="w-24 h-24 mb-4">
@@ -180,7 +187,7 @@ const CourseList = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-6">
               {courseDetails.questions.map((q, qIndex) => (
-                <div key={qIndex} className="bg-surface-bright p-6 md:p-8 rounded-[32px] border border-outline-variant/10 shadow-sm hover:border-primary/20 transition-colors">
+                <div key={qIndex} className="bg-surface-bright p-6 md:p-8 rounded-4xl border border-outline-variant/10 shadow-sm hover:border-primary/20 transition-colors">
                   <p className="font-bold mb-6 font-body text-on-surface text-lg leading-snug">
                     <span className="text-primary mr-2">0{qIndex + 1}.</span> {q.question}
                   </p>
@@ -226,13 +233,14 @@ const CourseList = () => {
     );
   }
 
-  const newCourses = courses.filter((course) => !course.isCompleted);
-  const completedCourses = courses.filter((course) => course.isCompleted);
+  const publishedCourses = courses.filter(course => course.isPublished);
+  const newCourses = publishedCourses.filter((course) => !course.isCompleted);
+  const completedCourses = publishedCourses.filter((course) => course.isCompleted);
 
   const CourseCard = ({ course, isCompleted }) => (
     <div
       key={course._id}
-      className={`group relative bg-white rounded-[32px] border ${isCompleted ? 'border-primary/10' : 'border-outline-variant/10'} overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 cursor-pointer flex flex-col h-full`}
+      className={`group relative bg-white rounded-4xl border ${isCompleted ? 'border-primary/10' : 'border-outline-variant/10'} overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 cursor-pointer flex flex-col h-full`}
       onClick={() => isCompleted ? setCompletedPopup(course) : handleSelectCourse(course._id)}
     >
       {course.thumbnail && (
@@ -295,26 +303,77 @@ const CourseList = () => {
     </div>
   );
 
+  const categories = [
+    { id: 'all', label: 'All', icon: 'apps' },
+    { id: 'budgeting', label: 'Budgeting', icon: 'account_balance_wallet' },
+    { id: 'investing', label: 'Investing', icon: 'trending_up' },
+    { id: 'saving', label: 'Saving', icon: 'savings' },
+    { id: 'debt', label: 'Debt', icon: 'money_off' },
+    { id: 'taxes', label: 'Taxes', icon: 'description' },
+  ];
+
+  const difficulties = [
+    { id: 'all', label: 'All Levels', icon: 'clinical_notes' },
+    { id: 'beginner', label: 'Beginner', icon: 'child_care' },
+    { id: 'intermediate', label: 'Intermediate', icon: 'bolt' },
+    { id: 'advanced', label: 'Advanced', icon: 'local_fire_department' },
+  ];
+
   return (
     <div className="space-y-12 pb-12 animate-in fade-in duration-1000">
+      <div className="space-y-6">
+        {/* Category Filters */}
+        <div className="flex gap-2 pb-2 overflow-x-auto scrollbar-hide">
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setFilter(cat.id)}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap ${filter === cat.id
+                ? 'bg-[#111c44] text-indigo-100'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/50'
+                }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">{cat.icon}</span>
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Difficulty Filters */}
+        <div className="flex gap-2 pb-6 overflow-x-auto scrollbar-hide">
+          {difficulties.map((diff) => (
+            <button
+              key={diff.id}
+              onClick={() => setDifficulty(diff.id)}
+              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap border ${difficulty === diff.id
+                ? 'bg-primary/10 text-primary border-primary/20 shadow-sm'
+                : 'text-on-surface/50 border-outline-variant/20 hover:border-outline-variant/40 hover:bg-surface-container'
+                }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">{diff.icon}</span>
+              {diff.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {courses.length === 0 ? (
-        <div className="py-20 text-center bg-white rounded-[32px] border border-outline-variant/10 text-on-surface/30">
+        <div className="py-20 text-center bg-white rounded-4xl border border-outline-variant/10 text-on-surface/30">
           <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="material-symbols-outlined text-4xl">inventory_2</span>
           </div>
-          <h4 className="font-bold text-on-surface/60">No courses available right now</h4>
-          <p className="text-sm">Check back later for new learning materials!</p>
+          <h4 className="font-bold text-on-surface/60">No courses available for this selection</h4>
+          <p className="text-sm">Try adjusting your filters to find more learning materials!</p>
         </div>
       ) : (
         <div className="space-y-16">
-          {/* Active / New Courses Section */}
           <section>
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-xl font-headline font-bold text-on-surface flex items-center gap-3">
                 <div className="w-8 h-8 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
                   <span className="material-symbols-outlined text-[20px]">play_circle</span>
                 </div>
-                Available Courses
+                {filter === 'all' ? 'Available Courses' : `${categories.find(c => c.id === filter).label} Courses`}
               </h2>
               {newCourses.length > 0 && (
                 <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface/30 bg-surface-container px-3 py-1 rounded-full">
@@ -324,7 +383,7 @@ const CourseList = () => {
             </div>
 
             {newCourses.length === 0 ? (
-              <div className="p-10 text-center bg-surface-container-low rounded-[32px] border border-dashed border-primary/20 text-on-surface/40 flex flex-col items-center">
+              <div className="pb-10 text-center bg-surface-container-low rounded-4xl border border-dashed border-primary/20 text-on-surface/40 flex flex-col items-center">
                 <div className="w-54 h-54 mb-2">
                   {lotties.coins && <Lottie animationData={lotties.coins} loop={true} />}
                 </div>
@@ -359,7 +418,7 @@ const CourseList = () => {
 
       {/* Completed Course Popup Modal */}
       {completedPopup && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white border border-outline-variant/10 p-10 rounded-[40px] shadow-2xl max-w-sm w-full relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-16 translate-x-16 blur-2xl transition-colors group-hover:bg-primary/10" />
 
@@ -407,6 +466,10 @@ const CourseList = () => {
           </div>
         </div>
       )}
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 };

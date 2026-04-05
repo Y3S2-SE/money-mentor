@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
+import ReactMarkdown from 'react-markdown';
 import { startConversation, sendMessage, getAllConversations, getConversation, deleteConversation } from '../../services/chatService';
 import { addToast } from '../../store/slices/toastSlice';
 import ConfirmWindow from '../ui/ConfirmWindow';
+import Lottie from 'lottie-react';
+
+import animationData from '../../assets/lottie/animation.json';
 
 const ChatComponent = ({ activeChatId, setActiveChatId, onMessageSent }) => {
   const [conversations, setConversations] = useState([]);
@@ -124,10 +128,10 @@ const ChatComponent = ({ activeChatId, setActiveChatId, onMessageSent }) => {
     <div className="flex flex-1 h-full relative border border-outline-variant/30 rounded-2xl overflow-hidden bg-surface-bright shadow-sm">
       {/* LEFT: Conversation History Sidebar - Connected */}
       <div
-        className={`bg-surface-bright border-r border-outline-variant/30 flex flex-col relative transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${isSidebarOpen ? 'w-[200px] sm:w-[250px] opacity-100' : 'w-0 border-none opacity-0'
+        className={`bg-surface-bright border-r border-outline-variant/30 flex flex-col relative transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${isSidebarOpen ? 'w-50 sm:w-62.5 opacity-100' : 'w-0 border-none opacity-0'
           }`}
       >
-        <div className="p-3 sm:p-4 border-b border-outline-variant/30 shrink-0 w-full min-w-[200px] sm:min-w-[250px]">
+        <div className="p-3 sm:p-4 border-b border-outline-variant/30 shrink-0 w-full min-w-50 sm:min-w-62.5">
           <button
             onClick={handleNewChat}
             className="w-full py-2.5 sm:py-3 bg-primary text-white rounded-xl font-label text-[10px] sm:text-[11px] uppercase tracking-wider font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
@@ -136,7 +140,7 @@ const ChatComponent = ({ activeChatId, setActiveChatId, onMessageSent }) => {
             New Chat
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1.5 sm:space-y-2 w-full min-w-[200px] sm:min-w-[250px]">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1.5 sm:space-y-2 w-full min-w-50 sm:min-w-62.5">
           {conversations.map(chat => (
             <div
               key={chat._id}
@@ -184,8 +188,8 @@ const ChatComponent = ({ activeChatId, setActiveChatId, onMessageSent }) => {
         <div className="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col">
           {messages.length === 0 && !loading && (
             <div className="m-auto text-center max-w-sm">
-              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="material-symbols-outlined text-4xl text-primary">forum</span>
+              <div className="w-48 h-48 mx-auto mb-4">
+                <Lottie animationData={animationData} loop={true} />
               </div>
               <h3 className="text-xl font-bold font-headline mb-2">Hello there!</h3>
               <p className="text-on-surface/60 text-sm">
@@ -200,8 +204,8 @@ const ChatComponent = ({ activeChatId, setActiveChatId, onMessageSent }) => {
                 ? 'bg-primary text-white rounded-br-none'
                 : 'bg-outline-variant/10 text-on-surface rounded-bl-none border border-outline-variant/20'
                 }`}>
-                <div className="whitespace-pre-wrap text-[15px] leading-relaxed">
-                  {m.content}
+                <div className={`text-[15px] leading-relaxed prose prose-sm max-w-none prose-p:leading-relaxed prose-strong:font-bold prose-pre:bg-surface-container prose-pre:p-3 prose-pre:rounded-lg ${m.role === 'user' ? 'prose-invert' : ''}`}>
+                  <ReactMarkdown>{m.content}</ReactMarkdown>
                 </div>
               </div>
             </div>

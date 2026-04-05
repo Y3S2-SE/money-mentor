@@ -19,7 +19,9 @@ const ArticleList = ({ onSelectArticle }) => {
             setLoading(true);
             const params = filter !== 'all' ? { category: filter } : {};
             const res = await getAllArticles(params);
-            setArticles(res.data);
+            // Show only published articles to users
+            const publishedArticles = res.data.filter(article => article.isPublished === true);
+            setArticles(publishedArticles);
         } catch (error) {
             toast.error('Failed to load articles');
         } finally {
@@ -72,7 +74,7 @@ const ArticleList = ({ onSelectArticle }) => {
                             key={article._id}
                             onClick={() => onSelectArticle(article)}
                             style={{ animationDelay: `${i * 50}ms` }}
-                            className="group relative bg-white rounded-[32px] border border-outline-variant/10 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 cursor-pointer flex flex-col animate-in slide-in-from-bottom-4 h-full"
+                            className="group relative bg-white rounded-4xl border border-outline-variant/10 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 cursor-pointer flex flex-col animate-in slide-in-from-bottom-4 h-full"
                         >
                             {/* Read Status Badge Overlay (No Image) */}
                             {article.isRead && !article.thumbnail && (
