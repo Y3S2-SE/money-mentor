@@ -212,9 +212,8 @@ const AdminPage = () => {
             )}
 
             {loadingCourse && (
-              <div className="flex items-center justify-center py-20 text-on-surface/50">
-                <span className="material-symbols-outlined animate-spin mr-2">progress activity</span>
-                Loading course...
+              <div className="flex items-center justify-center py-20">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             )}
 
