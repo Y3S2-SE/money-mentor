@@ -84,7 +84,7 @@ const AdminPage = () => {
   return (
     <div className="flex flex-col h-screen bg-surface-bright font-body text-on-surface">
       {/* Top Navbar specific to Admin */}
-      <div className="h-[72px] bg-white border-b border-outline-variant/20 flex items-center justify-between px-6 md:px-10 shrink-0 sticky top-0 z-40">
+      <div className="h-18 bg-white border-b border-outline-variant/20 flex items-center justify-between px-6 md:px-10 shrink-0 sticky top-0 z-40">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
             <span className="material-symbols-outlined">shield_person</span>
@@ -104,7 +104,7 @@ const AdminPage = () => {
           >
             Manage Courses
             {activeTab === 'courses' && (
-              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-primary rounded-t-full" />
+              <div className="absolute bottom-0 left-0 w-full h-0.75 bg-primary rounded-t-full" />
             )}
           </button>
           <button
@@ -115,7 +115,7 @@ const AdminPage = () => {
           >
             Manage Articles
             {activeTab === 'articles' && (
-              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-primary rounded-t-full" />
+              <div className="absolute bottom-0 left-0 w-full h-0.75 bg-primary rounded-t-full" />
             )}
           </button>
           <button
@@ -126,7 +126,7 @@ const AdminPage = () => {
           >
             Manage Users
             {activeTab === 'users' && (
-              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-primary rounded-t-full" />
+              <div className="absolute bottom-0 left-0 w-full h-0.75 bg-primary rounded-t-full" />
             )}
           </button>
         </div>
@@ -173,7 +173,7 @@ const AdminPage = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-6 md:p-10 w-full max-w-[1600px] mx-auto">
+      <div className="flex-1 overflow-y-auto p-6 md:p-10 w-full max-w-400 mx-auto">
         {/* Mobile quick tabs since absolute centering hides on very small screens */}
         <div className="flex md:hidden gap-4 border-b border-outline-variant/30 mb-6 overflow-x-auto scrollbar-hide">
           <button

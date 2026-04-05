@@ -111,7 +111,7 @@ const ContactPage = () => {
 
       {/* Contact cards */}
       <section className="contact-cards py-16 px-6 md:px-16 border-b border-outline-variant/10">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="max-w-300 mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
           {contacts.map(({ icon, label, value, href }) => (
             <div key={label} className="contact-card flex flex-col gap-5 p-8 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 hover:border-primary/30 transition-all duration-300 group">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -131,7 +131,7 @@ const ContactPage = () => {
 
       {/* Form + FAQ */}
       <section className="py-24 px-6 md:px-16">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20">
+        <div className="max-w-300 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20">
 
           {/* Contact form */}
           <div className="contact-form-wrap">
@@ -221,10 +221,10 @@ const ContactPage = () => {
 
       {/* Footer */}
       <footer className="bg-white py-12 px-8 md:px-16 border-t border-outline-variant/10">
-        <div className="flex flex-col md:flex-row justify-between items-end w-full max-w-[1920px] mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-end w-full max-w-480 mx-auto">
           <div className="flex flex-col gap-4 mb-8 md:mb-0">
             <div className="text-xl font-bold text-primary font-headline tracking-tighter">MoneyMentor</div>
-            <p className="font-label text-[10px] uppercase tracking-[0.1em] text-outline">© 2024 MoneyMentor. Gamified Savings Coach.</p>
+            <p className="font-label text-[10px] uppercase tracking-widest text-outline">© 2024 MoneyMentor. Gamified Savings Coach.</p>
           </div>
           <div className="flex flex-wrap gap-10 md:gap-16">
             {['Home', 'Features', 'Contact'].map((item) => (
