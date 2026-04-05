@@ -26,7 +26,7 @@ const Sidebar = ({ children }) => {
     const CACHE_DURATION = 5 * 60 * 1000;
 
     useEffect(() => {
-        const shouldFetch = !lastFetched || 
+        const shouldFetch = !lastFetched ||
             (Date.now() - lastFetched > CACHE_DURATION);
 
         if (shouldFetch) {
@@ -128,14 +128,14 @@ const Sidebar = ({ children }) => {
                 <div className="px-5 pb-6 mt-auto flex flex-col gap-4">
                     {/* Level Card */}
                     {!isCollapsed ? (
-                        <div 
+                        <div
                             onClick={() => navigate('/profile')}
                             role="button"
                             tabIndex={0}
                             className="bg-blue-950 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden group transition-all duration-300 cursor-pointer hover:shadow-xl hover:scale-[1.02]"
                         >
                             {/* Decorative background element */}
-                            <div className="absolute top-0 right-0 w-16 h-16 bg-white/5 rounded-bl-[64px] pointer-events-none" />
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-white/5 rounded-bl-[64px] pointer-events-none transition-all duration-300 group-hover:bg-white/10" />
 
                             <div className="flex justify-between items-center mb-3 relative z-10">
                                 <span className="text-[11px] font-bold tracking-wider text-white">LEVEL {level}</span>
@@ -145,15 +145,19 @@ const Sidebar = ({ children }) => {
                                 <div className="bg-[#85a4d5] h-full rounded-full transition-all duration-1000" style={{ width: `${progressPercent}%` }}></div>
                             </div>
                             <div className="flex justify-between items-center relative z-10">
-                                <span className="text-[10px] text-gray-300 font-medium">{remainingXP} XP to Level {level + 1}</span>
+                                <span className="text-[10px] text-gray-300 font-medium group-hover:opacity-0 transition-opacity duration-300">{remainingXP} XP to Level {level + 1}</span>
+                                <div className="absolute right-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+                                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">View Profile</span>
+                                    <ChevronRight className="w-3.5 h-3.5" />
+                                </div>
                             </div>
                         </div>
                     ) : (
-                        <div 
+                        <div
                             onClick={() => navigate('/profile')}
                             role="button"
                             tabIndex={0}
-                            className="w-10 h-10 mx-auto bg-blue-950 rounded-xl flex flex-col items-center justify-center shrink-0 shadow-lg cursor-pointer transition-all duration-300 hover:bg-[#17153b]" 
+                            className="w-10 h-10 mx-auto bg-blue-950 rounded-xl flex flex-col items-center justify-center shrink-0 shadow-lg cursor-pointer transition-all duration-300 hover:bg-[#17153b]"
                             title={`Level ${level} - ${currentXP} XP. Click to view profile.`}
                         >
                             <span className="text-[8px] font-bold text-white mb-0.5">LVL {level}</span>
@@ -177,10 +181,10 @@ const Sidebar = ({ children }) => {
 
             {/* Page content */}
             <div className="flex-1 overflow-auto bg-[#F8F9FA] pb-16 lg:pb-0 relative flex flex-col">
-                
+
                 {/* NEW: Updated Mobile Top Header */}
                 <header className="lg:hidden sticky top-0 z-40 bg-white border-b border-gray-200/60 px-4 py-3 flex items-center justify-between shadow-sm shrink-0">
-                    
+
                     {/* Left: Brand Identity */}
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-lg bg-blue-950 flex items-center justify-center shrink-0">
@@ -191,9 +195,9 @@ const Sidebar = ({ children }) => {
 
                     {/* Right: Status Pill & Action */}
                     <div className="flex items-center gap-2">
-                        
+
                         {/* Compact Level/XP Pill */}
-                        <div 
+                        <div
                             onClick={() => navigate('/profile')}
                             role="button"
                             tabIndex={0}
@@ -208,6 +212,7 @@ const Sidebar = ({ children }) => {
                                     <div className="bg-[#85a4d5] h-full rounded-full transition-all duration-1000" style={{ width: `${progressPercent}%` }}></div>
                                 </div>
                             </div>
+                            <ChevronRight className="w-3 h-3 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
                         </div>
 
                         {/* Mobile Logout Button */}
