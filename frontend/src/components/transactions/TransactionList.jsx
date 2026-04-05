@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { Pencil, Trash2, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import transactionService from '../../services/transactionService';
-import { toast } from 'react-toastify';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../store/slices/toastSlice';
+import useConfirm from '../../hooks/useConfirm';
+import ConfirmWindow from '../ui/ConfirmWindow';
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-LK', {
@@ -27,16 +30,32 @@ const getCategoryColor = (category) => {
 
 const TransactionList = ({ transactions, pagination, loading, onEdit, onRefresh }) => {
     const [deletingId, setDeletingId] = useState(null);
+    const { confirm, modalProps } = useConfirm();
+    const dispatch = useDispatch();
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Delete this transaction?')) return;
+        const confirmed = await confirm({
+            title: 'Delete Transaction?',
+            description: 'This transaction will be permanently removed.',
+            confirmLabel: 'Delete',
+            cancelLabel: 'Keep',
+            variant: 'danger',
+        });
+        if (!confirmed) return;
         setDeletingId(id);
         try {
             await transactionService.deleteTransaction(id);
-            toast.success('Transaction deleted');
+            dispatch(addToast({
+                type: 'success',
+                message: 'Transaction successfully deleted'
+            }));
             onRefresh?.();
         } catch (err) {
-            toast.error('Failed to delete transaction');
+            dispatch(addToast({
+                type: 'error',
+                message: 'Failed to delete transaction',
+                subMessage: 'Please try again later!'
+            }));
         } finally {
             setDeletingId(null);
         }
@@ -74,7 +93,9 @@ const TransactionList = ({ transactions, pagination, loading, onEdit, onRefresh 
         );
     }
 
+
     return (
+        <>
         <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden font-body">
             {/* Table header */}
             <div className="hidden md:grid grid-cols-12 gap-3 px-5 py-3 border-b border-outline-variant/20 bg-surface-container-low/50">
@@ -108,7 +129,6 @@ const TransactionList = ({ transactions, pagination, loading, onEdit, onRefresh 
                                     </span>
                                 </p>
                             </div>
-                        </div>
 
                         {/* Category badge */}
                         <div className="hidden md:flex col-span-2">
@@ -162,9 +182,8 @@ const TransactionList = ({ transactions, pagination, loading, onEdit, onRefresh 
                                 </button>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
 
             {/* Pagination */}
             {pagination && pagination.totalPages > 1 && (
@@ -188,9 +207,10 @@ const TransactionList = ({ transactions, pagination, loading, onEdit, onRefresh 
                             <ChevronRight className="w-3.5 h-3.5 text-on-surface-variant" />
                         </button>
                     </div>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+            <ConfirmWindow {...modalProps} />
+        </>
     );
 };
 

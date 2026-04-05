@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import transactionService from '../../services/transactionService';
-import { toast } from 'react-toastify';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../store/slices/toastSlice';
 
 const INCOME_CATEGORIES = [
     'Salary', 'Freelance', 'Business', 'Investment', 'Gift', 'Other'
@@ -27,6 +28,7 @@ const TransactionModal = ({ isOpen, onClose, transaction, onSuccess }) => {
     const [form, setForm] = useState(defaultForm);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
+    const dispatch = useDispatch();
 
     const isEdit = !!transaction;
 
@@ -88,17 +90,25 @@ const TransactionModal = ({ isOpen, onClose, transaction, onSuccess }) => {
 
             if (isEdit) {
                 await transactionService.updateTransaction(transaction._id, payload);
-                toast.success('Transaction updated successfully');
+                dispatch(addToast({
+                    type: 'success',
+                    message: 'Transaction updated successfully'
+                }));
             } else {
                 await transactionService.createTransaction(payload);
-                toast.success('Transaction added successfully');
+                dispatch(addToast({
+                    type: 'success',
+                    message: 'Transaction added successfully'
+                }));
             }
 
             onSuccess?.();
             onClose();
         } catch (err) {
-            const msg = err.response?.data?.message || 'Something went wrong';
-            toast.error(msg);
+            dispatch(addToast({
+                type: 'error',
+                message: err.response?.data?.message || 'Something went wrong'
+            }));
         } finally {
             setLoading(false);
         }

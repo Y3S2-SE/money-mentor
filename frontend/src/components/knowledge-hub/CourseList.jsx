@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import Lottie from 'lottie-react';
 import { useSelector } from 'react-redux';
 import { getCourses, getCourseById, submitCourseAnswers } from '../../services/courseService';
-import Lottie from 'lottie-react';
-import { toast } from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../store/slices/toastSlice';
 
 const CourseList = () => {
   const { user } = useSelector((state) => state.auth);
@@ -17,6 +18,7 @@ const CourseList = () => {
   const [lotties, setLotties] = useState({});
   const [filter, setFilter] = useState('all');
   const [difficulty, setDifficulty] = useState('all');
+  const dispatch = useDispatch();
 
   useEffect(() => {
     fetchCourses();
@@ -39,7 +41,11 @@ const CourseList = () => {
       const res = await getCourses(params);
       setCourses(res.data);
     } catch (error) {
-      toast.error('Failed to fetch courses');
+      dispatch(addToast({
+        type: 'error',
+        message: 'Failed to delete course',
+        subMessage: 'Please try again later!'
+      }));
     } finally {
       setLoading(false);
     }
@@ -53,7 +59,11 @@ const CourseList = () => {
       const res = await getCourseById(courseId);
       setCourseDetails(res.data);
     } catch (error) {
-      toast.error('Failed to fetch course details');
+      dispatch(addToast({
+        type: 'error',
+        message: 'Failed to fetch course details',
+        subMessage: 'Please try again later!'
+      }));
     }
   };
 
@@ -67,7 +77,7 @@ const CourseList = () => {
 
     const answersArray = courseDetails.questions.map((_, i) => answers[i] !== undefined ? answers[i] : -1);
     if (answersArray.includes(-1)) {
-      toast.error("Please answer all questions");
+      dispatch(addToast({ type: 'error', message: 'Please answer all questions' }));
       return;
     }
 
@@ -76,12 +86,21 @@ const CourseList = () => {
       const res = await submitCourseAnswers(selectedCourse, answersArray);
       setResult(res);
       if (res.data.passed) {
-        toast.success(`Course passed! +${res.data.pointsEarned} XP`, { icon: '🎉' });
+        dispatch(addToast({
+          type: 'success',
+          message: `Course passed! +${res.data.pointsEarned} XP`,
+        }));
       } else {
-        toast.error('Keep trying! You need a passing score.');
+        dispatch(addToast({
+          type: 'error',
+          message: 'Keep trying! You need a passing score.',
+        }));
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to submit. Please try again.");
+      dispatch(addToast({
+        type: 'error',
+        message: error.response?.data?.message || 'Failed to submit. Please try again.'
+      }));
     } finally {
       setSubmitting(false);
     }

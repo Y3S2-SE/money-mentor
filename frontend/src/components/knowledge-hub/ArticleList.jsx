@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAllArticles } from '../../services/articleService';
-import { toast } from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../store/slices/toastSlice';
 import Lottie from 'lottie-react';
 
 const ArticleList = ({ onSelectArticle }) => {
@@ -8,6 +9,7 @@ const ArticleList = ({ onSelectArticle }) => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
     const [emptyAnim, setEmptyAnim] = useState(null);
+    const dispatch = useDispatch();
 
     useEffect(() => {
         fetchArticles();
@@ -23,7 +25,11 @@ const ArticleList = ({ onSelectArticle }) => {
             const publishedArticles = res.data.filter(article => article.isPublished === true);
             setArticles(publishedArticles);
         } catch (error) {
-            toast.error('Failed to load articles');
+            dispatch(addToast({
+                type: 'error',
+                message: 'Failed to load articles',
+                subMessage: 'Please try again later!'
+            }));
         } finally {
             setLoading(false);
         }

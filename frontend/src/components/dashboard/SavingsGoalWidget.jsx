@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Target, Pencil, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
 import dashboardService from '../../services/dashboardService';
-import { toast } from 'react-toastify';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../store/slices/toastSlice';
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-LK', {
@@ -15,13 +16,17 @@ const SavingsGoalWidget = ({ progress, loading, selectedMonth, onGoalUpdated }) 
     const [showForm, setShowForm] = useState(false);
     const [goalAmount, setGoalAmount] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const dispatch = useDispatch();
 
     const hasGoal = !!progress;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!goalAmount || isNaN(goalAmount) || Number(goalAmount) <= 0) {
-            toast.error('Please enter a valid goal amount');
+            dispatch(addToast({
+                type: 'error',
+                message: 'Please enter a valid goal amount'
+            }));
             return;
         }
         setSubmitting(true);
@@ -29,17 +34,25 @@ const SavingsGoalWidget = ({ progress, loading, selectedMonth, onGoalUpdated }) 
             const data = { monthlyGoal: Number(goalAmount), month: selectedMonth };
             if (hasGoal) {
                 await dashboardService.updateSavingsGoal(data);
-                toast.success('Savings goal updated!');
+                dispatch(addToast({
+                    type: 'success',
+                    message: 'Savings goal updated!'
+                }));
             } else {
                 await dashboardService.createSavingsGoal(data);
-                toast.success('Savings goal created!');
+                dispatch(addToast({
+                    type: 'success',
+                    message: 'Savings goal created!'
+                }));
             }
             setShowForm(false);
             setGoalAmount('');
             onGoalUpdated?.();
         } catch (err) {
-            const msg = err.response?.data?.message || 'Failed to save goal';
-            toast.error(msg);
+            dispatch(addToast({
+                type: 'success',
+                message: err.response?.data?.message || 'Failed to save goal'
+            }));
         } finally {
             setSubmitting(false);
         }
