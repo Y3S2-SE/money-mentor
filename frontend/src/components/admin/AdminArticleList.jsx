@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAllArticles, deleteArticle, updateArticle } from '../../services/articleService';
-import { toast } from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../store/slices/toastSlice';
 import { format } from 'date-fns';
 import useConfirm from '../../hooks/useConfirm';
 import ConfirmWindow from '../ui/ConfirmWindow';
@@ -9,6 +10,7 @@ const AdminArticleList = ({ onAddArticle, onEditArticle }) => {
     const [articles, setArticles] = useState([]);
     const [loading, setLoading] = useState(true);
     const { confirm, modalProps } = useConfirm();
+    const dispatch = useDispatch();
 
     useEffect(() => {
         fetchArticles();
@@ -20,7 +22,7 @@ const AdminArticleList = ({ onAddArticle, onEditArticle }) => {
             const res = await getAllArticles();
             setArticles(res.data);
         } catch (error) {
-            toast.error('Failed to load articles');
+            dispatch(addToast({ type: 'error', message: 'Failed to load articles' }));
         } finally {
             setLoading(false);
         }
@@ -38,10 +40,10 @@ const AdminArticleList = ({ onAddArticle, onEditArticle }) => {
 
         try {
             await deleteArticle(id);
-            toast.success('Article deleted');
+            dispatch(addToast({ type: 'success', message: 'Article deleted' }));
             setArticles(articles.filter(a => a._id !== id));
         } catch (error) {
-            toast.error('Failed to delete article');
+            dispatch(addToast({ type: 'error', message: 'Failed to delete article' }));
         }
     };
 
@@ -49,12 +51,12 @@ const AdminArticleList = ({ onAddArticle, onEditArticle }) => {
         try {
             const newStatus = !article.isPublished;
             await updateArticle(article._id, { isPublished: newStatus });
-            toast.success(newStatus ? 'Article published' : 'Article unpublished');
+            dispatch(addToast({ type: 'success', message: newStatus ? 'Article published' : 'Article unpublished' }));
             setArticles(articles.map(a => 
                 a._id === article._id ? { ...a, isPublished: newStatus } : a
             ));
         } catch (error) {
-            toast.error('Failed to update status');
+            dispatch(addToast({ type: 'error', message: 'Failed to update status' }));
         }
     };
 

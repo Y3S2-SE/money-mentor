@@ -4,11 +4,13 @@ import { useCreateBlockNote } from "@blocknote/react";
 import "@blocknote/mantine/style.css";
 import { MantineProvider } from "@mantine/core";
 import { createArticle, updateArticle } from '../../services/articleService';
-import { toast } from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../store/slices/toastSlice';
 
 const AdminArticleForm = ({ initialData, onBack }) => {
     const isEdit = !!initialData;
     const [loading, setLoading] = useState(false);
+    const dispatch = useDispatch();
     const [formData, setFormData] = useState({
         title: '',
         summary: '',
@@ -69,8 +71,8 @@ const AdminArticleForm = ({ initialData, onBack }) => {
         if (e) e.preventDefault();
 
         // Validation
-        if (!formData.title.trim()) return toast.error('Title is required');
-        if (!formData.summary.trim()) return toast.error('Summary is required');
+        if (!formData.title.trim()) return dispatch(addToast({ type: 'error', message: 'Title is required' }));
+        if (!formData.summary.trim()) return dispatch(addToast({ type: 'error', message: 'Summary is required' }));
 
         const content = editor.topLevelBlocks; // BlockNote content as JSON blocks
 
@@ -85,16 +87,15 @@ const AdminArticleForm = ({ initialData, onBack }) => {
             setLoading(true);
             if (isEdit) {
                 await updateArticle(initialData._id, payload);
-                toast.success('Article updated successfully');
+                dispatch(addToast({ type: 'success', message: 'Article updated successfully' }));
             } else {
                 await createArticle(payload);
-                toast.success('Article created successfully');
+                dispatch(addToast({ type: 'success', message: 'Article created successfully' }));
             }
             onBack();
         } catch (error) {
             console.error('Submission error:', error);
-            const message = error.response?.data?.message || 'Failed to save article';
-            toast.error(message);
+            dispatch(addToast({ type: 'error', message: error.response?.data?.message || 'Failed to save article' }));
         } finally {
             setLoading(false);
         }

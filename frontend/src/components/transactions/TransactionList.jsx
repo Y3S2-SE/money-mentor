@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { Pencil, Trash2, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import transactionService from '../../services/transactionService';
-import { toast } from 'react-toastify';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../store/slices/toastSlice';
+import useConfirm from '../../hooks/useConfirm';
+import ConfirmWindow from '../ui/ConfirmWindow';
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-LK', {
@@ -27,16 +30,32 @@ const getCategoryColor = (category) => {
 
 const TransactionList = ({ transactions, pagination, loading, onEdit, onRefresh }) => {
     const [deletingId, setDeletingId] = useState(null);
+    const { confirm, modalProps } = useConfirm();
+    const dispatch = useDispatch();
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Delete this transaction?')) return;
+        const confirmed = await confirm({
+            title: 'Delete Transaction?',
+            description: 'This transaction will be permanently removed.',
+            confirmLabel: 'Delete',
+            cancelLabel: 'Keep',
+            variant: 'danger',
+        });
+        if (!confirmed) return;
         setDeletingId(id);
         try {
             await transactionService.deleteTransaction(id);
-            toast.success('Transaction deleted');
+            dispatch(addToast({
+                type: 'success',
+                message: 'Transaction successfully deleted'
+            }));
             onRefresh?.();
         } catch (err) {
-            toast.error('Failed to delete transaction');
+            dispatch(addToast({
+                type: 'error',
+                message: 'Failed to delete transaction',
+                subMessage: 'Please try again later!'
+            }));
         } finally {
             setDeletingId(null);
         }
@@ -71,123 +90,125 @@ const TransactionList = ({ transactions, pagination, loading, onEdit, onRefresh 
         );
     }
 
+
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden font-body">
-            {/* Table header */}
-            <div className="hidden md:grid grid-cols-12 gap-3 px-5 py-3 border-b border-gray-50 bg-gray-50/50">
-                <span className="col-span-4 text-xs font-medium text-gray-400 uppercase tracking-wider font-label">Transaction</span>
-                <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider font-label">Category</span>
-                <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider font-label">Date</span>
-                <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider font-label">Type</span>
-                <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider text-right font-label">Amount</span>
-            </div>
-
-            {/* Rows */}
-            <div className="divide-y divide-gray-50">
-                {transactions.map((tx) => (
-                    <div
-                        key={tx._id}
-                        className="grid grid-cols-12 gap-3 px-4 sm:px-5 py-3 sm:py-3.5 items-center hover:bg-gray-50/50 transition-colors duration-150 group"
-                    >
-                        {/* Description / category avatar */}
-                        <div className="col-span-8 md:col-span-4 flex items-center gap-3">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 font-headline ${getCategoryColor(tx.category)}`}>
-                                {tx.category?.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-sm font-medium text-gray-800 truncate font-headline">
-                                    {tx.description || tx.category}
-                                </p>
-                                <p className="text-xs text-gray-400 md:hidden font-label mt-0.5">
-                                    {format(new Date(tx.date), 'MMM d, yyyy')} ·{' '}
-                                    <span className={tx.type === 'income' ? 'text-emerald-500 font-medium' : 'text-red-400 font-medium'}>
-                                        {tx.type}
-                                    </span>
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Category badge */}
-                        <div className="hidden md:flex col-span-2">
-                            <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${getCategoryColor(tx.category)}`}>
-                                {tx.category}
-                            </span>
-                        </div>
-
-                        {/* Date */}
-                        <div className="hidden md:block col-span-2">
-                            <span className="text-xs text-gray-500">
-                                {format(new Date(tx.date), 'MMM d, yyyy')}
-                            </span>
-                        </div>
-
-                        {/* Type */}
-                        <div className="hidden md:flex col-span-2 items-center gap-1">
-                            {tx.type === 'income'
-                                ? <ArrowUpRight className="w-3.5 h-3.5 text-emerald-500" />
-                                : <ArrowDownRight className="w-3.5 h-3.5 text-red-400" />
-                            }
-                            <span className={`text-xs font-medium capitalize ${
-                                tx.type === 'income' ? 'text-emerald-600' : 'text-red-500'
-                            }`}>
-                                {tx.type}
-                            </span>
-                        </div>
-
-                        {/* Amount + actions */}
-                        <div className="col-span-4 md:col-span-2 flex items-center justify-end gap-2">
-                            <span className={`text-sm font-bold ${
-                                tx.type === 'income' ? 'text-emerald-600' : 'text-red-500'
-                            }`}>
-                                {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-                            </span>
-
-                            {/* Action buttons */}
-                            <div className="hidden group-hover:flex items-center gap-1 ml-1">
-                                <button
-                                    onClick={() => onEdit(tx)}
-                                    className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-blue-50 flex items-center justify-center transition-colors duration-150"
-                                >
-                                    <Pencil className="w-3 h-3 text-gray-400 hover:text-blue-600" />
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(tx._id)}
-                                    disabled={deletingId === tx._id}
-                                    className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50 flex items-center justify-center transition-colors duration-150"
-                                >
-                                    <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-500" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Pagination */}
-            {pagination && pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between px-5 py-3 border-t border-gray-50 bg-gray-50/30">
-                    <span className="text-xs text-gray-400">
-                        {pagination.total} transactions · Page {pagination.page} of {pagination.totalPages}
-                    </span>
-                    <div className="flex items-center gap-1">
-                        <button
-                            onClick={() => onRefresh?.(pagination.page - 1)}
-                            disabled={pagination.page <= 1}
-                            className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
-                        >
-                            <ChevronLeft className="w-3.5 h-3.5 text-gray-500" />
-                        </button>
-                        <button
-                            onClick={() => onRefresh?.(pagination.page + 1)}
-                            disabled={pagination.page >= pagination.totalPages}
-                            className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
-                        >
-                            <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
-                        </button>
-                    </div>
+        <>
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden font-body">
+                {/* Table header */}
+                <div className="hidden md:grid grid-cols-12 gap-3 px-5 py-3 border-b border-gray-50 bg-gray-50/50">
+                    <span className="col-span-4 text-xs font-medium text-gray-400 uppercase tracking-wider font-label">Transaction</span>
+                    <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider font-label">Category</span>
+                    <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider font-label">Date</span>
+                    <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider font-label">Type</span>
+                    <span className="col-span-2 text-xs font-medium text-gray-400 uppercase tracking-wider text-right font-label">Amount</span>
                 </div>
-            )}
-        </div>
+
+                {/* Rows */}
+                <div className="divide-y divide-gray-50">
+                    {transactions.map((tx) => (
+                        <div
+                            key={tx._id}
+                            className="grid grid-cols-12 gap-3 px-4 sm:px-5 py-3 sm:py-3.5 items-center hover:bg-gray-50/50 transition-colors duration-150 group"
+                        >
+                            {/* Description / category avatar */}
+                            <div className="col-span-8 md:col-span-4 flex items-center gap-3">
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 font-headline ${getCategoryColor(tx.category)}`}>
+                                    {tx.category?.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-sm font-medium text-gray-800 truncate font-headline">
+                                        {tx.description || tx.category}
+                                    </p>
+                                    <p className="text-xs text-gray-400 md:hidden font-label mt-0.5">
+                                        {format(new Date(tx.date), 'MMM d, yyyy')} ·{' '}
+                                        <span className={tx.type === 'income' ? 'text-emerald-500 font-medium' : 'text-red-400 font-medium'}>
+                                            {tx.type}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Category badge */}
+                            <div className="hidden md:flex col-span-2">
+                                <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${getCategoryColor(tx.category)}`}>
+                                    {tx.category}
+                                </span>
+                            </div>
+
+                            {/* Date */}
+                            <div className="hidden md:block col-span-2">
+                                <span className="text-xs text-gray-500">
+                                    {format(new Date(tx.date), 'MMM d, yyyy')}
+                                </span>
+                            </div>
+
+                            {/* Type */}
+                            <div className="hidden md:flex col-span-2 items-center gap-1">
+                                {tx.type === 'income'
+                                    ? <ArrowUpRight className="w-3.5 h-3.5 text-emerald-500" />
+                                    : <ArrowDownRight className="w-3.5 h-3.5 text-red-400" />
+                                }
+                                <span className={`text-xs font-medium capitalize ${tx.type === 'income' ? 'text-emerald-600' : 'text-red-500'
+                                    }`}>
+                                    {tx.type}
+                                </span>
+                            </div>
+
+                            {/* Amount + actions */}
+                            <div className="col-span-4 md:col-span-2 flex items-center justify-end gap-2">
+                                <span className={`text-sm font-bold ${tx.type === 'income' ? 'text-emerald-600' : 'text-red-500'
+                                    }`}>
+                                    {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                                </span>
+
+                                {/* Action buttons */}
+                                <div className="hidden group-hover:flex items-center gap-1 ml-1">
+                                    <button
+                                        onClick={() => onEdit(tx)}
+                                        className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-blue-50 flex items-center justify-center transition-colors duration-150"
+                                    >
+                                        <Pencil className="w-3 h-3 text-gray-400 hover:text-blue-600" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(tx._id)}
+                                        disabled={deletingId === tx._id}
+                                        className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50 flex items-center justify-center transition-colors duration-150"
+                                    >
+                                        <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-500" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Pagination */}
+                {pagination && pagination.totalPages > 1 && (
+                    <div className="flex items-center justify-between px-5 py-3 border-t border-gray-50 bg-gray-50/30">
+                        <span className="text-xs text-gray-400">
+                            {pagination.total} transactions · Page {pagination.page} of {pagination.totalPages}
+                        </span>
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => onRefresh?.(pagination.page - 1)}
+                                disabled={pagination.page <= 1}
+                                className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
+                            >
+                                <ChevronLeft className="w-3.5 h-3.5 text-gray-500" />
+                            </button>
+                            <button
+                                onClick={() => onRefresh?.(pagination.page + 1)}
+                                disabled={pagination.page >= pagination.totalPages}
+                                className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
+                            >
+                                <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+            <ConfirmWindow {...modalProps} />
+        </>
     );
 };
 

@@ -2,38 +2,47 @@ import { useState } from 'react';
 import { Crown, Copy, Check, LogOut, Trash2, RefreshCw, MoreVertical } from 'lucide-react';
 import { useCopy } from '../../hooks/useCopy';
 import { leaveGroup, deleteGroup, regenerateInvite } from '../../services/groupService';
+import useConfirm from '../../hooks/useConfirm';
+import ConfirmWindow from '../ui/ConfirmWindow';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../store/slices/toastSlice';
 
 export default function GroupCard({ group, currentUserId, onRefresh, isSelected, onSelect }) {
   const { copied, copy } = useCopy();
   const [menuOpen, setMenuOpen] = useState(false);
+  const dispatch = useDispatch();
+  const { confirm, modalProps } = useConfirm();
+
 
   const isAdmin = group.admin?._id === currentUserId || group.admin === currentUserId;
 
   const handleLeave = async (e) => {
     e.stopPropagation();
     setMenuOpen(false);
-    if (!window.confirm('Leave this group?')) return;
+    const confirmed = await confirm({ title: 'Leave Group?', description: 'You will be removed from this group.', confirmLabel: 'Leave', variant: 'warning' });
+    if (!confirmed) return;
     try { await leaveGroup(group._id); onRefresh(); }
-    catch (err) { alert(err.response?.data?.message || 'Failed to leave group'); }
+    catch (err) { dispatch(addToast({ type: 'error', message: err.response?.data?.message || 'Failed to leave group' })); }
   };
 
   const handleDelete = async (e) => {
     e.stopPropagation();
     setMenuOpen(false);
-    if (!window.confirm('Delete this group permanently?')) return;
+    const confirmed = await confirm({ title: 'Delete Group?', description: 'This group will be permanently deleted.', confirmLabel: 'Delete', variant: 'danger' });
+    if (!confirmed) return;
     try { await deleteGroup(group._id); onRefresh(); }
-    catch (err) { alert(err.response?.data?.message || 'Failed to delete group'); }
+    catch (err) { dispatch(addToast({ type: 'error', message: err.response?.data?.message || 'Failed to delete group' })); }
   };
 
   const handleRegen = async (e) => {
     e.stopPropagation();
     setMenuOpen(false);
-    try { await regenerateInvite(group._id); onRefresh(); }
-    catch (err) { alert(err.response?.data?.message || 'Failed to regenerate code'); }
+    try { await regenerateInvite(group._id); onRefresh(); dispatch(addToast({ type: 'success', message: 'Invite code regenerated' })); }
+    catch (err) { dispatch(addToast({ type: 'error', message: err.response?.data?.message || 'Failed to regenerate code' })); }
   };
 
   return (
-    <div
+    <><div
       onClick={onSelect}
       className={`relative flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-colors border-b border-slate-100
         ${isSelected ? 'bg-slate-100' : 'hover:bg-slate-50'}
@@ -116,5 +125,7 @@ export default function GroupCard({ group, currentUserId, onRefresh, isSelected,
         )}
       </div>
     </div>
+      <ConfirmWindow {...modalProps} />
+    </>
   );
 }
