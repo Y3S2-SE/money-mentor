@@ -77,13 +77,13 @@ const SummaryCards = ({ summary, loading }) => {
     ];
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
             {cards.map((card, i) => {
                 const Icon = card.icon;
                 return (
                     <div
                         key={i}
-                        className="bg-surface-container-lowest rounded-2xl p-4 sm:p-5 border border-outline-variant/30 hover:border-outline-variant/50 hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+                        className="bg-surface-container-lowest rounded-2xl p-3 sm:p-4 border border-outline-variant/30 hover:border-outline-variant/50 hover:shadow-md transition-all duration-200 flex flex-col justify-between"
                     >
                         <div className="flex items-start justify-between mb-3 gap-2">
                             <span className="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-widest wrap-break-word">
@@ -94,10 +94,10 @@ const SummaryCards = ({ summary, loading }) => {
                             </div>
                         </div>
                         <div>
-                            <p className="text-xl sm:text-lg font-headline font-bold text-on-surface mb-1 truncate">
+                            <p className="text-xl sm:text-sm font-headline font-bold text-on-surface mb-1 truncate">
                                 {card.value}
                             </p>
-                            <p className={`text-xs font-body font-medium ${card.subColor} truncate`}>
+                            <p className={`text-[10px] font-body font-medium ${card.subColor} truncate`}>
                                 {card.sub}
                             </p>
                         </div>
