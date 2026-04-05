@@ -231,8 +231,8 @@ const ArticleView = ({ articleId, onBack, onComplete }) => {
 
                         {article.thumbnail && (
                             <div className="group rounded-[40px] overflow-hidden shadow-2xl shadow-primary/10 border border-outline-variant/10 mb-20 relative">
-                                <img src={article.thumbnail} alt="" className="w-full h-auto object-cover max-h-[500px] group-hover:scale-105 transition-transform duration-[2s]" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <img src={article.thumbnail} alt="" className="w-full h-auto object-cover max-h-125 group-hover:scale-105 transition-transform duration-[2s]" />
+                                <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                         )}
 
@@ -273,7 +273,7 @@ const ArticleView = ({ articleId, onBack, onComplete }) => {
 
                         {alreadyCompleted && (
                             <div className="mt-24 p-12 md:p-20 text-center space-y-6 bg-emerald-50/50 rounded-[56px] border border-emerald-100 relative overflow-hidden group">
-                                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                                <div className="absolute inset-0 bg-linear-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
 
                                 <div className="w-24 h-24 mx-auto relative z-10">
                                     {completionAnim && <Lottie animationData={completionAnim} loop={false} />}

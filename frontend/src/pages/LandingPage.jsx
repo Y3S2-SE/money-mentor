@@ -369,12 +369,12 @@ const LandingPage = () => {
 
               <div className="mt-12 flex flex-col items-center gap-4 opacity-50">
                 <div
-                  className="scroll-line w-[1px] h-8 bg-white origin-top mb-8"
+                  className="scroll-line w-px h-8 bg-white origin-top mb-8"
                   style={{ transform: 'scaleY(0)' }}
                 />
                 {/* Typewriter target below the line — empty on mount, TextPlugin fills it */}
                 <span
-                  className="scroll-label font-label text-[9px] uppercase tracking-[0.4em] text-white min-w-[12rem] text-center"
+                  className="scroll-label font-label text-[9px] uppercase tracking-[0.4em] text-white min-w-48 text-center"
                   style={{ opacity: 0 }}
                 />
               </div>
@@ -384,7 +384,7 @@ const LandingPage = () => {
 
         {/* ── STATS STRIP ─────────────────────────────────────────────────────── */}
         <section ref={statsRef} className="bg-primary py-14 px-6 md:px-16 border-t border-white/10">
-          <div className="max-w-[1920px] mx-auto grid grid-cols-3 gap-8 text-center">
+          <div className="max-w-480 mx-auto grid grid-cols-3 gap-8 text-center">
             {[
               { cls: 'stat-users', label: 'Active Users', init: '0+' },
               { cls: 'stat-saved', label: 'Rupees Saved', init: '0M' },
@@ -400,7 +400,7 @@ const LandingPage = () => {
 
         {/* ── FEATURES SECTION ────────────────────────────────────────────────── */}
         <section className="features-section py-20 md:py-24 px-6 md:px-16 bg-surface-bright" id="features">
-          <div className="max-w-[1920px] mx-auto">
+          <div className="max-w-480 mx-auto">
             <div className="features-header grid grid-cols-1 lg:grid-cols-12 gap-24 mb-32 items-end">
               <div className="lg:col-span-8">
                 <h2 className="scrub-heading text-[10px] uppercase tracking-[0.4em] text-outline font-bold mb-10">Features</h2>
@@ -435,15 +435,15 @@ const LandingPage = () => {
 
         {/* ── BENTO — scrub parallax depth ────────────────────────────────────── */}
         <section className="bento-section py-20 px-6 md:px-16 bg-surface-dim">
-          <div className="max-w-[1920px] mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-8 h-auto md:h-[600px]">
+          <div className="max-w-480 mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-8 h-auto md:h-150">
               <div className="bento-item md:col-span-2 md:row-span-2 bg-primary overflow-hidden rounded-xl relative group">
                 <img
                   alt="Architectural skyscraper reflecting light"
                   className="w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlcAN3flZpoUbpZ006ieRJpwClCupQF_slSn5IZZmXZZzvU4CvRMazdvtCO7cueKNtRWPW7YouYjRVtyM3pNTMIfzS_eO7NKFp1rx3mI-q6KOyM-7OPki7EA62VhdcjGRrQ_hPGLCWqO25jtkOFqZ_kLyUiyka_Aj9wefVoLx0vAN50nRyIbzoZlGOj-1Srf9HM0ECShbsaT-e6ljKnVqIMNjhayxNGOde48jwgFa92_QgJHWmHyOkNf5aCDbeyGQgqJ4xUqO5sGX4"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent p-12 flex flex-col justify-end">
+                <div className="absolute inset-0 bg-linear-to-t from-primary via-transparent to-transparent p-12 flex flex-col justify-end">
                   <p className="text-blue-400 font-label text-xs uppercase tracking-widest mb-4">Core Philosophy</p>
                   <h4 className="text-3xl font-headline font-bold text-white mb-4">Safe & Secure</h4>
                   <p className="text-blue-100/60 max-w-sm">Your data is protected with enterprise-level security while you focus on building your financial future.</p>
@@ -495,16 +495,19 @@ const LandingPage = () => {
         </section>
       </main>
 
-      {/* ── FOOTER ─────────────────────────────────────────────────────────── */}
+      {/* Footer */}
       <footer className="bg-white py-12 px-8 md:px-16 border-t border-outline-variant/10">
-        <div className="flex flex-col md:flex-row justify-between items-end w-full max-w-[1920px] mx-auto">
-          <div className="flex flex-col gap-10 w-full md:w-auto mb-16 md:mb-0">
+        <div className="flex flex-col md:flex-row justify-between items-end w-full max-w-480 mx-auto">
+          <div className="flex flex-col gap-4 mb-8 md:mb-0">
             <div className="text-xl font-bold text-primary font-headline tracking-tighter">MoneyMentor</div>
-            <p className="font-label text-[10px] uppercase tracking-[0.1em] text-outline">© 2024 MoneyMentor. Gamified Savings Coach for Youth.</p>
+            <p className="font-label text-[10px] uppercase tracking-widest text-outline">© 2024 MoneyMentor. Gamified Savings Coach.</p>
           </div>
           <div className="flex flex-wrap gap-10 md:gap-16">
-            {['Legal', 'Privacy', 'Terms', 'Parents / Educators'].map((item) => (
-              <a key={item} className="font-label text-[10px] uppercase tracking-[0.2em] text-outline hover:text-primary transition-colors" href="#">{item}</a>
+            {['Home', 'Features', 'Contact'].map((item) => (
+              <Link key={item} to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
+                className="font-label text-[10px] uppercase tracking-[0.2em] text-outline hover:text-primary transition-colors">
+                {item}
+              </Link>
             ))}
           </div>
         </div>

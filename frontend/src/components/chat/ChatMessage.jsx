@@ -27,8 +27,8 @@ function LinkPreviewCard({ preview }) {
 function DeleteModal({ message, onConfirm, onCancel, isDeleting }) {
   const preview = message.type === 'badge' ? '🏅 Badge share' : (message.content?.length > 50 ? message.content.slice(0, 50) + '…' : message.content);
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4" onClick={onCancel}>
-      <div className="bg-white rounded-2xl shadow-2xl w-[300px] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4" onClick={onCancel}>
+      <div className="bg-white rounded-2xl shadow-2xl w-75 overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="px-5 pt-5 pb-3">
           <h3 className="text-sm font-semibold text-slate-800">Delete message?</h3>
           <div className="mt-3 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl">
@@ -114,7 +114,7 @@ export default function ChatMessage({ message, isOwn, groupId, onDelete }) {
           </button>
           <div className="max-w-[75%]">
             <div className="bg-[#0f172a] text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
-              <p className="text-sm leading-relaxed break-words">{message.content}</p>
+              <p className="text-sm leading-relaxed wrap-break-word">{message.content}</p>
               <LinkPreviewCard preview={message.linkPreview} />
             </div>
             <p className="text-[10px] text-slate-400 mt-0.5 text-right pr-1">{time}</p>
@@ -133,7 +133,7 @@ export default function ChatMessage({ message, isOwn, groupId, onDelete }) {
       <div className="max-w-[75%]">
         <p className="text-[11px] text-slate-500 mb-1 ml-1 font-medium">{message.sender?.username}</p>
         <div className="bg-white px-4 py-2.5 rounded-2xl rounded-tl-sm shadow-sm">
-          <p className="text-sm text-slate-900 leading-relaxed break-words">{message.content}</p>
+          <p className="text-sm text-slate-900 leading-relaxed wrap-break-word">{message.content}</p>
           <LinkPreviewCard preview={message.linkPreview} />
         </div>
         <p className="text-[10px] text-slate-400 mt-0.5 ml-1">{time}</p>

@@ -25,7 +25,7 @@ const AuthPage = () => {
 
       {/* Top Nav Minimal */}
       <nav className="absolute top-0 w-full z-50">
-        <div className="flex justify-between items-center px-8 md:px-16 py-8 w-full max-w-[1920px] mx-auto">
+        <div className="flex justify-between items-center px-8 md:px-16 py-8 w-full max-w-480uto">
           <Link to="/" className="text-xl font-bold tracking-tighter text-blue-50 font-headline hover:text-white transition-colors">MoneyMentor</Link>
         </div>
       </nav>
@@ -69,7 +69,7 @@ const AuthPage = () => {
 
             {/* Footer Toggle */}
             <div className="mt-12 pt-8 border-t border-white/10 text-center">
-              <p className="font-label text-[9px] uppercase tracking-[0.1em] text-blue-100/40">
+              <p className="font-label text-[9px] uppercase tracking-widest text-blue-100/40">
                 {isLogin ? "Don't have an account? " : "Already have an account? "}
                 <button
                   onClick={() => setIsLogin(!isLogin)}

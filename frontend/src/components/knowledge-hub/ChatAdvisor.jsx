@@ -46,7 +46,7 @@ const ChatAdvisor = () => {
           />
         </div>
 
-        <div className={`xl:w-[320px] 2xl:w-[380px] h-full ${activeTab === 'videos' ? 'flex' : 'hidden xl:flex'}`}>
+        <div className={`xl:w-[320px] 2xl:w-95 h-full ${activeTab === 'videos' ? 'flex' : 'hidden xl:flex'}`}>
           <YouTubeComponent
             activeChatId={activeChatId}
             refreshTrigger={refreshTrigger}

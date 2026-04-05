@@ -6,6 +6,7 @@ import { logout } from "../../store/slices/authSlice";
 import { Wallet, Gamepad2, BookOpen, Users, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { addToast } from "../../store/slices/toastSlice";
 import { fetchProfile } from "../../store/slices/gamingSlice";
+import logo from "../../assets/logo.png"
 
 const navItems = [
     { label: 'Dashboard', icon: Wallet, path: '/dashboard' },
@@ -87,9 +88,7 @@ const Sidebar = ({ children }) => {
                 </button>
 
                 <div className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-6 gap-3'} py-8 transition-all duration-300`}>
-                    <div className="w-10 h-10 rounded-xl bg-blue-950 flex flex-col items-center justify-center shrink-0 shadow-md">
-                        <Wallet className="w-5 h-5 text-white" />
-                    </div>
+                    <img src={logo} alt="MoneyMentor" className="w-9" />
                     {!isCollapsed && (
                         <div className="flex flex-col overflow-hidden whitespace-nowrap">
                             <span className="text-blue-950 font-extrabold text-[20px] tracking-tight leading-tight">MoneyMentor</span>
@@ -187,7 +186,7 @@ const Sidebar = ({ children }) => {
                     {/* Left: Brand Identity */}
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-lg bg-blue-950 flex items-center justify-center shrink-0">
-                            <Wallet className="w-4 h-4 text-white" />
+                            <img src={logo} alt="MoneyMentor" className="w-4 h-4" />
                         </div>
                         <span className="text-blue-950 font-extrabold text-[17px] tracking-tight leading-none">MoneyMentor</span>
                     </div>

@@ -33,7 +33,7 @@ const PublicNavbar = () => {
           : 'bg-transparent'
       }`}
     >
-      <div className={`flex justify-between items-center px-8 md:px-16 w-full max-w-[1920px] mx-auto transition-all duration-300 ${isScrolled ? 'py-4' : 'py-8'}`}>
+      <div className={`flex justify-between items-center px-8 md:px-16 w-full max-w-480 mx-auto transition-all duration-300 ${isScrolled ? 'py-4' : 'py-8'}`}>
         <Link to="/" className="text-xl font-bold tracking-tighter text-blue-50 font-headline">
           MoneyMentor
         </Link>
@@ -44,7 +44,7 @@ const PublicNavbar = () => {
         </div>
         <div className="flex items-center gap-8">
           <Link to="/auth" className="text-blue-100/40 hover:text-blue-100 transition-colors font-label tracking-[0.2em] text-[10px] uppercase font-semibold hidden sm:block">Sign In</Link>
-          <Link to="/auth" state={{ isLogin: false }} className="bg-white text-primary px-8 py-3 rounded-full font-label tracking-[0.1em] font-bold text-[11px] uppercase hover:bg-blue-50 transition-all">Get Started</Link>
+          <Link to="/auth" state={{ isLogin: false }} className="bg-white text-primary px-8 py-3 rounded-full font-label tracking-widest font-bold text-[11px] uppercase hover:bg-blue-50 transition-all">Get Started</Link>
         </div>
       </div>
     </nav>
