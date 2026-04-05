@@ -491,6 +491,13 @@ describe('Course API Integration Tests', () => {
             expect(response.body.success).toBe(true);
             expect(response.body.data.passed).toBe(false);
             expect(response.body.data.pointsEarned).toBe(0);
+
+            // Verify NO completion is recorded
+            const course = await Course.findById(courseId);
+            const userCompletion = course.completions.find(
+                (c) => c.user.toString() === userId.toString()
+            );
+            expect(userCompletion).toBeUndefined();
         });
 
         it('should not award points on fail', async () => {
