@@ -31,7 +31,7 @@ const Dashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [selectedMonth, setSelectedMonth] = useState(CURRENT_MONTH_VALUE);
 
-    // ── Dashboard state ──────────────────────────────────────────
+    // Dashboard state 
     const [summary, setSummary] = useState(null);
     const [categoryBreakdown, setCategoryBreakdown] = useState(null);
     const [categoryType, setCategoryType] = useState('expense');
@@ -49,7 +49,7 @@ const Dashboard = () => {
         savings: true,
     });
 
-    // ── Transaction state ─────────────────────────────────────────
+    // Transaction state 
     const [transactions, setTransactions] = useState([]);
     const [pagination, setPagination] = useState(null);
     const [txLoading, setTxLoading] = useState(false);
@@ -59,7 +59,7 @@ const Dashboard = () => {
     const [calOpen, setCalOpen] = useState(false);
     const monthBtnRef = useRef(null);
 
-    // ── Fetch dashboard data ──────────────────────────────────────
+    // Fetch dashboard data
     const fetchSummary = useCallback(async (month) => {
         setDashLoading((prev) => ({ ...prev, summary: true }));
         try {
@@ -136,7 +136,7 @@ const Dashboard = () => {
         }
     }, []);
 
-    // ── Fetch transactions ────────────────────────────────────────
+    // Fetch transactions 
     const fetchTransactions = useCallback(async (overrideFilters = null) => {
         const activeFilters = overrideFilters || filters;
         setTxLoading(true);
@@ -151,7 +151,7 @@ const Dashboard = () => {
         }
     }, [filters]);
 
-    // ── Initial load ──────────────────────────────────────────────
+    // Initial load 
     useEffect(() => {
         fetchSummary(selectedMonth);
         fetchBreakdown(selectedMonth, categoryType);
@@ -167,7 +167,7 @@ const Dashboard = () => {
         }
     }, [activeTab, filters]);
 
-    // ── Handlers ──────────────────────────────────────────────────
+    // Handlers 
     const handleMonthChange = (val) => {
         setSelectedMonth(val);
     };
@@ -225,29 +225,30 @@ const Dashboard = () => {
 
     return (
         <Sidebar>
-            <div className="flex flex-col h-full min-h-screen bg-gray-50 font-body px-0 sm:px-1">
-                {/* Page header */}
-                <div className="bg-white px-4 sm:px-6 pt-4 sticky top-0 z-20 shrink-0">
-                    <div className='mb-7'>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
-                        <div>
-                            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 font-headline">Dashboard</h1>
-                            <p className="text-xs sm:text-sm text-gray-400 mt-0.5 font-body">
-                                Wealth status for {formatDisplay(selectedMonth)}
-                            </p>
-                        </div>
+            <div className="flex flex-col h-full min-h-screen bg-surface-bright font-body px-0 sm:px-1">
 
-                        <div className="flex items-center justify-end w-full sm:w-auto mt-3 px-4 sm:mt-0">
+                {/* ── Page header ── */}
+                <div className="bg-surface-bright px-4 sm:px-6 pt-4 sticky top-0 z-20 shrink-0 border-b border-outline-variant/20">
+                    <div className="mb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+                            <div>
+                                <h1 className="text-xl font-headline font-bold text-on-surface">Dashboard</h1>
+                                <p className="text-xs font-body text-on-surface-variant mt-0.5">
+                                    Wealth status for {formatDisplay(selectedMonth)}
+                                </p>
+                            </div>
+
+                            <div className="flex items-center justify-end w-full sm:w-auto mt-3 px-4 sm:mt-0">
                             {/* Add transaction button — visible on both tabs */}
-                            <button
-                                onClick={handleOpenAdd}
-                                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-950 text-white text-sm font-label font-medium rounded-xl hover:bg-blue-900 transition-colors duration-150 w-full sm:w-auto"
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span className="inline">Add Transaction</span>
-                            </button>
+                                <button
+                                    onClick={handleOpenAdd}
+                                    className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 bg-primary text-on-primary text-xs font-label font-bold uppercase tracking-wider rounded-xl hover:bg-primary/90 transition-colors duration-150 w-full sm:w-auto shadow-sm"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    <span className="inline">Add Transaction</span>
+                                </button>
+                            </div>
                         </div>
-                    </div>
                     </div>
 
                     {/* Tabs */}
@@ -256,10 +257,11 @@ const Dashboard = () => {
                             <button
                                 key={id}
                                 onClick={() => setActiveTab(id)}
-                                className={`pb-3 px-2 font-label tracking-widest uppercase text-[11px] font-bold 
-                                    transition-all relative flex items-center gap-2 shrink-0 snap-start ${activeTab === id
-                                        ? 'text-blue-950'
-                                        : 'text-gray-500 hover:text-gray-800'
+                                className={`pb-3 px-2 font-label tracking-widest uppercase text-[11px] font-bold
+                                    transition-all relative flex items-center gap-2 shrink-0 snap-start ${
+                                    activeTab === id
+                                        ? 'text-blue-900'
+                                        : 'text-on-surface-variant hover:text-on-surface'
                                     }`}
                             >
                                 <Icon strokeWidth={2} className="w-4 h-4" />
@@ -267,7 +269,7 @@ const Dashboard = () => {
                                 <span className="sm:hidden">{short}</span>
 
                                 {activeTab === id && (
-                                    <div className="absolute bottom-0 left-0 w-full h-[2px] bg-blue-950 rounded-t" />
+                                    <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-900 rounded-t" />
                                 )}
                             </button>
                         ))}
@@ -286,36 +288,28 @@ const Dashboard = () => {
                             <div className="flex flex-col lg:flex-row gap-6">
                                 {/* Main content (left/center — 2/3 width) */}
                                 <div className="flex-1 min-w-0 space-y-5">
-                                    
-                                    {/* Month Picker wrapper */}
-                                    <div className="flex flex-col gap-1 w-full sm:w-[220px] shrink-0 relative z-10 bg-white rounded-2xl p-4 border border-gray-100">
-                                        <label className="text-xs font-label text-gray-400 font-medium">Overview Month</label>
+
+                                    {/* Month Picker */}
+                                    <div className="flex flex-col gap-1 w-full sm:w-55 shrink-0 relative z-10 bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/30">
+                                        <label className="text-[10px] font-label text-on-surface-variant font-bold uppercase tracking-wider">Overview Month</label>
                                         <button
                                             ref={monthBtnRef}
                                             type="button"
                                             onClick={() => setCalOpen(p => !p)}
-                                            className={`w-full flex items-center gap-2.5 px-4 py-[9px] rounded-xl border
-                                                text-sm font-body text-left bg-white transition-all focus:outline-none shadow-sm
+                                            className={`w-full flex items-center gap-2.5 px-4 py-2.25 rounded-xl border
+                                                text-sm font-body text-left bg-surface-bright transition-all focus:outline-none shadow-sm
                                                 ${calOpen
                                                     ? 'border-primary/40 ring-2 ring-primary/10'
                                                     : 'border-outline-variant/30 hover:border-outline-variant/60'
                                                 }`}
                                         >
                                             <CalendarDays
-                                                className={`w-4 h-4 shrink-0 transition-colors
-                                                    ${calOpen ? 'text-primary' : 'text-on-surface/35'}`}
+                                                className={`w-4 h-4 shrink-0 transition-colors ${calOpen ? 'text-primary' : 'text-on-surface/35'}`}
                                             />
-                                            <span className={`flex-1 truncate font-bold
-                                                ${calOpen ? 'text-primary' : 'text-on-surface'}`}>
+                                            <span className={`flex-1 truncate font-bold ${calOpen ? 'text-primary' : 'text-on-surface'}`}>
                                                 {formatDisplay(selectedMonth)}
                                             </span>
-                                            <span
-                                                className={`material-symbols-outlined pointer-events-none text-[18px]
-                                                    transition-transform duration-200
-                                                    ${calOpen
-                                                        ? 'rotate-180 text-primary/60'
-                                                        : 'text-on-surface/40'}`}
-                                            >
+                                            <span className={`material-symbols-outlined pointer-events-none text-[18px] transition-transform duration-200 ${calOpen ? 'rotate-180 text-primary/60' : 'text-on-surface/40'}`}>
                                                 expand_more
                                             </span>
                                         </button>
@@ -396,30 +390,30 @@ const Dashboard = () => {
                                     {/* Currency converter */}
                                     <CurrencyConverter />
                                 </div>
-                            </div> 
+                            </div>
                         )}
 
                                 {/* ── MY WALLET TAB ──────────────────────────────────── */}
-                                {activeTab === 'wallet' && (
-                                    <div className="space-y-4">
+                        {activeTab === 'wallet' && (
+                            <div className="space-y-4">
                                         {/* Filters */}
-                                        <TransactionFilters
-                                            filters={filters}
-                                            onChange={handleFilterChange}
-                                            onReset={handleFilterReset}
-                                        />
+                                <TransactionFilters
+                                    filters={filters}
+                                    onChange={handleFilterChange}
+                                    onReset={handleFilterReset}
+                                />
 
                                         {/* Transaction list */}
-                                        <TransactionList
-                                            transactions={transactions}
-                                            pagination={pagination}
-                                            loading={txLoading}
-                                            onEdit={handleEditTransaction}
-                                            onRefresh={handlePageChange}
-                                        />
-                                    </div>
-                                )}
+                                <TransactionList
+                                    transactions={transactions}
+                                    pagination={pagination}
+                                    loading={txLoading}
+                                    onEdit={handleEditTransaction}
+                                    onRefresh={handlePageChange}
+                                />
                             </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Transaction modal */}
