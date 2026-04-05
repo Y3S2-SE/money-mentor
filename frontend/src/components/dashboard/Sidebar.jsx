@@ -8,7 +8,7 @@ import { addToast } from "../../store/slices/toastSlice";
 import { fetchProfile } from "../../store/slices/gamingSlice";
 
 const navItems = [
-    { label: 'My Wallet', icon: Wallet, path: '/dashboard' },
+    { label: 'Dashboard', icon: Wallet, path: '/dashboard' },
     { label: 'Play & Level Up', icon: Gamepad2, path: '/play' },
     { label: 'Learn Hub', icon: BookOpen, path: '/learn' },
     { label: 'Group Pot', icon: Users, path: '/group' },
