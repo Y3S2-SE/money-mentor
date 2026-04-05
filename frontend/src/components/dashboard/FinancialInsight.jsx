@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Sparkles, RefreshCw } from 'lucide-react';
-import dashboardService from '../../services/dashboardService';
 
 const FinancialInsight = ({ insight, loading, selectedMonth, onRefresh }) => {
     const [refreshing, setRefreshing] = useState(false);

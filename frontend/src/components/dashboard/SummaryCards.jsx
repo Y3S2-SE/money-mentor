@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, Wallet, PiggyBank, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, PiggyBank, Activity } from 'lucide-react';
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-LK', {
