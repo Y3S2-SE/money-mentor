@@ -19,7 +19,9 @@ const ArticleList = ({ onSelectArticle }) => {
             setLoading(true);
             const params = filter !== 'all' ? { category: filter } : {};
             const res = await getAllArticles(params);
-            setArticles(res.data);
+            // Show only published articles to users
+            const publishedArticles = res.data.filter(article => article.isPublished === true);
+            setArticles(publishedArticles);
         } catch (error) {
             toast.error('Failed to load articles');
         } finally {
