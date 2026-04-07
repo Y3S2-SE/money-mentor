@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import mongoose from 'mongoose';
 
-jest.unstable_mockModule('../../services/dashboard.service.js', () => ({
+jest.unstable_mockModule('../../../services/dashboard.service.js', () => ({
   getSummary:            jest.fn(),
   getCategoryBreakdown:  jest.fn(),
   getMonthlyTrends:      jest.fn(),
@@ -10,8 +10,8 @@ jest.unstable_mockModule('../../services/dashboard.service.js', () => ({
   convertCurrency:       jest.fn(),
 }));
 
-const dashboardService    = await import('../../services/dashboard.service.js');
-const dashboardController = await import('../../controllers/dashboard.controller.js');
+const dashboardService    = await import('../../../services/dashboard.service.js');
+const dashboardController = await import('../../../controllers/dashboard.controller.js');
 
 const mockUserId = new mongoose.Types.ObjectId();
 
