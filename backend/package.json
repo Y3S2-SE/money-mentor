@@ -8,7 +8,7 @@
     "dev": "nodemon server.js",
     "test": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage --detectOpenHandles --runInBand",
     "test:watch": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --watch --runInBand",
-    "test:unit": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js tests/unit --runInBand",
+    "test:unit": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js -c tests/setup/jest.unit.config.js tests/unit --coverage --runInBand",
     "test:integration": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js tests/integration --runInBand"
   },
   "keywords": [],
