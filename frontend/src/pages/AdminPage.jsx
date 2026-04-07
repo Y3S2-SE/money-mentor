@@ -78,7 +78,7 @@ const AdminPage = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.dispatchEvent(new Event('storage')); // trigger auth state update if app listens for it
-    navigate('/auth', { replace: true });
+    navigate('/', { replace: true });
   };
 
   return (

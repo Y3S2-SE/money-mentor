@@ -10,22 +10,42 @@ MoneyMentor is a full-stack web application designed to provide gamified financi
 - **Framework**: [Express.js v5](https://expressjs.com/)
 - **Database**: [MongoDB](https://www.mongodb.com/) *with* [Mongoose](https://mongoosejs.com/)
 - **Authentication**: [JSON Web Tokens (JWT)](https://jwt.io/), [bcryptjs](https://github.com/dcodeIO/bcrypt.js)
-- **Validation**: [express-validator](https://express-validator.github.io/)
+- **Validation**: [express-validator](https://express-validator.github.io/), [express-validation](https://github.com/diegohsilva/express-validation)
 - **Security**: [helmet](https://helmetjs.github.io/), [cors](https://github.com/expressjs/cors), [express-rate-limit](https://github.com/express-rate-limit/express-rate-limit)
+- **File Handling**: [multer](https://github.com/expressjs/multer), [cloudinary](https://cloudinary.com/) (image storage)
 - **Real-time**: [ws (WebSocket)](https://github.com/websockets/ws)
 - **AI Integration**: [Google Generative AI (Gemini)](https://ai.google.dev/)
+- **Metadata**: [open-graph-scraper](https://github.com/jshemas/openGraphScraper) (link previews)
+- **Configuration**: [dotenv](https://github.com/motdotla/dotenv)
 - **Testing**: [Jest](https://jestjs.io/), [Supertest](https://github.com/ladjs/supertest)
 - **Dev Tools**: [nodemon](https://nodemon.io/), [cross-env](https://github.com/kentcdodds/cross-env)
 
 ### Frontend
-- **Framework**: [React](https://react.dev/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Runtime**: [Node.js](https://nodejs.org/)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Framework**: [React](https://react.dev/) v19
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) v4 *with* [Tailwind CSS Vite Plugin](https://github.com/tailwindlabs/tailwindcss-vite)
+- **UI Component Library**: [Mantine](https://mantine.dev/) (@mantine/core, @mantine/hooks)
+- **Rich Text Editor**: [BlockNote](https://www.blocknotejs.org/) (@blocknote/react, @blocknote/mantine)
 - **State Management**: [Redux Toolkit](https://redux-toolkit.js.org/)
 - **HTTP Client**: [Axios](https://axios-http.com/)
+- **Routing**: [React Router DOM](https://reactrouter.com/)
+- **Notifications**: [react-hot-toast](https://react-hot-toast.com/), [react-toastify](https://fkhadra.github.io/react-toastify/)
+- **Data Visualization**: [Recharts](https://recharts.org/)
+- **Animations**: 
+  - [GSAP](https://gsap.com/) (TweenMax, Timeline animations)
+  - [Lottie React](https://github.com/chenqingspring/react-lottie) (Lottie animations)
+- **Icon Library**: [Lucide React](https://lucide.dev/)
+- **Date/Time**: [date-fns](https://date-fns.org/)
+- **Markdown Rendering**: [react-markdown](https://github.com/remarkjs/react-markdown)
+- **CSS-in-JS**: [Emotion](https://emotion.sh/) (@emotion/react)
+- **Linting**: [ESLint](https://eslint.org/)
 
 ### Deployment
-- **Backend**: [Render](https://render.com/) — *`render url`*
-- **Frontend**: [Vercel](https://vercel.com/) — *`vercel url`*
+
+
+- **Backend**: [Render](https://render.com/) — *`https://money-mentor-azm9.onrender.com/health`*
+- **Frontend**: [Vercel](https://vercel.com/) — *`https://money-mentor-v1.vercel.app/`*
 
 ## Team Members
 - **[Hiruvinda ](https://github.com/hiruvindajayashanka2001)** 
@@ -75,7 +95,7 @@ MoneyMentor is a full-stack web application designed to provide gamified financi
 - Collaborate on financial discussions and foster a supportive, goal-driven community
 
 ## Project Structure 
-Project Structure and File naming convetion
+
 ```
 MoneyMentor/
 ├── .github/
@@ -136,11 +156,30 @@ MoneyMentor/
 └── README.md
 ```
 
+
+### Key Directory Descriptions
+
+| Directory | Purpose |
+|-----------|---------|
+| **backend/controllers** | Handle HTTP requests and business logic |
+| **backend/models** | Define MongoDB schemas and validations |
+| **backend/routes** | Define API endpoints and route handlers |
+| **backend/middleware** | Handle auth, validation, error handling |
+| **backend/tests** | Unit and integration test suites |
+| **backend/services** | Business logic services (reusable) |
+| **backend/websocket** | Real-time chat and group messaging |
+| **frontend/components** | Reusable React components |
+| **frontend/pages** | Full-page React components (routes) |
+| **frontend/hooks** | Custom React hooks for logic reuse |
+| **frontend/store** | Redux state management slices |
+| **frontend/services** | API service clients and utilities |
+
+
 ## Setup Instructions
 
 ### Prerequisites
 - Node.js (v18 or higher)
-- MongoDB (local installation or Atlas account)
+- MongoDB (Atlas account)
 
 ### Backend Setup
 1. Clone the repository
@@ -200,10 +239,14 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | Knowledge Hub | Thimeth | [View Docs →](https://documenter.getpostman.com/view/43108804/2sBXcHhJUQ#da36d5ac-3be7-4d11-9a68-1a3eea6681e9) |
 | Group & Chat Function | Hiruvinda | [View Docs →](https://documenter.getpostman.com/view/52186165/2sBXcGDzcJ) |
 
+---
+
 ### Health Check
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | GET | `/health` | Server & DB status | Public |
+
+---
 
 ### Authentication — `/api/auth`
 | Method | Endpoint | Description | Auth |
@@ -215,12 +258,16 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | PUT | `/api/auth/change-password` | Change password |  User |
 | POST | `/api/auth/logout` | Logout |  User |
 
+---
+
 ### User Management — `/api/users`
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | GET | `/api/users` | Get all users (paginated, searchable) |  Admin |
 | GET | `/api/users/:id` | Get user by ID |  Admin |
 | DELETE | `/api/users/:id` | Delete user |  Admin |
+
+---
 
 ### Gamification — `/api/play`
 | Method | Endpoint | Description | Auth |
@@ -233,6 +280,8 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | GET | `/api/play/xp-history` | User XP history |  User |
 | POST | `/api/play/admin/seed-badges` | Seed badge definitions |  Admin |
 | GET | `/api/play/admin/stats` | Platform-wide stats |  Admin |
+
+---
 
 ### Grouping and Chat feature — `/api/group`
 | Method | Endpoint | Description | Auth |
@@ -251,6 +300,7 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | GET | `/api/chat-room/:groupId/messages` | get previous message history |   |
 | Delete | `/api/chat-room//:groupId/messages/:messageId` | Delete user send message |  User |
 
+---
 
 ### Course — `/api/course`
 
@@ -262,6 +312,8 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | PUT | `/api/course/:id` | Update course details or publish status | Admin |
 | DELETE | `/api/course/:id` | Delete a course | Admin |
 | POST | `/api/course/:id/submit` | Submit answers, get graded, earn points | User |
+
+---
 
 ### Articles — `/api/article`
 
@@ -275,6 +327,8 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | POST | `/api/article/complete` | Mark an article as read and earn points | User |
 | GET | `/api/article/my-points` | Get user's article reading points | User |
 
+---
+
 ### Chat — `/api/chat`
 
 | Method | Endpoint | Description | Auth |
@@ -285,11 +339,15 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | GET | `/api/chat/:id` | Get a single conversation with full message history | User |
 | DELETE | `/api/chat/:id` | Delete a conversation | User |
 
+---
+
 ### YouTube — `/api/youtube`
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | GET | `/api/youtube/search?chatId=:id` | Get video suggestions based on a chat's keywords | User |
+
+---
 
 ### Income & Expenses - `/api/transactions`
 
@@ -300,6 +358,8 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | GET | `/api/transactions/:id` | Get single transaction | User |
 | PUT | `/api/transactions/:id` | Update transaction (Income or Expense) | User |
 | DELETE | `/api/transactions/:id` | Delete transaction (Income or Expense) | User |
+
+---
 
 ### Dashboard Analytics & Saving Goals - `/api/dashboard`
 
@@ -316,48 +376,11 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 | GET | `/api/dashboard/savings-goal-progress` | Track progress toward savings goal | User |
 | PUT | `/api/dashboard/savings-goal` | Update savings goal | User |
 
+## Deployment
+
+View [**Deployment Report**](./Deployment_Report.md) deployment details and evidance of successfull deployment.
+
+
 ##  Testing
 
-### Running Tests
-
-```bash
-# All tests with coverage
-npm test
-
-# Unit tests only
-npm run test:unit
-
-# Integration tests only
-npm run test:integration
-
-# Watch mode
-npm run test:watch
-```
-
-### Test Coverage Summary
-
-| Test Suite | File | Type | Tests |
-|------------|------|------|-------|
-| User Model | `user.model.test.js` | Unit | `toAuthJSON`, `comparePassword`, defaults, field assignments |
-| Gamification Model | `gamification.model.test.js` | Unit | `getLevelFromXP`, `getTitleForLevel`, `awardXP`, `updateStreak`, `awardBadge`, `levelProgress` virtual |
-| Group Model | `group.model.test.js` | Unit | Creation, members, admin ref, invite code, timestamps, CRUD (mocked) |
-| Message Model | `message.model.test.js` | Unit | Group reference, sender reference, content, type, readBy array, deletedAt, timestamps, CRUD (mocked) |
-| Course Model | `course.model.test.js` | Unit | Creation, defaults, question validation, option count, `totalPoints` calculation, completions |
-| Chat Model | `chat.model.test.js` | Unit | Creation, defaults, message roles, content trim, keyword storage |
-| Youtube Model | `youtube.model.test.js` | Unit | Creation, keyword normalization, video field defaults, staleness logic |
-| Transaction Model | `transaction.model.test.js` | Unit | Required fields, type enum (`income`/`expense`), amount validation (min, negative, zero), defaults, indexes (userId, date, compound) |
-| SavingsGoal Model | `savingsGoal.model.test.js` | Unit | Required fields, monthlyGoal validation (min, negative, zero), month format (YYYY-MM), userId ObjectId, compound unique index (userId + month) |
-| Dashboard Controller | `dashboard.controller.test.js` | Unit | `getSummary`, `getCategoryBreakdown`, `getMonthlyTrends`, `getFinancialInsight`, `getRecentTransactions`, `convertCurrency` (service mocked) |
-| Validation Middleware | `validation.middleware.test.js` | Unit | Pass, fail, multiple error formatting |
-| Auth Endpoints | `auth.integration.test.js` | Integration | Register, login, profile, update, change password, logout |
-| Gamification Endpoints | `gamification.integration.test.js` | Integration | Profile, daily login, award XP, leaderboard, badges, admin stats |
-| Course Endpoints | `course.integration.test.js` | Integration | Create, list with filters/pagination, get by ID, update, delete, submit & grade, points award, duplicate submission prevention |
-| Chat Endpoints | `chat.integration.test.js` | Integration | Start conversation, send message, list chats, get by ID, delete, ownership checks, Gemini mocked |
-| YouTube Endpoints | `youtube.integration.test.js` | Integration | Video search, cache hit/miss, staleness check, deduplication, keyword-based fetch |
-| Group Endpoints | `group.integration.test.js` | Integration | create group, join, leave, get groups details, delete group, remove member, update group, re-generate invite code,  |
-| ChatRoom Endpoints | `chatRoom.integration.test.js` | Integration | get WebSocket ticket, get message history (pagination, member access control, soft-delete filtering), delete message (owner, admin, unauthorized) |
-| Dashboard Endpoints | `dashboard.integration.test.js` | Integration | Summary (income/expense/savings, user isolation, month filter), category breakdown, monthly trends, recent transactions (limit 5, sort desc), currency conversion, savings goal CRUD (create, get, update, conflict, 404), savings goal progress (achieved, partial, overspend warning) |
-
-
-### Test Environment
-Tests use a separate `.env.test` file pointing to a dedicated test database (`test_db`). The database is dropped and recreated between test suites automatically via `testSetup.js`.
+View [**Testing Report**](./Testing_Report.md) for detailed testing reports.
