@@ -15,14 +15,23 @@ const TABS = [
 ];
 
 const StatCard = ({ label, value, sub, icon: Icon, iconColor, iconBg }) => (
-  <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-5 flex items-start gap-4 transition-all hover:border-outline-variant/50">
-    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
-      <Icon strokeWidth={1.5} className={`w-5 h-5 ${iconColor}`} />
+  <div className="group relative overflow-hidden bg-slate-900/95 rounded-2xl border border-white/5 p-4 sm:p-5 flex items-start gap-3 sm:gap-4 transition-all duration-300">
+    
+    {/* Responsive Decorative Rings */}
+    <div className="absolute -right-8 -bottom-8 w-20 h-20 sm:-right-10 sm:-bottom-10 sm:w-32 sm:h-32 border-10 sm:border-16 border-blue-500/5 rounded-full transition-transform duration-700 pointer-events-none group-hover:scale-110 group-hover:border-blue-500/10" />
+    <div className="absolute -right-2 -bottom-2 w-14 h-14 sm:-right-4 sm:-bottom-4 sm:w-20 sm:h-20 border-[6px] sm:border-12 border-blue-400/10 rounded-full transition-transform duration-500 pointer-events-none group-hover:scale-125" />
+    
+    {/* Neon Top Accent */}
+    <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-blue-500 via-blue-400 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
+
+    <div className={`relative z-10 w-9 h-9 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 shadow-lg ${iconBg} ring-1 ring-white/10 transition-transform group-hover:scale-110`}>
+      <Icon strokeWidth={2.5} className={`w-4 h-4 sm:w-6 sm:h-6 ${iconColor}`} />
     </div>
-    <div className="min-w-0">
-      <p className="font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{label}</p>
-      <p className="font-headline text-2xl font-bold text-on-surface tracking-tight leading-none">{value}</p>
-      {sub && <p className="font-body text-xs text-on-surface-variant/70 mt-1">{sub}</p>}
+    
+    <div className="relative z-10 min-w-0 flex-1">
+      <p className="font-label text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-0.5 sm:mb-1 truncate">{label}</p>
+      <p className="font-headline text-xl sm:text-3xl font-black text-white tracking-tight leading-none mb-1 drop-shadow-[0_2px_8px_rgba(255,255,255,0.2)]">{value}</p>
+      {sub && <p className="font-body text-[10px] sm:text-xs text-slate-400/80 font-medium italic">{sub}</p>}
     </div>
   </div>
 );
@@ -70,31 +79,69 @@ const LevelProgressCard = ({ profile }) => {
 };
 
 const StreakCard = ({ profile }) => {
-  if (!profile) return <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 h-24 animate-pulse" />;
+  if (!profile) return <div className="bg-slate-900/95 rounded-2xl border border-white/5 h-24 animate-pulse" />;
 
   const { currentStreak, longestStreak, lastActivityDate } = profile;
   const isActiveToday = lastActivityDate &&
     new Date(lastActivityDate).toDateString() === new Date().toDateString();
 
+  // --- LOGIC CHANGE START ---
+  const milestoneTarget = 30;
+  const daysLeft = Math.max(0, milestoneTarget - currentStreak);
+  // Calculate progress specifically toward the 30-day goal
+  const milestoneProgress = (currentStreak / milestoneTarget) * 100;
+  // --- LOGIC CHANGE END ---
+
   return (
-    <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-5 transition-all hover:border-outline-variant/50">
-      <div className="flex items-center justify-between mb-4">
-        <p className="font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Daily Streak</p>
-        <div className={`w-2 h-2 rounded-full ${isActiveToday ? 'bg-green-500' : 'bg-outline-variant'}`} />
-      </div>
-      <div className="flex items-end gap-3">
-        <div>
-          <div className="flex items-baseline gap-1">
-            <span className="font-headline text-4xl font-bold text-on-surface">{currentStreak}</span>
-            <span className="font-body text-on-surface-variant text-sm font-medium">days</span>
-          </div>
-          <p className="font-body text-xs text-on-surface-variant mt-0.5">
-            {isActiveToday ? 'Checked in today' : 'Login to continue'}
-          </p>
+    <div className="group relative overflow-hidden bg-slate-900/95 rounded-2xl border border-white/5 p-4 sm:p-5 transition-all duration-300">
+      
+      {/* Neon Energy Orb - Scaled for Mobile */}
+      <div className="absolute -top-12 -right-12 w-24 h-24 sm:-top-16 sm:-right-16 sm:w-40 sm:h-40 bg-blue-500/10 rounded-full blur-2xl sm:blur-3xl animate-[pulse_4s_ease-in-out_infinite] pointer-events-none" />
+      
+      {/* Geometric Corner Accent */}
+      <div className="absolute bottom-0 right-0 w-20 h-20 sm:w-24 sm:h-24 bg-linear-to-tl from-blue-500/10 to-transparent rounded-tl-full pointer-events-none group-hover:scale-110 transition-transform" />
+
+      <div className="relative z-10 flex items-center justify-between mb-3 sm:mb-4">
+        <p className="font-label text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-1 sm:gap-1.5">
+          Daily Streak
+          {isActiveToday && (
+            <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-blue-300 shadow-[0_0_12px_rgba(103,232,249,0.8)]"></span>
+            </span>
+          )}
+        </p>
+        <div className="bg-white/5 px-1.5 py-0.5 sm:px-2 rounded-full border border-white/10">
+          <span className="font-label text-[7px] sm:text-[9px] text-slate-500 uppercase font-bold mr-1">Best</span>
+          <span className="font-headline text-xs sm:text-base font-black text-slate-200">{longestStreak}</span>
         </div>
-        <div className="ml-auto text-right">
-          <p className="font-label text-[10px] text-on-surface-variant uppercase tracking-wider">Best</p>
-          <p className="font-headline text-xl font-bold text-on-surface-variant/80">{longestStreak}</p>
+      </div>
+      
+      <div className="relative z-10 flex flex-col gap-0.5 sm:gap-1">
+        <div className="flex items-baseline gap-1 sm:gap-1.5">
+          <span className="font-headline text-3xl sm:text-4xl font-black bg-linear-to-br from-white via-white to-blue-400 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+            {currentStreak}
+          </span>
+          <span className="font-body text-slate-400 text-[10px] sm:text-sm font-black uppercase tracking-widest">days</span>
+        </div>
+        <p className={`font-body text-[9px] sm:text-[11px] font-bold ${isActiveToday ? 'text-blue-400' : 'text-slate-500'}`}>
+          {isActiveToday ? '🔥 STREAK ACTIVE' : 'LOG IN TO CONTINUE'}
+        </p>
+      </div>
+
+      {/* --- UPDATED PROGRESS BAR --- */}
+      <div className="relative z-10 mt-3 sm:mt-4">
+        <div className="flex justify-between items-center mb-1 px-0.5">
+          <span className="text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-widest">Milestone Progress</span>
+          <span className="text-[7px] sm:text-[8px] font-black text-blue-400 uppercase">
+            {daysLeft > 0 ? `${daysLeft}d left` : '30d Goal Met!'}
+          </span>
+        </div>
+        <div className="relative w-full h-1 sm:h-1.5 bg-black/40 rounded-full overflow-hidden ring-1 ring-white/5">
+          <div
+            className="h-full bg-linear-to-r from-blue-600 via-blue-400 to-white rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(34,211,238,0.5)]"
+            style={{ width: `${Math.min(100, milestoneProgress)}%` }}
+          />
         </div>
       </div>
     </div>
