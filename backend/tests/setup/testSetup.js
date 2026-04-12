@@ -55,14 +55,12 @@ export const teardownTestDB = async () => {
 export const clearTestDB = async () => {
     try {
         const dbName = mongoose.connection.name;
-        if (!dbName.toLocaleLowerCase().includes('test')) {
+        if (!dbName.toLowerCase().includes('test')) {
             throw new Error(`Refusing to clear non-test database: ${dbName}`);
         }
 
-        const collections = mongoose.connection.collections;
-        for (const key in collections) {
-            await collections[key].deleteMany({});
-        }
+        // Faster: drop and recreate test database instead of deleting each collection
+        await mongoose.connection.dropDatabase();
         console.log('Test database cleared');
     } catch (error) {
         console.error('Error clearing test database:', error);
