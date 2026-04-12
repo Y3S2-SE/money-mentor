@@ -72,7 +72,127 @@
    - Coverage Paths: All files except node_modules and tests
    - Setup File: jest.setup.js handles database setup/teardown
 
-### 4. CI/CD Pipeline
+### 4. Performance Tests
+
+#### **Overview**
+Performance testing validates that the application meets response time and throughput requirements under various load conditions using Artillery load testing tool.
+
+#### **i. Testing Environment Configuration**
+- Create .env.performance File in backend directory with these variables
+- Performance testing database completly isolated with production database
+
+```bash
+   PORT=5081
+   NODE_ENV=performance 
+   PERF_DB_TARGET=docker
+   MONGODB_DOCKER_URI=mongodb://localhost:27017/perf_test_db
+   MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mjktxbs.mongodb.net/perf_test_db
+   JWT_SECRET=add_secret_key
+   JWT_EXPIRE=7d
+   ALLOWED_ORIGINS=http://localhost:5081
+```
+
+#### **ii. Running Performance Tests**
+
+**Step 1: Seed Performance Test Data with Mongo 7 Docker Image or Atlas cluster**
+
+- **for Docker Image approach, need to have installed docker desktop**
+- **After installing docker desktop,**
+
+```bash
+#  run this command to pull docker image in terminal
+docker run -d -p 27017:27017 --name mongo-perf mongo:7
+```
+
+```bash 
+# 1. Open a terminal and run 
+cd backend
+
+# 2. Then Load test data with multiple users and resources 
+
+npm run perf:seed:atlas  # for Atlas Conncetion
+
+npm run perf:seed:docker # or Docker Image
+
+# 3. In same terminal, Start server with performance environment configuration
+
+npm run perf:seed:atlas # for Atlas Conncetion
+
+npm run perf:start:docker # or Docker Image
+```
+- **While server is running in that terminal, Follow these steps**
+
+```bash
+# 4. Open a new terminal in backend directory
+cd backend
+
+# 5. Run the load test scenarios that have in artillery.config.yml
+npm run perf:run:atlas # for Atlas Conncetion
+
+npm run perf:run:docker # or Docker Image
+```
+
+- **After test completed, then we can generate HTML and enhanced report** 
+```bash
+#. For that use this command in backend directory
+npm run perf:report:docker # for Atlas Conncetion
+
+npm run perf:report:atlas # or Docker Image
+```
+
+#### **iii. Test Configuration**
+- Load Testing Phases `artillery.config.yml`:
+
+| Phase            | Duration | Arrival Rate   | Purpose                     |
+|------------------|----------|----------------|-----------------------------|
+| Warm-up          | 45s      | 1 req/s        | Initial stabilization       |
+| Ramp Up          | 90s      | 1 → 10 req/s   | Gradual load increase       |
+| Sustained Load   | 180s     | 12 req/s       | Normal production load      |
+| Spike            | 45s      | 20 req/s       | Peak load handling          |
+| Cool Down        | 45s      | 5 req/s        | Recovery phase              |
+
+#### **iv.Performance Thresholds (SLAs):**
+
+- `p95` Response Time: < 2000ms (95th percentile)
+- `p99` Response Time: < 5000ms (99th percentile)
+- `HTTP` Timeout: 20 seconds
+
+#### **v. Test Scenarios**
+
+| Scenario                         | Weight | Purpose                    | Operations                                  |
+|----------------------------------|--------|----------------------------|---------------------------------------------|
+| Auth - Login                     | 5%     | Authentication throughput  | Login flow with token capture               |
+| Auth - Register & Profile        | 2%     | New user registration      | Register + profile retrieval                |
+| Transactions - Read Heavy        | 25%    | Query performance          | Fetch all, income, expense transactions     |
+| Transactions - Create & Read     | 15%    | Write + read operations    | Create transaction, fetch updated list      |
+| Dashboard - Analytics            | 20%    | Complex aggregations       | Summary, trends, category breakdown         |
+| Courses - Browse & Submit        | 15%    | Course interactions        | List, get by ID, submit & grade             |
+| Chat & Groups                    | 10%    | Real-time features         | Send message, group operations              |
+| Articles & YouTube               | 8%     | Content discovery          | Article list, video suggestions             |
+
+#### **vi. Performance Test Setup**
+- **Target Server:** `http://localhost:5081`
+- **Environment:** Uses .env.performance configuration
+- **Test Data:** Pre-seeded via seed-data.json with realistic data volumes
+- **Helper Functions:** Custom processors in processors/helpers.cjs for:
+   - Random user selection from seed database
+   - Dynamic data generation (dates, unique emails)
+   - Token management for authenticated requests
+   - Course/Article/User ID randomization
+
+#### **vii. Reports Generated**
+- Performance test execution generates reports in `tests/performance/reports/`:
+
+| Report       | Format | Contents                                      |
+|--------------|--------|-----------------------------------------------|
+| `report.json`  | JSON   | Raw metrics, response times, error rates      |
+| `report.html`  | HTML   | Visual dashboard with charts and insights     |
+
+
+----
+
+
+### 5. CI/CD Pipeline
 - **Automated testing runs on GitHub Actions (`backend-test.yaml`):**
 - **Triggered on push to main and pull requests**
 - **Runs all unit tests with coverage report**
@@ -80,7 +200,7 @@
 
 ---
 
-### 5. Test Coverage Summary
+### 6. Test Coverage Summary
 
 #### i. Unit Tests — Models
 
@@ -139,10 +259,10 @@
 | YouTube Endpoints | `youtube.integration.test.js` | Integration | Video search, cache hit/miss, staleness check, deduplication, keyword-based fetch |
 
 
-### 6. Test Environment
+### 7. Test Environment
 Tests use a separate `.env.test` file pointing to a dedicated test database (`test_db`). The database is dropped and recreated between test suites automatically via `testSetup.js`.
 
-### 7. Test Statistics
+### 8. Test Statistics
 
 **Total Test Files:** 36
 - **Unit Tests:** 25 files (12 controllers + 3 middleware + 10 models)
@@ -159,3 +279,17 @@ Tests use a separate `.env.test` file pointing to a dedicated test database (`te
    | `jest.unit.config.js` | `tests/setup/` | Global Jest configuration & hooks for unit test |
    | `jest.setup.js` | `tests/setup/` | Global Jest configuration & hooks |
    | `testSetup.js` | `tests/setup/` | Database setup, teardown, test utilities |
+
+## Coverage Reports
+
+### i. Unit Test
+
+![Unit testing coverage](./images/unit.png)
+
+### ii. Integration Test
+
+![Integration testing coverage](./images/integration.png)
+
+### iii. Overall Test (Unit + Integration)
+
+![Overall](./images/full_test.png)
