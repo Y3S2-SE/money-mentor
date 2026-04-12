@@ -1,0 +1,209 @@
+config:
+  target: "http://localhost:5081"
+
+  phases:
+    - duration: 45
+      arrivalRate: 1
+      name: "Warm-up"
+    - duration: 90
+      arrivalRate: 1
+      rampTo: 10
+      name: "Ramp Up"
+    - duration: 180
+      arrivalRate: 12
+      name: "Sustained Load"
+    - duration: 45
+      arrivalRate: 20
+      name: "Spike"
+    - duration: 45
+      arrivalRate: 5
+      name: "Cool Down"
+
+  processor: "./processors/helpers.cjs"     # relative to artillery.config.yml, so this stays the same
+
+  ensure:
+    p95: 2000
+    p99: 5000
+
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+  http:
+    timeout: 20
+
+scenarios:
+  - name: "Auth - Login"
+    weight: 5
+    flow:
+      - function: "pickRandomUser"
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ userEmail }}"
+            password: "PerfUser123!"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+
+  - name: "Auth - Register and Profile"
+    weight: 2
+    flow:
+      - function: "buildUniqueRegisterUser"
+      - post:
+          url: "/api/auth/register"
+          json:
+            username: "{{ registerUsername }}"
+            email: "{{ registerEmail }}"
+            password: "Load123!"
+          capture:
+            - json: "$.data.token"
+              as: "newToken"
+      - get:
+          url: "/api/auth/profile"
+          headers:
+            Authorization: "Bearer {{ newToken }}"
+
+  - name: "Transactions - Read Heavy"
+    weight: 25
+    flow:
+      - function: "pickRandomUser"
+      - get:
+          url: "/api/transactions"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+      - get:
+          url: "/api/transactions?type=expense"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+      - get:
+          url: "/api/transactions?type=income"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+
+  - name: "Transactions - Create and Read"
+    weight: 15
+    flow:
+      - function: "pickRandomUser"
+      - function: "getTodayDate"
+      - post:
+          url: "/api/transactions"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+          json:
+            type: "expense"
+            amount: "{{ $randomNumber(100, 5000) }}"
+            category: "Food"
+            date: "{{ todayDate }}"
+          capture:
+            - json: "$.data._id"
+              as: "newTransactionId"
+      - get:
+          url: "/api/transactions/{{ newTransactionId }}"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+
+  - name: "Dashboard - Summary and Breakdown"
+    weight: 16
+    flow:
+      - function: "pickRandomUser"
+      - get:
+          url: "/api/dashboard/summary"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+      - get:
+          url: "/api/dashboard/category-breakdown"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+      - get:
+          url: "/api/dashboard/category-breakdown?type=income"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+
+  - name: "Dashboard - Trends and Recent"
+    weight: 8
+    flow:
+      - function: "pickRandomUser"
+      - get:
+          url: "/api/dashboard/trends"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+      - get:
+          url: "/api/dashboard/recent-transactions"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+
+  - name: "Dashboard - Savings Goal CRUD"
+    weight: 7
+    flow:
+      - function: "pickRandomUser"
+      - function: "getCurrentMonth"
+      - get:
+          url: "/api/dashboard/savings-goal"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+      - get:
+          url: "/api/dashboard/savings-goal-progress"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+
+  - name: "Courses - Browse and View"
+    weight: 10
+    flow:
+      - function: "pickRandomUser"
+      - function: "pickRandomCourse"
+      - get:
+          url: "/api/course"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+      - get:
+          url: "/api/course?category=budgeting"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+      - get:
+          url: "/api/course/{{ courseId }}"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+
+  - name: "Articles - Browse and Read"
+    weight: 8
+    flow:
+      - function: "pickRandomUser"
+      - function: "pickRandomArticle"
+      - get:
+          url: "/api/articles"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+      - get:
+          url: "/api/articles?category=budgeting"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+      - get:
+          url: "/api/articles/{{ articleId }}"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+      - get:
+          url: "/api/articles/my-points"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+
+  - name: "Gamification - Profile and Leaderboard"
+    weight: 4
+    flow:
+      - function: "pickRandomUser"
+      - get:
+          url: "/api/play/profile"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+      - get:
+          url: "/api/play/leaderboard"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+      - get:
+          url: "/api/play/badges"
+          headers:
+            Authorization: "Bearer {{ userToken }}"
+      - get:
+          url: "/api/play/xp-history"
+          headers:
+            Authorization: "Bearer {{ userToken }}"

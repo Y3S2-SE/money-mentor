@@ -9,7 +9,21 @@
     "test": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage --detectOpenHandles --runInBand",
     "test:watch": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --watch --runInBand",
     "test:unit": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js -c tests/setup/jest.unit.config.js tests/unit --coverage --runInBand",
-    "test:integration": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js tests/integration --runInBand"
+    "test:integration": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js tests/integration --coverage --runInBand",
+
+    "perf:seed": "node --experimental-vm-modules scripts/seedPerfData.js",
+    "perf:start": "node -r dotenv/config server.js dotenv_config_path=.env.performance",
+    "perf:run": "npx artillery run tests/performance/artillery.config.yml --output tests/performance/reports/report.json",
+    "perf:report": "node tests/performance/processors/generateReport.cjs",
+
+    "perf:seed:docker": "cross-env PERF_DB_TARGET=docker node --experimental-vm-modules scripts/seedPerfData.js",
+    "perf:seed:atlas": "cross-env PERF_DB_TARGET=atlas node --experimental-vm-modules scripts/seedPerfData.js",
+    "perf:start:docker": "cross-env PERF_DB_TARGET=docker node -r dotenv/config server.js dotenv_config_path=.env.performance",
+    "perf:start:atlas": "cross-env PERF_DB_TARGET=atlas node -r dotenv/config server.js dotenv_config_path=.env.performance",
+    "perf:run:docker": "cross-env PERF_DB_TARGET=docker npx artillery run tests/performance/artillery.config.yml --output tests/performance/reports/docker_report.json",
+    "perf:run:atlas": "cross-env PERF_DB_TARGET=atlas npx artillery run tests/performance/artillery.config.yml --output tests/performance/reports/atlas_report.json",
+    "perf:report:docker": "cross-env PERF_DB_TARGET=docker REPORT_BASENAME=docker_report node tests/performance/processors/generateReport.cjs",
+    "perf:report:atlas": "cross-env PERF_DB_TARGET=atlas REPORT_BASENAME=atlas_report node tests/performance/processors/generateReport.cjs"
   },
   "keywords": [],
   "author": "",
@@ -33,6 +47,7 @@
     "ws": "^8.19.0"
   },
   "devDependencies": {
+    "artillery": "^2.0.30",
     "cross-env": "^10.1.0",
     "jest": "^30.2.0",
     "nodemon": "^3.1.11",
