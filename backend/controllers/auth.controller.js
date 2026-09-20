@@ -14,7 +14,7 @@ const generateToken = (id) => {
 // @access  Public
 export const register = async (req, res) => {
     try {
-        const { username, email, password, role } = req.body;
+        const { username, email, password } = req.body;
 
         // Check if user already exists
         const userExists = await User.findOne({ $or: [{ email }, { username }] });
@@ -28,7 +28,10 @@ export const register = async (req, res) => {
 
         // Create user
         const user = await User.create({
-            username, email, password, role: role || 'user'
+            username, 
+            email, 
+            password, 
+            role: 'user'
         });
 
         // Generate token
