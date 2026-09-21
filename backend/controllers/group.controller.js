@@ -1,4 +1,5 @@
 import Group from "../models/group.model.js";
+import { disconnectUserFromRoom, disconnectRoom } from "../websocket/roomManager.js";
 import crypto from "crypto";
 import { logger } from "../utils/logger.js";
 import mongoose from "mongoose";
@@ -85,6 +86,9 @@ export const leaveGroup = async (req, res) => {
     group.members = group.members.filter((member) => member.toString() !== userId);
     await group.save();
 
+    // Revoke live chat access immediately
+    disconnectUserFromRoom(String(groupId), String(userId));
+
     res.json({ message: "Left group successfully" });
   } catch (error) {
     logger.error('Failed to leave group', error);
@@ -159,6 +163,10 @@ export const deleteGroup = async (req, res) => {
     }
 
     await Group.findByIdAndDelete(groupId);
+
+    // Close all live chat connections for the deleted group
+    disconnectRoom(String(groupId));
+
     res.json({ message: "Group deleted successfully" });
   } catch (error) {
     logger.error('Failed to delete group', error);
@@ -183,6 +191,9 @@ export const removeMember = async (req, res) => {
 
     group.members = group.members.filter((member) => member.toString() !== memberId);
     await group.save();
+
+    // Revoke the removed member's live chat access immediately
+    disconnectUserFromRoom(String(groupId), String(memberId));
 
     res.json({ message: "Member removed successfully", group });
   } catch (error) {
