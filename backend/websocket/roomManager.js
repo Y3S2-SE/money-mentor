@@ -36,6 +36,30 @@ export const leaveRoom = (groupId, userId, ws) => {
   if (room.size === 0) rooms.delete(groupId);
 };
 
+// ─── Force-close all of a user's connections in a room (access revoked) ──────
+// Cleanup of the room maps and the user_left broadcast happen in the
+// "close" handler registered in wsServer.js.
+export const disconnectUserFromRoom = (groupId, userId) => {
+  const connections = rooms.get(groupId)?.get(userId);
+  if (!connections) return;
+
+  for (const ws of connections) {
+    ws.close(4003, "Group access revoked");
+  }
+};
+
+// ─── Force-close every connection in a room (group deleted) ──────────────────
+export const disconnectRoom = (groupId) => {
+  const room = rooms.get(groupId);
+  if (!room) return;
+
+  for (const connections of room.values()) {
+    for (const ws of connections) {
+      ws.close(4003, "Group no longer available");
+    }
+  }
+};
+
 // ─── Broadcast to everyone in a room ─────────────────────────────────────────
 export const broadcastToRoom = (groupId, payload, excludeUserId = null) => {
   if (!rooms.has(groupId)) return;
