@@ -1,5 +1,6 @@
 import Course from "../models/course.model.js";
 import { processXPEvent } from "../utils/gamificationEngine.js";
+import { logger } from "../utils/logger.js";
 
 // @desc    Create a new course
 // @route   POST /api/course
@@ -25,10 +26,10 @@ export const createCourse = async (req, res) => {
             data: course
         });
     } catch (error) {
+        logger.error('Failed to create course', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to create course',
-            error: error.message
+            message: 'Failed to create course'
         });
     }
 };
@@ -96,10 +97,10 @@ export const getAllCourses = async (req, res) => {
             }
         });
     } catch (error) {
+        logger.error('Failed to fetch courses', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch courses',
-            error: error.message
+            message: 'Failed to fetch courses'
         });
     }
 };
@@ -128,10 +129,10 @@ export const getCourseById = async (req, res) => {
 
         res.status(200).json({ success: true, data: course });
     } catch (error) {
+        logger.error('Failed to fetch course', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch course',
-            error: error.message
+            message: 'Failed to fetch course'
         });
     }
 };
@@ -164,11 +165,10 @@ export const updateCourse = async (req, res) => {
             data: course
         });
     } catch (error) {
-        console.log('Update error:', error);
+        logger.error('Failed to update course', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to update course',
-            error: error.message
+            message: 'Failed to update course'
         });
     }
 };
@@ -186,10 +186,10 @@ export const deleteCourse = async (req, res) => {
 
         res.status(200).json({ success: true, message: 'Course deleted successfully' });
     } catch (error) {
+        logger.error('Failed to delete course', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to delete course',
-            error: error.message
+            message: 'Failed to delete course'
         });
     }
 };
@@ -277,10 +277,10 @@ export const submitCourse = async (req, res) => {
             }
         });
     } catch (error) {
+        logger.error('Failed to submit course', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to submit course',
-            error: error.message
+            message: 'Failed to submit course'
         });
     }
 };
@@ -306,10 +306,10 @@ export const getUserPoints = async (req, res) => {
             data: { totalPoints }
         });
     } catch (error) {
+        logger.error('Failed to fetch user points', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch user points',
-            error: error.message
+            message: 'Failed to fetch user points'
         });
     }
 };
