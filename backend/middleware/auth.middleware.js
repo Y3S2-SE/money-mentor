@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
+import { logger } from '../utils/logger.js';
 
 // Verification of JWT token
 export const protect = async (req, res, next) => {
@@ -53,10 +54,10 @@ export const protect = async (req, res, next) => {
             });
         }
 
+        logger.error('Authentication failed', error);
         res.status(500).json({
             success: false,
-            message: 'Authentication failed',
-            error: error.message
+            message: 'Authentication failed'
         })
     }
 };

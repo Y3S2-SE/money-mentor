@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import jwt from 'jsonwebtoken';
 import { processDailyLogin } from "../utils/gamificationEngine.js";
+import { logger } from "../utils/logger.js";
 
 // Generate JWT token
 const generateToken = (id) => {
@@ -42,10 +43,10 @@ export const register = async (req, res) => {
             data: { user: user.toAuthJSON(), token, dailyLogin }
         });
     } catch (error) {
+        logger.error('Registration failed', error);
         res.status(500).json({
             success: false,
-            message: 'Registration failed',
-            error: error.message
+            message: 'Registration failed'
         });
     }
 };
@@ -100,10 +101,10 @@ export const login = async (req, res) => {
             data: { user: user.toAuthJSON(), token, dailyLogin }
         });
     } catch (error) {
+        logger.error('Login failed', error);
         res.status(500).json({
             success: false,
-            message: 'Login failed',
-            error: error.message
+            message: 'Login failed'
         });
     }
 };
@@ -161,10 +162,10 @@ export const updateProfile = async (req, res) => {
             data: user
         });
     } catch (error) {
+        logger.error('Failed to update profile', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to update profile',
-            error: error.message
+            message: 'Failed to update profile'
         });
     }
 };
@@ -198,10 +199,10 @@ export const changePassword = async (req, res) => {
             data: { user: user.toAuthJSON(), token }
         });
     } catch (error) {
+        logger.error('Failed to change password', error);
         res.status(500).json({
-            success: false, 
-            message: 'Failed to change password',
-            error: error.message
+            success: false,
+            message: 'Failed to change password'
         });
     }
 };
@@ -217,10 +218,10 @@ export const logout = async (req, res) => {
             message: 'Logout successfully'
         });
     } catch (error) {
+        logger.error('Logout failed', error);
         res.status(500).json({
             success: false,
-            message: 'Logout failed',
-            error: error.message
+            message: 'Logout failed'
         });
     }
 };
