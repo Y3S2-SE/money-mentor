@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Chat from '../models/chat.model.js';
+import { logger } from '../utils/logger.js';
 import 'dotenv/config';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -97,10 +98,10 @@ export const startConversation = async (req, res) => {
             }
         });
     } catch (error) {
+        logger.error('Failed to start conversation', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to start conversation',
-            error: error.message
+            message: 'Failed to start conversation'
         });
     }
 };
@@ -167,10 +168,10 @@ export const sendMessage = async (req, res) => {
             }
         });
     } catch (error) {
+        logger.error('Failed to send message', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to send message',
-            error: error.message
+            message: 'Failed to send message'
         });
     }
 };
@@ -189,10 +190,10 @@ export const getAllConversations = async (req, res) => {
             data: chats
         });
     } catch (error) {
+        logger.error('Failed to fetch conversations', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch conversations',
-            error: error.message
+            message: 'Failed to fetch conversations'
         });
     }
 };
@@ -214,10 +215,10 @@ export const getConversation = async (req, res) => {
 
         res.status(200).json({ success: true, data: chat });
     } catch (error) {
+        logger.error('Failed to fetch conversation', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch conversation',
-            error: error.message
+            message: 'Failed to fetch conversation'
         });
     }
 };
@@ -241,10 +242,10 @@ export const deleteConversation = async (req, res) => {
 
         res.status(200).json({ success: true, message: 'Conversation deleted successfully' });
     } catch (error) {
+        logger.error('Failed to delete conversation', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to delete conversation',
-            error: error.message
+            message: 'Failed to delete conversation'
         });
     }
 };

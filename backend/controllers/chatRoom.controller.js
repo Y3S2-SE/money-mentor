@@ -1,6 +1,7 @@
 import Message from "../models/message.model.js";
 import Group from "../models/group.model.js";
 import { createTicket } from "../websocket/wsTicketStore.js";
+import { logger } from "../utils/logger.js";
 
 // POST /api/chat-room/ticket
 export const getWsTicket = async (req, res) => {
@@ -8,7 +9,8 @@ export const getWsTicket = async (req, res) => {
     const ticket = createTicket(req.user._id.toString());
     res.json({ success: true, ticket });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    logger.error('Failed to create chat ticket', error);
+    res.status(500).json({ success: false, message: 'Failed to create chat ticket' });
   }
 };
 
@@ -55,7 +57,8 @@ export const getMessageHistory = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    logger.error('Failed to fetch message history', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch message history' });
   }
 };
 
@@ -83,6 +86,7 @@ export const deleteMessage = async (req, res) => {
 
     res.json({ success: true, message: "Message deleted" });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    logger.error('Failed to delete message', error);
+    res.status(500).json({ success: false, message: 'Failed to delete message' });
   }
 };

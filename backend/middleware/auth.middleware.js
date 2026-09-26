@@ -22,8 +22,21 @@ export const protect = async (req, res, next) => {
         // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+        if (!Number.isInteger(decoded.tokenVersion)) {
+            logger.warn('security.auth.token_rejected', {
+                reason: 'missing_token_version',
+                userId: decoded.id,
+                path: req.originalUrl,
+                ip: req.ip
+            });
+            return res.status(401).json({
+                success: false,
+                message: 'Session is no longer valid'
+            });
+        }
+
         // Get user from token
-        req.user = await User.findById(decoded.id).select('-password');
+        req.user = await User.findById(decoded.id).select('-password +tokenVersion');
 
         if (!req.user) {
             logger.warn('security.auth.token_rejected', {
@@ -35,6 +48,22 @@ export const protect = async (req, res, next) => {
             return res.status(401).json({
                 success: false,
                 message: 'User not found'
+            });
+        }
+
+        // Existing documents without the physical field have effective version 0
+        const effectiveTokenVersion = req.user.tokenVersion ?? 0;
+
+        if (decoded.tokenVersion !== effectiveTokenVersion) {
+            logger.warn('security.auth.token_rejected', {
+                reason: 'session_invalidated',
+                userId: req.user._id.toString(),
+                path: req.originalUrl,
+                ip: req.ip
+            });
+            return res.status(401).json({
+                success: false,
+                message: 'Session is no longer valid'
             });
         }
 
@@ -76,10 +105,10 @@ export const protect = async (req, res, next) => {
             });
         }
 
+        logger.error('Authentication failed', error);
         res.status(500).json({
             success: false,
-            message: 'Authentication failed',
-            error: error.message
+            message: 'Authentication failed'
         })
     }
 };

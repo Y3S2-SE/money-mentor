@@ -42,19 +42,72 @@ beforeEach(() => jest.clearAllMocks());
 
 // ── protect ────────────────────────────────────────────────────────
 describe('Auth Middleware - protect', () => {
-  it('should call next() when a valid token is provided', async () => {
+  it('accepts a verified JWT with a matching tokenVersion', async () => {
     const user = mockUserDoc();
-    jwt.verify.mockReturnValue({ id: mockUserId.toString() });
-    User.findById.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+    const select = jest.fn().mockResolvedValue(user);
+    jwt.verify.mockReturnValue({ id: mockUserId.toString(), tokenVersion: 0 });
+    User.findById.mockReturnValue({ select });
 
     const { req, res, next } = buildMocks({
-      headers: { authorization: `Bearer valid-token` }
+      headers: { authorization: 'Bearer valid-token' }
+    });
+
+    await protect(req, res, next);
+
+    expect(jwt.verify).toHaveBeenCalledWith('valid-token', process.env.JWT_SECRET);
+    expect(select).toHaveBeenCalledWith('-password +tokenVersion');
+    expect(req.user).toEqual(user);
+  });
+
+  it('accepts a legacy database user with no stored tokenVersion', async () => {
+    const user = mockUserDoc({ tokenVersion: undefined });
+    jwt.verify.mockReturnValue({ id: mockUserId.toString(), tokenVersion: 0 });
+    User.findById.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+    const { req, res, next } = buildMocks({
+      headers: { authorization: 'Bearer version-zero-token' }
     });
 
     await protect(req, res, next);
 
     expect(next).toHaveBeenCalledWith();
-    expect(req.user).toEqual(user);
+  });
+
+  it('rejects a revoked tokenVersion', async () => {
+    jwt.verify.mockReturnValue({ id: mockUserId.toString(), tokenVersion: 2 });
+    User.findById.mockReturnValue({
+      select: jest.fn().mockResolvedValue(mockUserDoc({ tokenVersion: 3 }))
+    });
+    const { req, res, next } = buildMocks({
+      headers: { authorization: 'Bearer old-token' }
+    });
+
+    await protect(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      message: 'Session is no longer valid'
+    }));
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['missing', undefined],
+    ['string', '0'],
+    ['fractional', 0.5]
+  ])('rejects a %s tokenVersion claim', async (_, tokenVersion) => {
+    jwt.verify.mockReturnValue({ id: mockUserId.toString(), tokenVersion });
+    const { req, res, next } = buildMocks({
+      headers: { authorization: 'Bearer malformed-claim-token' }
+    });
+
+    await protect(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      message: 'Session is no longer valid'
+    }));
+    expect(User.findById).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
   it('should return 401 when no token is provided', async () => {
@@ -104,7 +157,7 @@ describe('Auth Middleware - protect', () => {
   });
 
   it('should return 401 when user is not found in DB', async () => {
-    jwt.verify.mockReturnValue({ id: mockUserId.toString() });
+    jwt.verify.mockReturnValue({ id: mockUserId.toString(), tokenVersion: 0 });
     User.findById.mockReturnValue({ select: jest.fn().mockResolvedValue(null) });
 
     const { req, res, next } = buildMocks({
@@ -121,7 +174,7 @@ describe('Auth Middleware - protect', () => {
 
   it('should return 403 when user account is deactivated', async () => {
     const user = mockUserDoc({ isActive: false });
-    jwt.verify.mockReturnValue({ id: mockUserId.toString() });
+    jwt.verify.mockReturnValue({ id: mockUserId.toString(), tokenVersion: 0 });
     User.findById.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
 
     const { req, res, next } = buildMocks({
@@ -134,7 +187,7 @@ describe('Auth Middleware - protect', () => {
   });
 
   it('should return 500 on unexpected error', async () => {
-    jwt.verify.mockReturnValue({ id: mockUserId.toString() });
+    jwt.verify.mockReturnValue({ id: mockUserId.toString(), tokenVersion: 0 });
     User.findById.mockReturnValue({
       select: jest.fn().mockRejectedValue(new Error('DB error'))
     });

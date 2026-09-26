@@ -20,7 +20,7 @@ describe('ChatRoom Controller - Integration Tests', () => {
   //  Helper to generate JWT token 
   const generateToken = (user) => {
     return jwt.sign(
-      { id: user._id.toString(), email: user.email },
+      { id: user._id.toString(), email: user.email, tokenVersion: user.tokenVersion ?? 0 },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );

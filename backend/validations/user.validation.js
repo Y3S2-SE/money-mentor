@@ -21,8 +21,8 @@ export const registerValidation = [
         .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
 
     body('role')
-        .optional()
-        .isIn(['user', 'admin']).withMessage('Role must be either user or admin')
+        .not()
+        .exists().withMessage('Role cannot be set during registration')
 ];
 
 // Login validation rules

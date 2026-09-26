@@ -3,6 +3,7 @@ import BadgeDefinition from "../models/badge.model.js";
 import { awardActionBadge, processXPEvent, processDailyLogin, XP_REWARDS, syncBadgesForUser } from "../utils/gamificationEngine.js";
 import { BADGE_SEEDS } from "../seeds/seedBadges.js";
 import Group from "../models/group.model.js";
+import { logger } from "../utils/logger.js";
 
 /**
  * @desc    Get current user's full gamification profile
@@ -45,10 +46,10 @@ export const getMyProfile = async (req, res) => {
             }))
         });
     } catch (error) {
+        logger.error('Failed to fetch gamification profile', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch gamification profile',
-            error: error.message
+            message: 'Failed to fetch gamification profile'
         });
     }
 };
@@ -77,10 +78,10 @@ export const dailyLogin = async (req, res) => {
             data: result
         });
     } catch (error) {
+        logger.error('Failed to process daily login', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to process daily login',
-            error: error.message
+            message: 'Failed to process daily login'
         });
     }
 };
@@ -122,10 +123,10 @@ export const awardXP = async (req, res) => {
             }
         });
     } catch (error) {
+        logger.error('Failed to award XP', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to award XP',
-            error: error.message
+            message: 'Failed to award XP'
         });
     }
 };
@@ -197,10 +198,10 @@ export const getLeaderboard = async (req, res) => {
             }
         });
     } catch (error) {
+        logger.error('Failed to fetch leaderboard', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch leaderboard',
-            error: error.message
+            message: 'Failed to fetch leaderboard'
         });
     }
 };
@@ -244,10 +245,10 @@ export const getAllBadges = async (req, res) => {
             }))
         });
     } catch (error) {
+        logger.error('Failed to fetch badges', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch badges',
-            error: error.message
+            message: 'Failed to fetch badges'
         });
     }
 };
@@ -283,10 +284,10 @@ export const getXPHistory = async (req, res) => {
             }
         });
     } catch (error) {
+        logger.error('Failed to fetch XP history', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch XP history',
-            error: error.message
+            message: 'Failed to fetch XP history'
         });
     }
 };
@@ -324,10 +325,10 @@ export const seedBadges = async (req, res) => {
             data: { seeded, updated, skipped }
         });
     } catch (error) {
+        logger.error('Failed to seed badges', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to seed badges',
-            error: error.message
+            message: 'Failed to seed badges'
         });
     }
 }
@@ -368,10 +369,10 @@ export const getAdminStats = async (req, res) => {
             }
         });
     } catch (error) {
+        logger.error('Failed to fetch admin stats', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch admin stats',
-            error: error.message
+            message: 'Failed to fetch admin stats'
         });
     }
 };

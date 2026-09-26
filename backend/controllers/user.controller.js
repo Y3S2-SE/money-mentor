@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import { logger } from "../utils/logger.js";
 
 // @desc    Get all users (Admin only)
 // @route   GET /api/users
@@ -38,10 +39,10 @@ export const getAllUsers = async (req, res) => {
             }
         });
     } catch (error) {
+        logger.error('Failed to fetch users', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch users',
-            error: error.message
+            message: 'Failed to fetch users'
         });
     }
 };
@@ -65,10 +66,10 @@ export const getUserByID = async (req, res) => {
             data: user
         });
     } catch (error) {
+        logger.error('Failed to fetch user', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch user',
-            error: error.message
+            message: 'Failed to fetch user'
         });
     }
 };
@@ -102,10 +103,10 @@ export const deleteUser = async (req, res) => {
             message: 'User deleted successfully'
         });
     } catch (error) {
+        logger.error('Failed to delete user', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to delete user',
-            error: error.message
+            message: 'Failed to delete user'
         });
     }
 };
