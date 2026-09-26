@@ -1,5 +1,6 @@
 import Group from "../models/group.model.js";
 import crypto from "crypto";
+import { logger } from "../utils/logger.js";
 
 /**
  * Create Group
@@ -27,7 +28,8 @@ export const createGroup = async (req, res) => {
 
     res.status(201).json(group);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    logger.error('Failed to create group', error);
+    res.status(500).json({ message: 'Failed to create group' });
   }
 };
 
@@ -58,7 +60,8 @@ export const joinGroup = async (req, res) => {
 
     res.json({ message: "Joined successfully", group });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    logger.error('Failed to join group', error);
+    res.status(500).json({ message: 'Failed to join group' });
   }
 };
 
@@ -83,7 +86,8 @@ export const leaveGroup = async (req, res) => {
 
     res.json({ message: "Left group successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    logger.error('Failed to leave group', error);
+    res.status(500).json({ message: 'Failed to leave group' });
   }
 };
 
@@ -99,7 +103,8 @@ export const getUserGroups = async (req, res) => {
 
     res.json(groups);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    logger.error('Failed to fetch user groups', error);
+    res.status(500).json({ message: 'Failed to fetch user groups' });
   }
 };
 
@@ -117,7 +122,8 @@ export const getGroupById = async (req, res) => {
 
     res.json(group);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    logger.error('Failed to fetch group', error);
+    res.status(500).json({ message: 'Failed to fetch group' });
   }
 };
 
@@ -139,7 +145,8 @@ export const deleteGroup = async (req, res) => {
     await Group.findByIdAndDelete(groupId);
     res.json({ message: "Group deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    logger.error('Failed to delete group', error);
+    res.status(500).json({ message: 'Failed to delete group' });
   }
 };
 
@@ -163,7 +170,8 @@ export const removeMember = async (req, res) => {
 
     res.json({ message: "Member removed successfully", group });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    logger.error('Failed to remove member', error);
+    res.status(500).json({ message: 'Failed to remove member' });
   }
 };
 
@@ -190,7 +198,8 @@ export const updateGroup = async (req, res) => {
 
     res.json({ message: "Group updated successfully", group });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    logger.error('Failed to update group', error);
+    res.status(500).json({ message: 'Failed to update group' });
   }
 };
 
@@ -214,6 +223,7 @@ export const regenerateInviteCode = async (req, res) => {
 
     res.json({ message: "Invite code regenerated", inviteCode: group.inviteCode });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    logger.error('Failed to regenerate invite code', error);
+    res.status(500).json({ message: 'Failed to regenerate invite code' });
   }
 };
