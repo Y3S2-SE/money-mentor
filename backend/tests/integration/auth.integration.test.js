@@ -39,22 +39,31 @@ describe('Auth integration Tests', () => {
             expect(response.body.data.user.role).toBe('user');
         });
 
-        it('should register user with admin role when specified', async () => {
-            const userData = {
-                username: 'adminuser',
-                email: 'admin@example.com',
+        it.each(['admin', 'user'])(
+          'should reject public registration when role is "%s"',
+          async (role) => {
+             const userData = {
+                username: 'roleuser',
+                email: 'roleuser@example.com',
                 password: 'Test123!',
-                role: 'admin'
-            };
-
-            const response = await request(app)
+                role
+             };
+ 
+             const response = await request(app)
                 .post('/api/auth/register')
                 .send(userData)
-                .expect(201)
-
-            expect(response.body.success).toBe(true);
-            expect(response.body.data.user.role).toBe('admin');
-        });
+                .expect(400);
+ 
+            expect(response.body.success).toBe(false);
+            expect(response.body.errors).toEqual(expect.arrayContaining([
+                expect.objectContaining({
+                    field: 'role',
+                    message: 'Role cannot be set during registration'
+                })
+            ]));
+            expect(await User.countDocuments()).toBe(0);
+          }
+        );
 
         it('should reject registration with duplicate email', async () => {
             const userData = {
