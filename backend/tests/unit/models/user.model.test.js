@@ -32,11 +32,12 @@ describe('User Model - Unit Tests', () => {
             const user = new User({
                 username: 'testuser',
                 email: 'test@example.com',
-                password: 'hashedpassword'
+                password: 'hashedpassword',
+                tokenVersion: 7
             });
 
             const authJSON = user.toAuthJSON();
-            expect(authJSON).not.toHaveProperty('password');
+            expect(authJSON).not.toHaveProperty('tokenVersion');
         });
 
         it('should include lastLogin when set', () => {
@@ -154,6 +155,15 @@ describe('User Model - Unit Tests', () => {
             expect(user.isActive).toBe(true);
         });
 
+        it('should default tokenVersion to 0', () => {
+            const user = new User({
+                username: 'testuser',
+                email: 'test@example.com',
+                password: 'Test123!'
+            });
+            expect(user.tokenVersion).toBe(0);
+        });
+
         it('should default lastLogin to undefined', () => {
             const user = new User({
                 username: 'testuser',
@@ -166,6 +176,17 @@ describe('User Model - Unit Tests', () => {
 
     
     describe('field assignments', () => {
+        it('should reject a negative tokenVersion', () => {
+            const user = new User({
+                username: 'testuser',
+                email: 'test@example.com',
+                password: 'Test123!',
+                tokenVersion: -1
+            });
+
+            expect(user.validateSync().errors.tokenVersion.kind).toBe('min');
+        });
+
         it('should assign username correctly', () => {
             const user = new User({
                 username: 'john_doe',

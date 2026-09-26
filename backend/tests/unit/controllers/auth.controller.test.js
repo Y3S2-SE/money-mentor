@@ -1,5 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import mongoose from 'mongoose';
+const expectedJwtExpiry = () => process.env.JWT_EXPIRE || '15m';
 
 // Mock dependencies
 jest.unstable_mockModule('../../../models/user.model.js', () => ({
@@ -7,6 +8,7 @@ jest.unstable_mockModule('../../../models/user.model.js', () => ({
     findOne: jest.fn(),
     findById: jest.fn(),
     findByIdAndUpdate: jest.fn(),
+    updateOne: jest.fn(),
     create: jest.fn(),
   }
 }));
@@ -28,6 +30,7 @@ jest.unstable_mockModule('../../../utils/gamificationEngine.js', () => ({
 }));
 
 const User = (await import('../../../models/user.model.js')).default;
+const jwt = (await import('jsonwebtoken')).default;
 const authController = await import('../../../controllers/auth.controller.js');
 
 const mockUserId = new mongoose.Types.ObjectId();
@@ -47,6 +50,7 @@ const mockUserDoc = (overrides = {}) => ({
   email: 'test@example.com',
   role: 'user',
   isActive: true,
+  tokenVersion: 0,
   lastLogin: null,
   password: 'hashedpassword',
   comparePassword: jest.fn(),
@@ -84,6 +88,35 @@ describe('Auth Controller - register', () => {
       success: true,
       message: 'User registered successfully',
     }));
+    expect(jwt.sign).toHaveBeenCalledWith(
+      { id: mockUserId, tokenVersion: 0 },
+      process.env.JWT_SECRET,
+      { expiresIn: expectedJwtExpiry() }
+    );
+    expect(res.json.mock.calls[0][0].data.user).not.toHaveProperty('tokenVersion');
+  });
+
+  it('should use a 15m fallback when JWT_EXPIRE is unset', async () => {
+    User.findOne.mockResolvedValue(null);
+    User.create.mockResolvedValue(mockUserDoc());
+    const previousExpiry = process.env.JWT_EXPIRE;
+    delete process.env.JWT_EXPIRE;
+
+    try {
+      const { req, res } = buildMocks({
+        body: { username: 'testuser', email: 'test@example.com', password: 'Test123!' }
+      });
+      await authController.register(req, res);
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(jwt.sign).toHaveBeenCalledWith(
+        { id: mockUserId, tokenVersion: 0 },
+        process.env.JWT_SECRET,
+        { expiresIn: '15m' }
+      );
+    } finally {
+      if (previousExpiry === undefined) delete process.env.JWT_EXPIRE;
+      else process.env.JWT_EXPIRE = previousExpiry;
+    }
   });
 
   it('should force the user role when controller validation is bypassed', async () => {
@@ -169,8 +202,9 @@ describe('Auth Controller - register', () => {
 // ── login ──────────────────────────────────────────────────────────
 describe('Auth Controller - login', () => {
   it('should return 200 with token on successful login', async () => {
-    const user = mockUserDoc({ comparePassword: jest.fn().mockResolvedValue(true) });
-    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+    const user = mockUserDoc({ tokenVersion: undefined, comparePassword: jest.fn().mockResolvedValue(true) });
+    const select = jest.fn().mockResolvedValue(user);
+    User.findOne.mockReturnValue({ select });
 
     const { req, res } = buildMocks({
       body: { email: 'test@example.com', password: 'Test123!' }
@@ -179,8 +213,32 @@ describe('Auth Controller - login', () => {
     await authController.login(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+    expect(select).toHaveBeenCalledWith('+password +tokenVersion');
+    expect(jwt.sign).toHaveBeenCalledWith(
+      { id: mockUserId, tokenVersion: 0 },
+      process.env.JWT_SECRET,
+      { expiresIn: expectedJwtExpiry() }
+    );
+    expect(res.json.mock.calls[0][0].data.user).not.toHaveProperty('tokenVersion');
   });
+
+  it('should sign with the stored tokenVersion', async () => {
+    const user = mockUserDoc({ tokenVersion: 7, comparePassword: jest.fn().mockResolvedValue(true) });
+    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+    const { req, res } = buildMocks({
+      body: { email: 'test@example.com', password: 'Test123!' }
+    });
+
+    await authController.login(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(jwt.sign).toHaveBeenCalledWith(
+      { id: mockUserId, tokenVersion: 7 },
+      process.env.JWT_SECRET,
+      { expiresIn: expectedJwtExpiry() }
+    );
+    expect(res.json.mock.calls[0][0].data.user).not.toHaveProperty('tokenVersion');
+  })
 
   it('should return 401 if user not found', async () => {
     User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(null) });
@@ -341,9 +399,14 @@ describe('Auth Controller - updateProfile', () => {
 
 // ── changePassword ─────────────────────────────────────────────────
 describe('Auth Controller - changePassword', () => {
-  it('should return 200 on successful password change', async () => {
-    const user = mockUserDoc({ comparePassword: jest.fn().mockResolvedValue(true) });
-    User.findById.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+  it('should return 200 after saving the new password and version', async () => {
+    const user = mockUserDoc({ tokenVersion: 4, comparePassword: jest.fn().mockResolvedValue(true) });
+    let filterDuringSave;
+    user.save.mockImplementation(async function () {
+      filterDuringSave = this.$where;
+    });
+    const select = jest.fn().mockResolvedValue(user);
+    User.findById.mockReturnValue({ select });
 
     const { req, res } = buildMocks({
       body: { currentPassword: 'OldPass!', newPassword: 'NewPass123!' },
@@ -351,12 +414,44 @@ describe('Auth Controller - changePassword', () => {
     });
 
     await authController.changePassword(req, res);
-
+    
+    expect(select).toHaveBeenCalledWith('+password +tokenVersion');
+    expect(user.comparePassword).toHaveBeenCalledWith('OldPass!');
+    expect(user.password).toBe('NewPass123!');
+    expect(user.tokenVersion).toBe(5);
+    expect(user.save).toHaveBeenCalledTimes(1);
+    expect(filterDuringSave).toEqual({ tokenVersion: 4 });
+    expect(user).not.toHaveProperty('$where');
+    expect(jwt.sign).toHaveBeenCalledWith(
+      { id: mockUserId, tokenVersion: 5 },
+      process.env.JWT_SECRET,
+      { expiresIn: expectedJwtExpiry() }
+    );
+    expect(user.save.mock.invocationCallOrder[0]).toBeLessThan(jwt.sign.mock.invocationCallOrder[0]);
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      success: true,
-      message: 'Password changed successfully'
-    }));
+    expect(res.json.mock.calls[0][0].data.user).not.toHaveProperty('tokenVersion');
+  });
+
+  it('does not sign a replacement token after a stale-version save conflict', async () => {
+    const conflict = Object.assign(new Error('stale version'), { name: 'DocumentNotFoundError' });
+    const user = mockUserDoc({
+      tokenVersion: 4,
+      comparePassword: jest.fn().mockResolvedValue(true),
+      save: jest.fn().mockRejectedValue(conflict)
+    });
+    User.findById.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+    const { req, res } = buildMocks({
+      body: { currentPassword: 'OldPass!', newPassword: 'NewPass123!' },
+      user: { _id: mockUserId }
+    });
+
+    await authController.changePassword(req, res);
+
+    expect(user.save).toHaveBeenCalledTimes(1);
+    expect(user).not.toHaveProperty('$where');
+    expect(jwt.sign).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json.mock.calls[0][0]).not.toHaveProperty('data.token');
   });
 
   it('should return 401 if current password is incorrect', async () => {
@@ -371,6 +466,9 @@ describe('Auth Controller - changePassword', () => {
     await authController.changePassword(req, res);
 
     expect(res.status).toHaveBeenCalledWith(401);
+    expect(user.comparePassword).toHaveBeenCalledWith('WrongPass!');
+    expect(user.save).not.toHaveBeenCalled();
+    expect(jwt.sign).not.toHaveBeenCalled();
   });
 
   it('should return 500 on error', async () => {
@@ -405,15 +503,33 @@ describe('Auth Controller - changePassword', () => {
 
 // ── logout ─────────────────────────────────────────────────────────
 describe('Auth Controller - logout', () => {
-  it('should return 200 on logout', async () => {
+  it('should atomically revoke tokens for the authenticated user', async () => {
+    User.updateOne.mockResolvedValue({ matchedCount: 1 });
     const { req, res } = buildMocks({ user: { _id: mockUserId } });
 
     await authController.logout(req, res);
+
+    expect(User.updateOne).toHaveBeenCalledWith(
+      { _id: mockUserId, isActive: true },
+      { $inc: { tokenVersion: 1 } }
+    );
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
       success: true,
       message: 'Logout successfully'
     }));
+    expect(jwt.sign).not.toHaveBeenCalled();
+  });
+
+  it('does not report revocation when no active user matched', async () => {
+    User.updateOne.mockResolvedValue({ matchedCount: 0 });
+    const { req, res } = buildMocks({ user: { _id: mockUserId } });
+
+    await authController.logout(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: false }));
+    expect(jwt.sign).not.toHaveBeenCalled();
   });
 });

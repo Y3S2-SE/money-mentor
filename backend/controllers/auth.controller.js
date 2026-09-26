@@ -4,9 +4,9 @@ import { processDailyLogin } from "../utils/gamificationEngine.js";
 import { logger } from "../utils/logger.js";
 
 // Generate JWT token
-const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRE || '1d'
+const generateToken = (userId, tokenVersion) => {
+    return jwt.sign({ id: userId, tokenVersion }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRE || '15m'
     });
 };
 
@@ -35,8 +35,9 @@ export const register = async (req, res) => {
             role: 'user'
         });
 
-        // Generate token
-        const token = generateToken(user._id);
+        // Newly created and legacy-compatible users use version 0 by default
+        const effectiveTokenVersion = user.tokenVersion ?? 0;
+        const token = generateToken(user._id, effectiveTokenVersion);
 
         const dailyLogin = await processDailyLogin(user._id, { silent: true });
 
@@ -62,7 +63,7 @@ export const login = async (req, res) => {
         const { email, password } = req.body;
 
         // Find user by email include the password
-        const user = await User.findOne({ email }).select('+password');
+        const user = await User.findOne({ email }).select('+password +tokenVersion');
 
         if (!user) {
             return res.status(401).json({
@@ -92,8 +93,9 @@ export const login = async (req, res) => {
         user.lastLogin = new Date();
         await user.save();
 
-        // Generate token 
-        const token = generateToken(user._id);
+        // Existing documents without tokenVersion are treated as version 0
+        const effectiveTokenVersion = user.tokenVersion ?? 0;
+        const token = generateToken(user._id, effectiveTokenVersion);
 
         // process daily login reward - silent mode so gamification errors never block auth
         const dailyLogin = await processDailyLogin(user._id, { silent: true });
@@ -181,8 +183,17 @@ export const changePassword = async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
 
-        const user = await User.findById(req.user._id).select('+password');
+        // 1. Select both fields required for password verification and revocation
+        const user = await User.findById(req.user._id).select('+password +tokenVersion');
 
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Session is no longer valid'
+            });
+        }
+        
+        // 2. Verify the current password
         if (!(await user.comparePassword(currentPassword))) {
             return res.status(401).json({
                 success: false,
@@ -190,11 +201,34 @@ export const changePassword = async (req, res) => {
             });
         }
 
-        user.password = newPassword;
-        await user.save();
+        const effectiveTokenVersion = user.tokenVersion ?? 0;
 
-        // Generate new token for automatic re-login
-        const token = generateToken(user._id);
+        // 3. Assign the new password so the exisiting pre-save hook hashes it
+        user.password = newPassword;
+
+        // 4. Increment the revocation version
+        user.tokenVersion = effectiveTokenVersion + 1;
+
+        // Prevent this save from overwriting a concurrent logout/version change.
+        // The version-0 condition also matches legacy documents with no field.
+        user.$where = effectiveTokenVersion === 0
+            ? {
+                $or: [
+                    { tokenVersion: 0 },
+                    { tokenVersion: { $exists: false } }
+                ]
+            }
+            : { tokenVersion: effectiveTokenVersion };
+
+        // 5. Persist the hashed password and incremented version together
+        try {
+            await user.save();
+        } finally {
+            delete user.$where;
+        }
+
+        // 6. Issue one replacement token containing the persisted new version
+        const token = generateToken(user._id, user.tokenVersion);
 
         res.status(200).json({
             success: true,
@@ -203,6 +237,14 @@ export const changePassword = async (req, res) => {
         });
     } catch (error) {
         logger.error('Failed to change password', error);
+
+        if (error.name === 'DocumentNotFoundError') {
+            return res.status(401).json({
+                success: false,
+                message: 'Session changed while updating the password. Please sign in again.'
+            });
+        }
+
         res.status(500).json({
             success: false,
             message: 'Failed to change password'
@@ -216,6 +258,23 @@ export const changePassword = async (req, res) => {
 // @access  Private
 export const logout = async (req, res) => {
     try {
+        const result = await User.updateOne(
+            {
+                _id: req.user._id,
+                isActive: true
+            },
+            {
+                $inc: { tokenVersion: 1 }
+            }
+        );
+
+        if (result.matchedCount !== 1) {
+            return res.status(401).json({
+                success: false,
+                message: 'Session is no longer valid'
+            });
+        }
+
         res.status(200).json({
             success: true,
             message: 'Logout successfully'

@@ -121,7 +121,7 @@ async function seed() {
     role: 'admin',
     isActive: true,
   });
-  const adminToken = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, {
+  const adminToken = jwt.sign({ id: admin._id, tokenVersion: admin.tokenVersion ?? 0 }, process.env.JWT_SECRET, {
     expiresIn: '24h',
   });
   console.log('Created admin user');
@@ -142,7 +142,7 @@ async function seed() {
     });
     await GamificationProfile.create({ user: user._id });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user._id, tokenVersion: user.tokenVersion ?? 0 }, process.env.JWT_SECRET, {
       expiresIn: '24h',
     });
     users.push(user);

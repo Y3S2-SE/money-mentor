@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import { describe, it, expect, jest, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import jwt from 'jsonwebtoken';
 import request from 'supertest';
 import app from '../../app.js';
 import User from '../../models/user.model.js';
@@ -37,6 +38,7 @@ describe('Auth integration Tests', () => {
             expect(response.body.data.user).toHaveProperty('email', userData.email);
             expect(response.body.data.user).not.toHaveProperty('password');
             expect(response.body.data.user.role).toBe('user');
+            expect(response.body.data.user).not.toHaveProperty('tokenVersion');
         });
 
         it.each(['admin', 'user'])(
@@ -184,6 +186,7 @@ describe('Auth integration Tests', () => {
             expect(response.body.data).toHaveProperty('token');
             expect(response.body.data.user).toHaveProperty('email', userData.email);
             expect(response.body.data.user).not.toHaveProperty('password');
+            expect(response.body.data.user).not.toHaveProperty('tokenVersion');
         });
 
         it('should reject login with invalid password', async () => {
@@ -300,6 +303,7 @@ describe('Auth integration Tests', () => {
             expect(response.body.data).toHaveProperty('username', 'testuser');
             expect(response.body.data).toHaveProperty('email', 'test@example.com');
             expect(response.body.data).not.toHaveProperty('password');
+            expect(response.body.data).not.toHaveProperty('tokenVersion');
         });
 
         it('should reject request without token', async () => {
@@ -546,6 +550,160 @@ describe('Auth integration Tests', () => {
                 .expect(401);
 
             expect(response.body.success).toBe(false);
+        });
+    });
+
+    describe('tokenVersion sessions', () => {
+        const credentials = { email: 'session@example.com', password: 'Test123!' };
+        const loginSession = () => request(app).post('/api/auth/login').send(credentials);
+        const profileWith = (token) => request(app)
+            .get('/api/auth/profile')
+            .set('Authorization', `Bearer ${token}`);
+
+        beforeEach(async () => {
+            await User.create({
+                username: 'sessionuser',
+                ...credentials
+            });
+        });
+
+        it('issues a login JWT with version 0', async () => {
+            const response = await loginSession().expect(200);
+            const decoded = jwt.verify(response.body.data.token, process.env.JWT_SECRET);
+
+            expect(decoded.id).toBe(response.body.data.user.id);
+            expect(decoded.tokenVersion).toBe(0);
+            expect(response.body.data.user).not.toHaveProperty('tokenVersion');
+        });
+
+        it('revokes the token used to log out', async () => {
+            const tokenA = (await loginSession().expect(200)).body.data.token;
+            await profileWith(tokenA).expect(200);
+
+            await request(app)
+                .post('/api/auth/logout')
+                .set('Authorization', `Bearer ${tokenA}`)
+                .expect(200);
+
+            const rejected = await profileWith(tokenA).expect(401);
+            expect(rejected.body.message).toBe('Session is no longer valid');
+        });
+
+        it('revokes all tokens issued for the account', async () => {
+            const tokenA = (await loginSession().expect(200)).body.data.token;
+            const tokenB = (await loginSession().expect(200)).body.data.token;
+            await profileWith(tokenA).expect(200);
+            await profileWith(tokenB).expect(200);
+
+            await request(app)
+                .post('/api/auth/logout')
+                .set('Authorization', `Bearer ${tokenA}`)
+                .expect(200);
+
+            await profileWith(tokenA).expect(401);
+            await profileWith(tokenB).expect(401);
+        });
+
+        it('rotates the token and password together', async () => {
+            const tokenA = (await loginSession().expect(200)).body.data.token;
+            const changed = await request(app)
+                .put('/api/auth/change-password')
+                .set('Authorization', `Bearer ${tokenA}`)
+                .send({
+                    currentPassword: 'Test123!',
+                    newPassword: 'NewTest123!'
+                })
+                .expect(200);
+            const tokenB = changed.body.data.token;
+
+            expect(jwt.verify(tokenB, process.env.JWT_SECRET).tokenVersion).toBe(1);
+            expect(changed.body.data.user).not.toHaveProperty('tokenVersion');
+            await profileWith(tokenA).expect(401);
+            await profileWith(tokenB).expect(200);
+            await loginSession().expect(401);
+            await request(app)
+                .post('/api/auth/login')
+                .send({ email: credentials.email, password: 'NewTest123!' })
+                .expect(200);
+        });
+
+        it('rejects a correctly signed pre-remediation token', async () => {
+            const user = await User.findOne({ email: credentials.email });
+            const oldToken = jwt.sign(
+                { id: user._id.toString() },
+                process.env.JWT_SECRET,
+                { expiresIn: '15m' }
+            );
+
+            const rejected = await profileWith(oldToken).expect(401);
+            expect(rejected.body.message).toBe('Session is no longer valid');
+        });
+
+        it('accepts and revokes a user without a physical tokenVersion field', async () => {
+            await User.collection.updateOne(
+                { email: credentials.email },
+                { $unset: { tokenVersion: '' } }
+            );
+            const rawBefore = await User.collection.findOne({ email: credentials.email });
+            expect(rawBefore).not.toHaveProperty('tokenVersion');
+
+            const token = (await loginSession().expect(200)).body.data.token;
+            expect(jwt.verify(token, process.env.JWT_SECRET).tokenVersion).toBe(0);
+            await profileWith(token).expect(200);
+
+            await request(app)
+                .post('/api/auth/logout')
+                .set('Authorization', `Bearer ${token}`)
+                .expect(200);
+
+            const rawAfter = await User.collection.findOne({ email: credentials.email });
+            expect(rawAfter.tokenVersion).toBe(1);
+            await profileWith(token).expect(401);
+        });
+
+        it('does not persist a stale password change after a concurrent version increment', async () => {
+            const token = (await loginSession().expect(200)).body.data.token;
+            const before = await User.findOne({ email: credentials.email }).select('+password');
+            const originalHash = before.password;
+            const realComparePassword = User.prototype.comparePassword;
+            let incremented = false;
+            const compareSpy = jest.spyOn(User.prototype, 'comparePassword')
+                .mockImplementation(async function (candidate) {
+                    const valid = await realComparePassword.call(this, candidate);
+                    if (valid && !incremented) {
+                        expect(this.tokenVersion).toBe(0);
+                        const result = await User.updateOne(
+                            { _id: this._id },
+                            { $inc: { tokenVersion: 1 } }
+                        );
+                        expect(result.matchedCount).toBe(1);
+                        incremented = true;
+                    }
+                    return valid;
+                });
+
+            let response;
+            try {
+                response = await request(app)
+                    .put('/api/auth/change-password')
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({
+                        currentPassword: 'Test123!',
+                        newPassword: 'NewTest123!'
+                    })
+                    .expect(401);
+            } finally {
+                compareSpy.mockRestore();
+            }
+
+            expect(incremented).toBe(true);
+            expect(response.body).not.toHaveProperty('data.token');
+            const persisted = await User.findOne({ email: credentials.email })
+                .select('+password +tokenVersion');
+            expect(persisted.tokenVersion).toBe(1);
+            expect(persisted.password).toBe(originalHash);
+            expect(await persisted.comparePassword('Test123!')).toBe(true);
+            expect(await persisted.comparePassword('NewTest123!')).toBe(false);
         });
     });
 });

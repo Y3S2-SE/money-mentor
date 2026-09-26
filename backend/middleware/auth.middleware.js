@@ -22,13 +22,30 @@ export const protect = async (req, res, next) => {
         // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+        if (!Number.isInteger(decoded.tokenVersion)) {
+            return res.status(401).json({
+                success: false,
+                message: 'Session is no longer valid'
+            });
+        }
+
         // Get user from token
-        req.user = await User.findById(decoded.id).select('-password');
+        req.user = await User.findById(decoded.id).select('-password +tokenVersion');
 
         if (!req.user) {
             return res.status(401).json({
                 success: false,
                 message: 'User not found'
+            });
+        }
+
+        // Existing documents without the physical field have effective version 0
+        const effectiveTokenVersion = req.user.tokenVersion ?? 0;
+
+        if (decoded.tokenVersion !== effectiveTokenVersion) {
+            return res.status(401).json({
+                success: false,
+                message: 'Session is no longer valid'
             });
         }
 
