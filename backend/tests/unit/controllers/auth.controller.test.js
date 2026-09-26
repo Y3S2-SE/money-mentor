@@ -86,6 +86,30 @@ describe('Auth Controller - register', () => {
     }));
   });
 
+  it('should force the user role when controller validation is bypassed', async () => {
+    User.findOne.mockResolvedValue(null);
+    User.create.mockResolvedValue(mockUserDoc());
+
+    const { req, res } = buildMocks({
+      body: {
+        username: 'attacker',
+        email: 'attacker@example.com',
+        password: 'Test123!',
+        role: 'admin'
+      }
+    });
+
+    await authController.register(req, res);
+
+    expect(User.create).toHaveBeenCalledWith({
+      username: 'attacker',
+      email: 'attacker@example.com',
+      password: 'Test123!',
+      role: 'user'
+    });
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+
   it('should return 400 if email already registered', async () => {
     User.findOne.mockResolvedValue({ email: 'test@example.com', username: 'other' });
 
