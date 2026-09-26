@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import jwt from 'jsonwebtoken';
 import { processDailyLogin } from "../utils/gamificationEngine.js";
+import { logger } from "../utils/logger.js";
 
 // Generate JWT token
 const generateToken = (id) => {
@@ -61,6 +62,11 @@ export const login = async (req, res) => {
         const user = await User.findOne({ email }).select('+password');
 
         if (!user) {
+            logger.warn('security.auth.login_failed', {
+                email: String(email).trim().toLowerCase(),
+                reason: 'no_such_user',
+                ip: req.ip
+            });
             return res.status(401).json({
                 success: false,
                 message: 'Invalid email or password'
@@ -69,6 +75,11 @@ export const login = async (req, res) => {
 
         // Check if user is active
         if (!user.isActive) {
+            logger.warn('security.auth.login_failed', {
+                userId: user._id.toString(),
+                reason: 'account_deactivated',
+                ip: req.ip
+            });
             return res.status(403).json({
                 success: false,
                 message: 'Account is deactivatd. Please contact administrator.'
@@ -78,6 +89,11 @@ export const login = async (req, res) => {
         const isPasswordCorrect = await user.comparePassword(password);
 
         if (!isPasswordCorrect) {
+            logger.warn('security.auth.login_failed', {
+                userId: user._id.toString(),
+                reason: 'invalid_password',
+                ip: req.ip
+            });
             return res.status(401).json({
                 success: false,
                 message: 'Invalid email or password'
@@ -88,11 +104,16 @@ export const login = async (req, res) => {
         user.lastLogin = new Date();
         await user.save();
 
-        // Generate token 
+        // Generate token
         const token = generateToken(user._id);
 
         // process daily login reward - silent mode so gamification errors never block auth
         const dailyLogin = await processDailyLogin(user._id, { silent: true });
+
+        logger.info('security.auth.login_success', {
+            userId: user._id.toString(),
+            ip: req.ip
+        });
 
         res.status(200).json({
             success: true,
