@@ -1,5 +1,6 @@
 import Chat from '../models/chat.model.js';
 import YoutubeCache from '../models/youtube.model.js';
+import { logger } from '../utils/logger.js';
 
 const YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3/search';
 const MAX_RESULTS_PER_KEYWORD = 2;   // 2 videos per keyword
@@ -121,10 +122,10 @@ export const getVideoSuggestions = async (req, res) => {
             }
         });
     } catch (error) {
+        logger.error('Failed to fetch video suggestions', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch video suggestions',
-            error: error.message
+            message: 'Failed to fetch video suggestions'
         });
     }
 };

@@ -1,6 +1,7 @@
 import Article from '../models/article.model.js';
 import { uploadToCloudinary } from '../middleware/upload.middleware.js';
 import { awardActionBadge, processXPEvent } from '../utils/gamificationEngine.js';
+import { logger } from '../utils/logger.js';
 
 // @desc    Create a new article
 // @route   POST /api/articles/create
@@ -43,10 +44,10 @@ export const createArticle = async (req, res) => {
             data: article
         });
     } catch (error) {
+        logger.error('Failed to create article', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to create article',
-            error: error.message
+            message: 'Failed to create article'
         });
     }
 };
@@ -111,10 +112,10 @@ export const getAllArticles = async (req, res) => {
             }
         });
     } catch (error) {
+        logger.error('Failed to fetch articles', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch articles',
-            error: error.message
+            message: 'Failed to fetch articles'
         });
     }
 };
@@ -152,10 +153,10 @@ export const getArticleById = async (req, res) => {
 
         res.status(200).json({ success: true, data: articleObj });
     } catch (error) {
+        logger.error('Failed to fetch article', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch article',
-            error: error.message
+            message: 'Failed to fetch article'
         });
     }
 };
@@ -223,10 +224,10 @@ export const updateArticle = async (req, res) => {
             data: article
         });
     } catch (error) {
+        logger.error('Failed to update article', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to update article',
-            error: error.message
+            message: 'Failed to update article'
         });
     }
 };
@@ -244,10 +245,10 @@ export const deleteArticle = async (req, res) => {
 
         res.status(200).json({ success: true, message: 'Article deleted successfully' });
     } catch (error) {
+        logger.error('Failed to delete article', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to delete article',
-            error: error.message
+            message: 'Failed to delete article'
         });
     }
 };
@@ -338,10 +339,10 @@ export const completeArticle = async (req, res) => {
             }
         });
     } catch (error) {
+        logger.error('Failed to record article completion', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to record article completion',
-            error: error.message
+            message: 'Failed to record article completion'
         });
     }
 };
@@ -373,10 +374,10 @@ export const getUserReadPoints = async (req, res) => {
             }
         });
     } catch (error) {
+        logger.error('Failed to fetch user read points', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch user read points',
-            error: error.message
+            message: 'Failed to fetch user read points'
         });
     }
 };
