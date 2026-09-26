@@ -1,5 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import mongoose from 'mongoose';
+const expectedJwtExpiry = () => process.env.JWT_EXPIRE || '15m';
 
 // Mock dependencies
 jest.unstable_mockModule('../../../models/user.model.js', () => ({
@@ -90,7 +91,7 @@ describe('Auth Controller - register', () => {
     expect(jwt.sign).toHaveBeenCalledWith(
       { id: mockUserId, tokenVersion: 0 },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE }
+      { expiresIn: expectedJwtExpiry() }
     );
     expect(res.json.mock.calls[0][0].data.user).not.toHaveProperty('tokenVersion');
   });
@@ -216,7 +217,7 @@ describe('Auth Controller - login', () => {
     expect(jwt.sign).toHaveBeenCalledWith(
       { id: mockUserId, tokenVersion: 0 },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE }
+      { expiresIn: expectedJwtExpiry() }
     );
     expect(res.json.mock.calls[0][0].data.user).not.toHaveProperty('tokenVersion');
   });
@@ -234,7 +235,7 @@ describe('Auth Controller - login', () => {
     expect(jwt.sign).toHaveBeenCalledWith(
       { id: mockUserId, tokenVersion: 7 },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE }
+      { expiresIn: expectedJwtExpiry() }
     );
     expect(res.json.mock.calls[0][0].data.user).not.toHaveProperty('tokenVersion');
   })
@@ -424,7 +425,7 @@ describe('Auth Controller - changePassword', () => {
     expect(jwt.sign).toHaveBeenCalledWith(
       { id: mockUserId, tokenVersion: 5 },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE }
+      { expiresIn: expectedJwtExpiry() }
     );
     expect(user.save.mock.invocationCallOrder[0]).toBeLessThan(jwt.sign.mock.invocationCallOrder[0]);
     expect(res.status).toHaveBeenCalledWith(200);
