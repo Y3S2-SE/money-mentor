@@ -1,23 +1,11 @@
-import { body, query } from 'express-validator';
+// IT23218512 - hotfix/vuln-7
+import { query } from 'express-validator';
 
-export const awardXPValidation = [
-    body('source')
-        .trim()
-        .notEmpty().withMessage('XP source is required')
-        .isString().withMessage('Source must be a String')
-        .isLength({ max: 50 }).withMessage('Source cannot exceed 50 characters'),
-
-    body('amount')
-        .optional()
-        .isInt({ min: 1, max: 500 })
-        .withMessage('Amount must be an integer between 1 and 500'),
-
-    body('description')
-        .optional()
-        .trim()
-        .isLength({ max: 100 })
-        .withMessage('Description cannot exceed 100 characters'),
-];
+// vuln-7: removed awardXPValidation.
+// It only checked the XP amount's format, not whether
+// the user earned it. Its endpoint is gone, so 'body' is no longer imported.
+// export const awardXPValidation = [
+// ];
 
 export const leaderboardQueryValidation = [
     query('limit')

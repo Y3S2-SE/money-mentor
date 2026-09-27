@@ -1,3 +1,5 @@
+// IT23218512 - hotfix/vuln-7
+
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import request from 'supertest';
 import app from '../../app.js';
@@ -5,6 +7,9 @@ import User from '../../models/user.model.js';
 import BadgeDefinition from '../../models/badge.model.js';
 import GamificationProfile from '../../models/gamification.model.js';
 import { setupTestDB, teardownTestDB, clearTestDB } from '../setup/testSetup.js';
+
+// vuln-7: tests now give XP through the server-side function instead of the removed endpoint.
+import { processXPEvent } from '../../utils/gamificationEngine.js';
 
 describe('Gamification Integration Tests', () => {
     let adminToken;
@@ -93,10 +98,8 @@ describe('Gamification Integration Tests', () => {
 
         it('should return newlyUnlocked badges array when syncing with eligible badges', async () => {
             // Give user enough XP to qualify for milestone badges
-            await request(app)
-                .post('/api/play/award-xp')
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ source: 'custom', amount: 200 });
+            // vuln-7: give XP server-side (the /award-xp endpoint was removed)
+            await processXPEvent(userId, 'custom', 200, 'Test setup XP');
 
             const res = await request(app)
                 .get('/api/play/profile?sync=true')
@@ -144,87 +147,21 @@ describe('Gamification Integration Tests', () => {
 
     // ── awardXP ─────────────────────────────────────────────────────────────
 
-    describe('POST /api/play/award-xp', () => {
-        it('should award XP for a valid source', async () => {
-            const res = await request(app)
-                .post('/api/play/award-xp')
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ source: 'complete_goal', description: 'Completed savings goal' })
-                .expect(200);
+    // vuln-7: POST /award-xp was removed because any user could award themselves XP.
+    // This regression test checks the endpoint stays gone and gives no XP.
+    describe('POST /api/play/award-xp (removed - vuln-7)', () => {
+        it('should return 404 and not change XP when a user tries to award themselves XP', async () => {
+            const before = await GamificationProfile.findOne({ user: userId });
+            const xpBefore = before?.totalXP ?? 0;
 
-            expect(res.body.success).toBe(true);
-            expect(res.body.data.totalXP).toBeGreaterThan(0);
-        });
-
-        it('should trigger level up when XP threshold crossed', async () => {
-            const res = await request(app)
-                .post('/api/play/award-xp')
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ source: 'custom', amount: 100 })
-                .expect(200);
-
-            expect(res.body.data.leveledUp).toBe(true);
-            expect(res.body.data.level).toBe(2);
-            // This covers the leveledUp message branch (line 150-153)
-            expect(res.body.message).toContain('Level up');
-        });
-
-        it('should return success message when no level up', async () => {
-            const res = await request(app)
-                .post('/api/play/award-xp')
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ source: 'complete_goal' })
-                .expect(200);
-
-            // Covers the else branch of leveledUp message
-            expect(res.body.message).toBe('XP awarded successfully');
-        });
-
-        it('should fail validation with invalid amount', async () => {
             await request(app)
                 .post('/api/play/award-xp')
                 .set('Authorization', `Bearer ${userToken}`)
-                .send({ source: 'test', amount: 9999 })
-                .expect(400);
-        });
+                .send({ source: 'custom', amount: 500, description: 'self-awarded' })
+                .expect(404);
 
-        it('should fail validation with missing source', async () => {
-            await request(app)
-                .post('/api/play/award-xp')
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ amount: 50 })
-                .expect(400);
-        });
-
-        it('should return newly earned badges', async () => {
-            const res = await request(app)
-                .post('/api/play/award-xp')
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ source: 'custom', amount: 100 })
-                .expect(200);
-
-            expect(res.body.data.newlyEarnedBadges.length).toBeGreaterThan(0);
-            expect(
-                res.body.data.newlyEarnedBadges.some(b => b.key === 'milestone_100xp')
-            ).toBe(true);
-        });
-
-        it('should include levelProgress in response', async () => {
-            const res = await request(app)
-                .post('/api/play/award-xp')
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ source: 'complete_goal' })
-                .expect(200);
-
-            expect(res.body.data).toHaveProperty('levelProgress');
-            expect(res.body.data.levelProgress).toHaveProperty('percentage');
-        });
-
-        it('should return 401 without token', async () => {
-            await request(app)
-                .post('/api/play/award-xp')
-                .send({ source: 'complete_goal' })
-                .expect(401);
+            const after = await GamificationProfile.findOne({ user: userId });
+            expect(after?.totalXP ?? 0).toBe(xpBefore);
         });
     });
 
@@ -340,10 +277,9 @@ describe('Gamification Integration Tests', () => {
 
         it('should show earned=true for badges user has earned', async () => {
             // Give user 100 XP to earn milestone_100xp badge
-            await request(app)
-                .post('/api/play/award-xp')
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ source: 'custom', amount: 100 });
+            
+            // vuln-7: give XP server-side (the /award-xp endpoint was removed)
+            await processXPEvent(userId, 'custom', 100, 'Test setup XP');
 
             const res = await request(app)
                 .get('/api/play/badges')
@@ -411,10 +347,8 @@ describe('Gamification Integration Tests', () => {
         });
 
         it('should return xp history after earning XP', async () => {
-            await request(app)
-                .post('/api/play/award-xp')
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ source: 'complete_goal', description: 'Test goal' });
+            // vuln-7: give XP server-side (the /award-xp endpoint was removed)
+            await processXPEvent(userId, 'complete_goal', null, 'Test goal');
 
             const res = await request(app)
                 .get('/api/play/xp-history')
@@ -428,11 +362,10 @@ describe('Gamification Integration Tests', () => {
 
         it('should respect limit query param', async () => {
             // Award XP multiple times
+
+            // vuln-7: give XP server-side (the /award-xp endpoint was removed)
             for (let i = 0; i < 5; i++) {
-                await request(app)
-                    .post('/api/play/award-xp')
-                    .set('Authorization', `Bearer ${userToken}`)
-                    .send({ source: 'complete_goal' });
+                await processXPEvent(userId, 'complete_goal');
             }
 
             const res = await request(app)
@@ -510,10 +443,9 @@ describe('Gamification Integration Tests', () => {
 
         it('should return topUser when profiles exist', async () => {
             // Award XP to create a profile with data
-            await request(app)
-                .post('/api/play/award-xp')
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ source: 'complete_goal' });
+            
+            // vuln-7: give XP server-side (the /award-xp endpoint was removed)
+            await processXPEvent(userId, 'complete_goal');
 
             const res = await request(app)
                 .get('/api/play/admin/stats')

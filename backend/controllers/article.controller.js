@@ -1,7 +1,12 @@
+// IT23218512 - hotfix/vuln-7
+
 import Article from '../models/article.model.js';
 import { uploadToCloudinary } from '../middleware/upload.middleware.js';
 import { awardActionBadge, processXPEvent } from '../utils/gamificationEngine.js';
 import { logger } from '../utils/logger.js';
+
+// vuln-7: server-side read timer (replaces trusting timeSpentSeconds from the client)
+import { startRead, getReadSeconds, endRead } from '../utils/articleReadStore.js';
 
 // @desc    Create a new article
 // @route   POST /api/articles/create
@@ -146,6 +151,12 @@ export const getArticleById = async (req, res) => {
         articleObj.isRead = !!userCompletion;
         articleObj.userPointsEarned = userCompletion ? userCompletion.pointsEarned : null;
 
+        // vuln-7: start the server-side read timer when a user opens an article they haven't completed yet. 
+        // completeArticle checks time against this.
+        if (!userCompletion) {
+            startRead(req.user._id.toString(), article._id.toString());
+        }
+
         // Hide other users' completions from non-admins
         if (req.user.role !== 'admin') {
             delete articleObj.completions;
@@ -258,7 +269,9 @@ export const deleteArticle = async (req, res) => {
 // @access  Private
 export const completeArticle = async (req, res) => {
     try {
-        const { articleId, timeSpentSeconds } = req.body;
+        // vuln-7: timeSpentSeconds is no longer read from the request body.
+        // The client could send any number to skip the reading-time check.
+        const { articleId } = req.body;
 
         const article = await Article.findById(articleId);
 
@@ -275,6 +288,15 @@ export const completeArticle = async (req, res) => {
                 success: false,
                 message: 'You have already earned points for this article',
                 data: alreadyCompleted
+            });
+        }
+
+        // vuln-7: measure reading time on the server, from when this user opened the article
+        const timeSpentSeconds = getReadSeconds(req.user._id.toString(), article._id.toString());
+        if (timeSpentSeconds === null) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please open the article before completing it.'
             });
         }
 
@@ -296,6 +318,8 @@ export const completeArticle = async (req, res) => {
             timeSpentSeconds
         });
         await article.save();
+        // vuln-7: reward recorded, so the read timer is no longer needed
+        endRead(req.user._id.toString(), article._id.toString());
 
         // Award Xp through gamification engine
         const { xpResult, newlyEarnedBadges } = await processXPEvent(

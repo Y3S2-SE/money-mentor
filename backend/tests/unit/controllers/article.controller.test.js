@@ -1,3 +1,5 @@
+// IT23218512 - hotfix/vuln-7
+
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import mongoose from 'mongoose';
 
@@ -24,9 +26,17 @@ jest.unstable_mockModule('../../../utils/gamificationEngine.js', () => ({
   }),
 }));
 
+// vuln-7: fake the server-side read timer so each test controls how long the user "read"
+jest.unstable_mockModule('../../../utils/articleReadStore.js', () => ({
+  startRead: jest.fn(),
+  getReadSeconds: jest.fn(),
+  endRead: jest.fn(),
+}));
+
 const Article = (await import('../../../models/article.model.js')).default;
 const articleController = await import('../../../controllers/article.controller.js');
 const { uploadToCloudinary } = await import('../../../middleware/upload.middleware.js');
+const { startRead, getReadSeconds, endRead } = await import('../../../utils/articleReadStore.js');
 
 const mockUserId = new mongoose.Types.ObjectId();
 const mockArticleId = new mongoose.Types.ObjectId();
@@ -255,6 +265,34 @@ describe('Article Controller - getArticleById', () => {
     expect(res.status).toHaveBeenCalledWith(200);
   });
 
+  // vuln-7: opening an unread article starts the server-side read timer
+  it('should start the read timer when the user opens an unread article', async () => {
+    const article = mockArticle({ isPublished: true });
+    article.toObject = () => ({ ...article, completions: [] });
+    Article.findById.mockReturnValue({ populate: jest.fn().mockResolvedValue(article) });
+
+    const { req, res } = buildMocks({ params: { id: mockArticleId.toString() } });
+
+    await articleController.getArticleById(req, res);
+
+    expect(startRead).toHaveBeenCalledWith(mockUserId.toString(), mockArticleId.toString());
+  });
+
+  it('should not start the read timer when the article is already completed', async () => {
+    const article = mockArticle({ isPublished: true });
+    article.toObject = () => ({
+      ...article,
+      completions: [{ user: mockUserId, pointsEarned: 15, timeSpentSeconds: 300 }]
+    });
+    Article.findById.mockReturnValue({ populate: jest.fn().mockResolvedValue(article) });
+
+    const { req, res } = buildMocks({ params: { id: mockArticleId.toString() } });
+
+    await articleController.getArticleById(req, res);
+
+    expect(startRead).not.toHaveBeenCalled();
+  });
+
   it('should return 404 when article not found', async () => {
     Article.findById.mockReturnValue({ populate: jest.fn().mockResolvedValue(null) });
 
@@ -453,6 +491,10 @@ describe('Article Controller - deleteArticle', () => {
 
 // ── completeArticle ───────────────────────────────────────────────
 describe('Article Controller - completeArticle', () => {
+  // vuln-7: by default the server measured 300s (5 min) of reading.
+  // Tests that need a different measured time override this.
+  beforeEach(() => getReadSeconds.mockReturnValue(300));
+
   it('should complete article and award points', async () => {
     const article = mockArticle({ readTime: 5, pointsPerRead: 15 });
     article.completions = [];
@@ -536,6 +578,7 @@ describe('Article Controller - completeArticle', () => {
     article.completions = [];
 
     Article.findById.mockResolvedValue(article);
+    getReadSeconds.mockReturnValue(60); // vuln-7: server measured only 1 minute
 
     const { req, res } = buildMocks({
       body: {
@@ -602,6 +645,64 @@ describe('Article Controller - completeArticle', () => {
     await articleController.completeArticle(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
+  });
+
+  // vuln-7: the server's measured time is used, not the number the client sends
+  it('should ignore timeSpentSeconds sent by the client (vuln-7)', async () => {
+    const article = mockArticle({ readTime: 5, pointsPerRead: 15 });   // needs 180s
+    article.completions = [];
+    Article.findById.mockResolvedValue(article);
+    getReadSeconds.mockReturnValue(10); // server: user opened it only 10s ago
+
+    const { req, res } = buildMocks({
+      body: { articleId: mockArticleId.toString(), timeSpentSeconds: 9999 } // forged
+    });
+
+    await articleController.completeArticle(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('Reading too fast')
+    }));
+    expect(article.save).not.toHaveBeenCalled();
+  });
+
+  it('should reject completion when the article was never opened (vuln-7)', async () => {
+    const article = mockArticle({ readTime: 5, pointsPerRead: 15 });
+    article.completions = [];
+    Article.findById.mockResolvedValue(article);
+    getReadSeconds.mockReturnValue(null); // no server-side start time
+
+    const { req, res } = buildMocks({
+      body: { articleId: mockArticleId.toString(), timeSpentSeconds: 9999 }
+    });
+
+    await articleController.completeArticle(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      message: 'Please open the article before completing it.'
+    }));
+    expect(article.save).not.toHaveBeenCalled();
+  });
+
+  it('should save the server-measured time and clear the read timer (vuln-7)', async () => {
+    const article = mockArticle({ readTime: 5, pointsPerRead: 15 });
+    article.completions = [];
+    article.save = jest.fn().mockResolvedValue(article);
+    Article.findById.mockResolvedValue(article);
+    Article.countDocuments.mockResolvedValue(1);
+    getReadSeconds.mockReturnValue(200); // server: 200s, enough for the 180s minimum
+
+    const { req, res } = buildMocks({
+      body: { articleId: mockArticleId.toString(), timeSpentSeconds: 9999 }
+    });
+
+    await articleController.completeArticle(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(article.completions[0].timeSpentSeconds).toBe(200); // not 9999
+    expect(endRead).toHaveBeenCalledWith(mockUserId.toString(), mockArticleId.toString());
   });
 });
 
