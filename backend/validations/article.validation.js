@@ -1,3 +1,5 @@
+// IT23218512 - hotfix/vuln-7
+
 import { body } from 'express-validator';
 
 // Create article validation rules
@@ -79,7 +81,9 @@ export const completeArticleRules = [
         .notEmpty().withMessage('articleId is required')
         .isMongoId().withMessage('articleId must be a valid MongoDB ID'),
 
+    // vuln-7: timeSpentSeconds is now ignored - the server measures reading time itself.
+    // Kept optional so existing clients that still send it are not rejected.
     body('timeSpentSeconds')
-        .notEmpty().withMessage('timeSpentSeconds is required')
-        .isInt({ min: 30 }).withMessage('timeSpentSeconds must be at least 30 seconds'),
+        .optional()
+        .isInt({ min: 0 }).withMessage('timeSpentSeconds must be a whole number'),
 ];
