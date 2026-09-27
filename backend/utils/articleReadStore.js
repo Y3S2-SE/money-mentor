@@ -2,8 +2,6 @@
 
 // vuln-7: server-side record of when a user opened an article.
 // The article reward check uses this instead of trusting timeSpentSeconds sent by the client.
-// In-memory, like wsTicketStore. In production, replace with Redis so it
-// survives restarts and is shared between server instances.
 
 const readStarts = new Map();
 const READ_START_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
