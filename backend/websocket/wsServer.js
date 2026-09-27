@@ -37,8 +37,17 @@ function extractUrl(text) {
   return match ? match[0] : null;
 }
 
+//resource limit
+const MAX_PAYLOAD_BYTES = 16 * 1024; // longest legal message is ~8 KB
+const RATE_WINDOW_MS    = 10_000;
+const RATE_MAX_EVENTS   = 30;        // inbound events per connection per window
+
 export const initWebSocketServer = (httpServer) => {
-  const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
+  const wss = new WebSocketServer({
+    server: httpServer,
+    path: "/ws",
+    maxPayload: MAX_PAYLOAD_BYTES,
+  });
 
   logger.info("WebSocket server initialized at path /ws");
 
@@ -82,8 +91,20 @@ export const initWebSocketServer = (httpServer) => {
       userId
     );
 
-    // ── Handle incoming messages ──────────────────────────────────────────────
+    // handle incoming msg
+    const eventTimes = [];
+
     ws.on("message", async (raw) => {
+      const now = Date.now();
+      while (eventTimes.length && eventTimes[0] <= now - RATE_WINDOW_MS) eventTimes.shift();
+
+      if (eventTimes.length >= RATE_MAX_EVENTS) {
+        logger.warn(`Rate limit exceeded by user ${userId} in group ${groupId}`);
+        ws.close(4008, "Message rate exceeded");
+        return;
+      }
+      eventTimes.push(now);
+
       let data;
 
       try {
