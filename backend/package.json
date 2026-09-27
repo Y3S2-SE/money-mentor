@@ -10,12 +10,10 @@
     "test:watch": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --watch --runInBand",
     "test:unit": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js -c tests/setup/jest.unit.config.js tests/unit --coverage --runInBand",
     "test:integration": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js tests/integration --coverage --runInBand",
-
     "perf:seed": "node --experimental-vm-modules scripts/seedPerfData.js",
     "perf:start": "node -r dotenv/config server.js dotenv_config_path=.env.performance",
     "perf:run": "npx artillery run tests/performance/artillery.config.yml --output tests/performance/reports/report.json",
     "perf:report": "node tests/performance/processors/generateReport.cjs",
-
     "perf:seed:docker": "cross-env PERF_DB_TARGET=docker node --experimental-vm-modules scripts/seedPerfData.js",
     "perf:seed:atlas": "cross-env PERF_DB_TARGET=atlas node --experimental-vm-modules scripts/seedPerfData.js",
     "perf:start:docker": "cross-env PERF_DB_TARGET=docker node -r dotenv/config server.js dotenv_config_path=.env.performance",
@@ -39,6 +37,7 @@
     "express-rate-limit": "^8.2.1",
     "express-validation": "^4.1.1",
     "express-validator": "^7.3.1",
+    "google-auth-library": "^11.1.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.6",
