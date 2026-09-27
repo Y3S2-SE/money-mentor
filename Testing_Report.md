@@ -222,7 +222,7 @@ npm run perf:report:atlas # or Docker Image
 | Test Suite | File | Type | Tests |
 |------------|------|------|-------|
 | Article Controller | `article.controller.test.js` | Unit | `createArticle`, `getAllArticles`, `getArticleById`, `deleteArticle`, `getUserReadPoints` (model mocked) |
-| Auth Controller | `auth.controller.test.js` | Unit | `register`, `login`, `getProfile`, `updateProfile`, `changePassword`, `logout` (model mocked) |
+| Auth Controller | `auth.controller.test.js` | Unit | `register`, `login` (incl. per-account lockout), `getProfile`, `updateProfile`, `changePassword`, `logout` (model mocked) |
 | Chat Controller | `chat.controller.test.js` | Unit | `startConversation`, `sendMessage`, `getAllConversations`, `getConversation`, `deleteConversation` (Gemini & model mocked) |
 | ChatRoom Controller | `chatRoom.controller.test.js` | Unit | `getWsTicket`, `getMessageHistory`, `deleteMessage` (model mocked) |
 | Course Controller | `course.controller.test.js` | Unit | `createCourse`, `getAllCourses`, `getCourseById`, `deleteCourse`, `submitCourse`, `getUserPoints` (model mocked) |
@@ -235,6 +235,8 @@ npm run perf:report:atlas # or Docker Image
 | YouTube Controller | `youtube.controller.test.js` | Unit | `getVideoSuggestions` — chatId validation, ownership, empty keywords, cache check (model mocked) |
 
 <!-- IT23218512 - hotfix/vuln-7: removed awardXP from Gamification Controller unit tests (endpoint removed) -->
+
+<!-- IT23218512 - hotfix/vuln-6: added per-account login lockout unit tests to Auth Controller -->
 
 #### iii. Unit Tests — Middleware
 
@@ -249,16 +251,20 @@ npm run perf:report:atlas # or Docker Image
 | Test Suite | File | Type | Tests |
 |------------|------|------|-------|
 | Article Endpoints | `article.integration.test.js` | Integration | Create (admin/user/unauth), list (all vs published, isRead flag), get by ID (draft access), update, delete, complete article (points, anti-gaming, duplicate prevention), my-points |
-| Auth Endpoints | `auth.integration.test.js` | Integration | Register, login, profile, update, change password, logout |
+| Auth Endpoints | `auth.integration.test.js` | Integration | Register, login, login lockout (lock after 5 failures, lock expiry, reset on success, parallel guesses), profile, update, change password, logout |
 | ChatRoom Endpoints | `chatRoom.integration.test.js` | Integration | WebSocket ticket, message history (pagination, member access control, soft-delete filtering), delete message (owner, admin, unauthorized) |
 | Chat Endpoints | `chat.integration.test.js` | Integration | Start conversation, send message, list chats, get by ID, delete, ownership checks, Gemini mocked |
 | Course Endpoints | `course.integration.test.js` | Integration | Create, list with filters/pagination, get by ID, update, delete, submit & grade, points award, duplicate submission prevention |
 | Dashboard Endpoints | `dashboard.integration.test.js` | Integration | Summary (income/expense/savings, user isolation, month filter), category breakdown, monthly trends, recent transactions (limit 5, sort desc), currency conversion, savings goal CRUD (create, get, update, conflict, 404), savings goal progress (achieved, partial, overspend warning) |
-| Gamification Endpoints | `gamification.integration.test.js` | Integration | Profile, daily login, award XP, leaderboard, badges, admin stats |
+| Gamification Endpoints | `gamification.integration.test.js` | Integration | Profile, daily login, award-xp removal regression (404, XP unchanged), leaderboard, badges, admin stats |
 | Group Endpoints | `group.integration.test.js` | Integration | Create group, join, leave, get group details, delete group, remove member, update group, regenerate invite code |
 | Transaction Endpoints | `transaction.integration.test.js` | Integration | Income/expense CRUD, field validation, user isolation, type/category/date/month/year filtering, pagination, sorted results |
 | User Endpoints | `user.integration.test.js` | Integration | Get all users (pagination, search, filter by active/role), get by ID, delete, self-deletion prevention, admin-only access |
 | YouTube Endpoints | `youtube.integration.test.js` | Integration | Video search, cache hit/miss, staleness check, deduplication, keyword-based fetch |
+
+<!-- IT23218512 - hotfix/vuln-6: added login lockout integration tests to Auth Endpoints -->
+
+<!-- IT23218512 - hotfix/vuln-7 follow-up: gamification row no longer lists the removed award XP endpoint -->
 
 
 ### 7. Test Environment

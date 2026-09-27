@@ -1,3 +1,5 @@
+// IT23218512 - hotfix/vuln-6
+
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import mongoose from 'mongoose';
 const expectedJwtExpiry = () => process.env.JWT_EXPIRE || '15m';
@@ -29,9 +31,18 @@ jest.unstable_mockModule('../../../utils/gamificationEngine.js', () => ({
   })
 }));
 
+// vuln-6: fake the lockout helper so each test controls the lock state and failure counting.
+// Defaults: not locked, and a wrong password does not (yet) lock the account.
+jest.unstable_mockModule('../../../utils/loginLockout.js', () => ({
+  isAccountLocked: jest.fn(() => false),
+  recordFailedLogin: jest.fn().mockResolvedValue(false),
+  resetFailedLogins: jest.fn(),
+}));
+
 const User = (await import('../../../models/user.model.js')).default;
 const jwt = (await import('jsonwebtoken')).default;
 const authController = await import('../../../controllers/auth.controller.js');
+const { isAccountLocked, recordFailedLogin, resetFailedLogins } = await import('../../../utils/loginLockout.js');
 
 const mockUserId = new mongoose.Types.ObjectId();
 
@@ -213,7 +224,8 @@ describe('Auth Controller - login', () => {
     await authController.login(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(select).toHaveBeenCalledWith('+password +tokenVersion');
+    // vuln-6: login also loads the hidden lockout fields
+    expect(select).toHaveBeenCalledWith('+password +tokenVersion +failedLoginAttempts +lockUntil');
     expect(jwt.sign).toHaveBeenCalledWith(
       { id: mockUserId, tokenVersion: 0 },
       process.env.JWT_SECRET,
@@ -308,6 +320,59 @@ describe('Auth Controller - login', () => {
     const jsonArg = res.json.mock.calls[0][0];
     expect(jsonArg.data).toHaveProperty('token');
     expect(jsonArg.data).toHaveProperty('user');
+  });
+
+  // vuln-6: per-account lockout
+  it('should return 429 and not check the password while the account is locked (vuln-6)', async () => {
+    const user = mockUserDoc({ comparePassword: jest.fn().mockResolvedValue(true) });
+    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+    isAccountLocked.mockReturnValueOnce(true);
+
+    const { req, res } = buildMocks({ body: { email: 'test@example.com', password: 'Test123!' } });
+    await authController.login(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(429);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      message: 'Too many failed login attempts. Please try again in 15 minutes.'
+    }));
+    expect(user.comparePassword).not.toHaveBeenCalled(); // even a correct password is not tried
+    expect(jwt.sign).not.toHaveBeenCalled();             // no token issued
+  });
+
+  it('should record a failed attempt on a wrong password (vuln-6)', async () => {
+    const user = mockUserDoc({ comparePassword: jest.fn().mockResolvedValue(false) });
+    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+
+    const { req, res } = buildMocks({ body: { email: 'test@example.com', password: 'WrongPass!' } });
+    await authController.login(req, res);
+
+    expect(recordFailedLogin).toHaveBeenCalledWith(mockUserId);
+    expect(res.status).toHaveBeenCalledWith(401);
+  });
+
+  it('should return 429 when the failed attempt locks the account (vuln-6)', async () => {
+    const user = mockUserDoc({ comparePassword: jest.fn().mockResolvedValue(false) });
+    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+    recordFailedLogin.mockResolvedValueOnce(true); // this was the 5th failure
+
+    const { req, res } = buildMocks({ body: { email: 'test@example.com', password: 'WrongPass!' } });
+    await authController.login(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(429);
+    expect(jwt.sign).not.toHaveBeenCalled();
+  });
+
+  it('should reset the failure count on a successful login (vuln-6)', async () => {
+    const user = mockUserDoc({ comparePassword: jest.fn().mockResolvedValue(true) });
+    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+
+    const { req, res } = buildMocks({ body: { email: 'test@example.com', password: 'Test123!' } });
+    await authController.login(req, res);
+
+    expect(resetFailedLogins).toHaveBeenCalledWith(user);
+    expect(user.save).toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(recordFailedLogin).not.toHaveBeenCalled();
   });
 });
 
