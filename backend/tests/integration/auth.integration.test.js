@@ -200,6 +200,7 @@ describe('Auth integration Tests', () => {
 
             expect(response.body.success).toBe(false);
             expect(response.body.message).toBe('Invalid email or password');
+            expect(response.body).not.toHaveProperty('code');
         });
 
         it('should reject login with non-exist email', async () => {
@@ -312,6 +313,7 @@ describe('Auth integration Tests', () => {
                 .expect(401);
 
             expect(response.body.success).toBe(false);
+            expect(response.body.code).toBe('AUTH_SESSION_INVALID');
             expect(response.body.message).toContain('token');
         });
 
@@ -322,6 +324,7 @@ describe('Auth integration Tests', () => {
                 .expect(401);
 
             expect(response.body.success).toBe(false);
+            expect(response.body.code).toBe('AUTH_SESSION_INVALID');
         });
 
         it('should reject request with malformed authorization header', async () => {
@@ -453,6 +456,11 @@ describe('Auth integration Tests', () => {
             
             expect(response.body.success).toBe(false);
             expect(response.body.message).toContain('Current password is incorrect');
+            expect(response.body).not.toHaveProperty('code');
+            await request(app)
+                .get('/api/auth/profile')
+                .set('Authorization', `Bearer ${token}`)
+                .expect(200);
         });
 
         it('should reject weak new password', async () => {
@@ -576,6 +584,18 @@ describe('Auth integration Tests', () => {
             expect(response.body.data.user).not.toHaveProperty('tokenVersion');
         });
 
+        it('marks an expired JWT as an invalid session', async () => {
+            const user = await User.findOne({ email: credentials.email });
+            const expiredToken = jwt.sign(
+                { id: user._id.toString(), tokenVersion: 0 },
+                process.env.JWT_SECRET,
+                { expiresIn: -1 }
+            );
+
+            const response = await profileWith(expiredToken).expect(401);
+            expect(response.body.code).toBe('AUTH_SESSION_INVALID');
+        });
+
         it('revokes the token used to log out', async () => {
             const tokenA = (await loginSession().expect(200)).body.data.token;
             await profileWith(tokenA).expect(200);
@@ -587,6 +607,7 @@ describe('Auth integration Tests', () => {
 
             const rejected = await profileWith(tokenA).expect(401);
             expect(rejected.body.message).toBe('Session is no longer valid');
+            expect(rejected.body.code).toBe('AUTH_SESSION_INVALID');
         });
 
         it('revokes all tokens issued for the account', async () => {
@@ -637,6 +658,7 @@ describe('Auth integration Tests', () => {
 
             const rejected = await profileWith(oldToken).expect(401);
             expect(rejected.body.message).toBe('Session is no longer valid');
+            expect(rejected.body.code).toBe('AUTH_SESSION_INVALID');
         });
 
         it('accepts and revokes a user without a physical tokenVersion field', async () => {

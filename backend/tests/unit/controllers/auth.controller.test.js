@@ -253,6 +253,7 @@ describe('Auth Controller - login', () => {
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'Invalid email or password' })
     );
+    expect(res.json.mock.calls[0][0]).not.toHaveProperty('code');
   });
 
   it('should return 403 if account is inactive', async () => {
@@ -279,6 +280,7 @@ describe('Auth Controller - login', () => {
     await authController.login(req, res);
 
     expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json.mock.calls[0][0]).not.toHaveProperty('code');
   });
 
   it('should return 500 on unexpected error', async () => {
@@ -451,7 +453,22 @@ describe('Auth Controller - changePassword', () => {
     expect(user).not.toHaveProperty('$where');
     expect(jwt.sign).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json.mock.calls[0][0].code).toBe('AUTH_SESSION_INVALID');
     expect(res.json.mock.calls[0][0]).not.toHaveProperty('data.token');
+  });
+
+  it('marks a missing password-change user as an invalid session', async () => {
+    User.findById.mockReturnValue({ select: jest.fn().mockResolvedValue(null) });
+    const { req, res } = buildMocks({
+      body: { currentPassword: 'OldPass!', newPassword: 'NewPass123!' },
+      user: { _id: mockUserId }
+    });
+
+    await authController.changePassword(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json.mock.calls[0][0].code).toBe('AUTH_SESSION_INVALID');
+    expect(jwt.sign).not.toHaveBeenCalled();
   });
 
   it('should return 401 if current password is incorrect', async () => {
@@ -466,6 +483,7 @@ describe('Auth Controller - changePassword', () => {
     await authController.changePassword(req, res);
 
     expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json.mock.calls[0][0]).not.toHaveProperty('code');
     expect(user.comparePassword).toHaveBeenCalledWith('WrongPass!');
     expect(user.save).not.toHaveBeenCalled();
     expect(jwt.sign).not.toHaveBeenCalled();
@@ -529,7 +547,10 @@ describe('Auth Controller - logout', () => {
     await authController.logout(req, res);
 
     expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: false }));
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      success: false,
+      code: 'AUTH_SESSION_INVALID'
+    }));
     expect(jwt.sign).not.toHaveBeenCalled();
   });
 });
