@@ -249,10 +249,13 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 ---
 
 ### Authentication — `/api/auth`
+
+<!-- IT23218512 - hotfix/vuln-6: documented login lockout and login rate limit -->
+
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | POST | `/api/auth/register` | Register new user | Public |
-| POST | `/api/auth/login` | Login user | Public |
+| POST | `/api/auth/login` | Login user (5 failed attempts lock the account for 15 min; max 20 attempts per IP per 15 min) | Public |
 | GET | `/api/auth/profile` | Get current user profile |  User |
 | PUT | `/api/auth/profile` | Update username / email |  User |
 | PUT | `/api/auth/change-password` | Change password |  User |
@@ -270,11 +273,13 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 ---
 
 ### Gamification — `/api/play`
+
+<!-- IT23218512 - hotfix/vuln-7: removed POST /api/play/award-xp (users could award themselves XP) -->
+
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | GET | `/api/play/profile` | Get gamification profile |  User |
 | POST | `/api/play/daily-login` | Claim daily login XP + streak |  User |
-| POST | `/api/play/award-xp` | Award XP for an action |  User |
 | GET | `/api/play/leaderboard` | XP leaderboard among friends |  User |
 | GET | `/api/play/badges` | All badges with earned status |  User |
 | GET | `/api/play/xp-history` | User XP history |  User |

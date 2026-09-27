@@ -1,6 +1,8 @@
+// IT23218512 - hotfix/vuln-7 
+
 import GamificationProfile from "../models/gamification.model.js";
 import BadgeDefinition from "../models/badge.model.js";
-import { awardActionBadge, processXPEvent, processDailyLogin, XP_REWARDS, syncBadgesForUser } from "../utils/gamificationEngine.js";
+import { awardActionBadge, processDailyLogin, syncBadgesForUser } from "../utils/gamificationEngine.js";
 import { BADGE_SEEDS } from "../seeds/seedBadges.js";
 import Group from "../models/group.model.js";
 import { logger } from "../utils/logger.js";
@@ -86,50 +88,9 @@ export const dailyLogin = async (req, res) => {
     }
 };
 
-/**
- * @desc    Award XP for a specific action
- * @route   POST /api/gamification/award-xp
- * @access  Private
- */
-export const awardXP = async (req, res) => {
-    try {
-        const { source, amount, description } = req.body;
-
-        const result = await processXPEvent(
-            req.user._id,
-            source,
-            amount ?? null,
-            description ?? ''
-        );
-
-        res.status(200).json({
-            success: true,
-            message: result.xpResult?.leveledUp
-                ? `Level up! You are now level ${result.profile.level}`
-                : 'XP awarded successfully',
-            data: {
-                xpAwarded: amount ?? XP_REWARDS[source] ?? 0,
-                totalXP: result.profile.totalXP,
-                level: result.profile.level,
-                levelTitle: result.profile.levelTitle,
-                leveledUp: result.xpResult?.leveledUp ?? false,
-                levelProgress: result.profile.levelProgress,
-                newlyEarnedBadges: result.newlyEarnedBadges.map(b => ({
-                    key: b.key,
-                    name: b.name,
-                    description: b.description,
-                    category: b.category
-                }))
-            }
-        });
-    } catch (error) {
-        logger.error('Failed to award XP', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to award XP'
-        });
-    }
-};
+// vuln-7: removed awardXP 
+// It trusted the XP amount sent by the client.
+// XP is now awarded only inside server-side flows via processXPEvent.
 
 /**
  * @desc    Get leaderboard sorted by XP (global or friends)

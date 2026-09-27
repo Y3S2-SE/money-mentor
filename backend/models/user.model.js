@@ -1,3 +1,5 @@
+// IT23218512 - hotfix/vuln-6
+
 import mongoose from "mongoose";
 import bcrypt from 'bcryptjs';
 
@@ -51,6 +53,19 @@ const userSchema = new mongoose.Schema(
             type: Number,
             default: 0,
             min: 0,
+            select: false
+        },
+        // vuln-6: per-account login lockout state.
+        // Counts wrong passwords and blocks login until lockUntil after too many failures.
+        failedLoginAttempts: {
+            type: Number,
+            default: 0,
+            min: 0,
+            select: false
+        },
+        lockUntil: {
+            type: Date,
+            default: null,
             select: false
         },
         lastLogin: {
