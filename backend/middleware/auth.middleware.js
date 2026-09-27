@@ -15,6 +15,7 @@ export const protect = async (req, res, next) => {
         if (!token) {
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'Not authorized, no token provided'
             });
         }
@@ -25,6 +26,7 @@ export const protect = async (req, res, next) => {
         if (!Number.isInteger(decoded.tokenVersion)) {
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'Session is no longer valid'
             });
         }
@@ -35,6 +37,7 @@ export const protect = async (req, res, next) => {
         if (!req.user) {
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'User not found'
             });
         }
@@ -45,6 +48,7 @@ export const protect = async (req, res, next) => {
         if (decoded.tokenVersion !== effectiveTokenVersion) {
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'Session is no longer valid'
             });
         }
@@ -61,13 +65,22 @@ export const protect = async (req, res, next) => {
         if (error.name === 'JsonWebTokenError') {
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'Invalid token'
             });
         }
         if (error.name === 'TokenExpiredError') {
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'Token Expired'
+            });
+        }
+        if (error.name === 'NotBeforeError') {
+            return res.status(401).json({
+                success: false,
+                code: 'AUTH_SESSION_INVALID',
+                message: 'Invalid token'
             });
         }
 
