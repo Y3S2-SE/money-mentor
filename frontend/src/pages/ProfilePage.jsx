@@ -252,11 +252,17 @@ const ProfilePage = () => {
                 }));
                 setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
             } else {
+                const unavailable = result.meta?.code === 'PASSWORD_CHANGE_UNAVAILABLE';
                 dispatch(addToast({
                     type: 'error',
-                    message: 'Change failed',
-                    subMessage: result.payload || 'Please try again.',
+                    message: unavailable ? 'Password change unavailable' : 'Change failed',
+                    subMessage: unavailable
+                        ? 'This sign-in method does not have a password to change.'
+                        : result.payload || 'Please try again.',
                 }));
+                if (unavailable) {
+                    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                }
             }
         } finally {
             setPasswordLoading(false);
