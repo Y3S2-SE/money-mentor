@@ -1,6 +1,7 @@
 import Group from "../models/group.model.js";
 import crypto from "crypto";
 import { logger } from "../utils/logger.js";
+import mongoose from "mongoose";
 
 /**
  * Create Group
@@ -114,13 +115,28 @@ export const getUserGroups = async (req, res) => {
 export const getGroupById = async (req, res) => {
   try {
     const { groupId } = req.body;
-    const group = await Group.findById(groupId)
-      .populate("admin", "name email")
-      .populate("members", "name email");
+    const userId = req.user.id;
+
+    if (!mongoose.isValidObjectId(groupId)) {
+      return res.status(400).json({ message: "Invalid group ID" });
+    }
+
+    // Membership is enforced in the query so non-members get a 404
+    // and cannot tell whether the group exists.
+    const group = await Group.findOne({
+      _id: groupId,
+      $or: [{ admin: userId }, { members: userId }],
+    })
+      .populate("admin", "username email")
+      .populate("members", "username email");
 
     if (!group) return res.status(404).json({ message: "Group not found" });
 
-    res.json(group);
+    // Only the admin may see the invite code through this endpoint
+    const result = group.toObject();
+    if (group.admin._id.toString() !== userId) delete result.inviteCode;
+
+    res.json(result);
   } catch (error) {
     logger.error('Failed to fetch group', error);
     res.status(500).json({ message: 'Failed to fetch group' });

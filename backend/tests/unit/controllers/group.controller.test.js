@@ -401,31 +401,37 @@ describe('Group Controller - getGroupById', () => {
   const mockGroupId = new mongoose.Types.ObjectId();
 
   it('should return group details', async () => {
+    // getGroupById now looks the group up by id AND membership, and
+    // calls group.toObject() before responding (to allow stripping inviteCode).
     const mockGroup = {
       _id: mockGroupId,
-      name: 'Test Group'
+      name: 'Test Group',
+      admin: { _id: mockUserId },
+      toObject() {
+        return { _id: mockGroupId, name: 'Test Group', admin: { _id: mockUserId } };
+      },
     };
 
     // Properly chain populate calls
-    Group.default.findById.mockReturnValue({
+    Group.default.findOne.mockReturnValue({
       populate: jest.fn().mockReturnThis(),
       then: jest.fn(callback => callback(mockGroup)),
     });
 
-    const { req, res } = buildMocks({ body: { groupId: mockGroupId } });
+    const { req, res } = buildMocks({ body: { groupId: mockGroupId.toString() } });
 
     await getGroupById(req, res);
 
-    expect(res.json).toHaveBeenCalledWith(mockGroup);
+    expect(res.json).toHaveBeenCalledWith(mockGroup.toObject());
   });
 
   it('should handle group not found', async () => {
-    Group.default.findById.mockReturnValue({
+    Group.default.findOne.mockReturnValue({
       populate: jest.fn().mockReturnThis(),
       then: jest.fn(callback => callback(null)), // Return null for not found
     });
 
-    const { req, res } = buildMocks({ body: { groupId: new mongoose.Types.ObjectId() } });
+    const { req, res } = buildMocks({ body: { groupId: new mongoose.Types.ObjectId().toString() } });
 
     await getGroupById(req, res);
 
@@ -434,11 +440,11 @@ describe('Group Controller - getGroupById', () => {
   });
 
   it('should handle database errors', async () => {
-    Group.default.findById.mockImplementation(() => {
+    Group.default.findOne.mockImplementation(() => {
       throw new Error('DB error');
     });
 
-    const { req, res } = buildMocks({ body: { groupId: new mongoose.Types.ObjectId() } });
+    const { req, res } = buildMocks({ body: { groupId: new mongoose.Types.ObjectId().toString() } });
 
     await getGroupById(req, res);
 
