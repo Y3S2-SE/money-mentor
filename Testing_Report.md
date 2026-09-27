@@ -227,12 +227,14 @@ npm run perf:report:atlas # or Docker Image
 | ChatRoom Controller | `chatRoom.controller.test.js` | Unit | `getWsTicket`, `getMessageHistory`, `deleteMessage` (model mocked) |
 | Course Controller | `course.controller.test.js` | Unit | `createCourse`, `getAllCourses`, `getCourseById`, `deleteCourse`, `submitCourse`, `getUserPoints` (model mocked) |
 | Dashboard Controller | `dashboard.controller.test.js` | Unit | `getSummary`, `getCategoryBreakdown`, `getMonthlyTrends`, `getFinancialInsight`, `getRecentTransactions`, `convertCurrency` (service mocked) |
-| Gamification Controller | `gamification.controller.test.js` | Unit | `getMyProfile`, `dailyLogin`, `awardXP`, `getLeaderboard` (model & engine mocked) |
+| Gamification Controller | `gamification.controller.test.js` | Unit | `getMyProfile`, `dailyLogin`, `getLeaderboard` (model & engine mocked) |
 | Group Controller | `group.controller.test.js` | Unit | `createGroup`, `joinGroup`, `leaveGroup`, `getUserGroups`, `getGroupById`, `deleteGroup`, `removeMember`, `updateGroup`, `regenerateInviteCode` (model mocked) |
 | SavingsGoal Controller | `savingGoal.controller.test.js` | Unit | `createSavingsGoal`, `getSavingsGoal`, `updateSavingsGoal`, `getSavingsGoalProgress` (service mocked) |
 | Transaction Controller | `transaction.controller.test.js` | Unit | `createTransaction`, `getTransactions`, `getTransactionById`, `updateTransaction`, `deleteTransaction` (service mocked) |
 | User Controller | `user.controller.test.js` | Unit | `getAllUsers`, `getUserByID`, `deleteUser` (model mocked) |
 | YouTube Controller | `youtube.controller.test.js` | Unit | `getVideoSuggestions` — chatId validation, ownership, empty keywords, cache check (model mocked) |
+
+<!-- IT23218512 - hotfix/vuln-7: removed awardXP from Gamification Controller unit tests (endpoint removed) -->
 
 #### iii. Unit Tests — Middleware
 

@@ -270,11 +270,13 @@ The MoneyMentor REST API is documented and tested using Postman. Click the links
 ---
 
 ### Gamification — `/api/play`
+
+<!-- IT23218512 - hotfix/vuln-7: removed POST /api/play/award-xp (users could award themselves XP) -->
+
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | GET | `/api/play/profile` | Get gamification profile |  User |
 | POST | `/api/play/daily-login` | Claim daily login XP + streak |  User |
-| POST | `/api/play/award-xp` | Award XP for an action |  User |
 | GET | `/api/play/leaderboard` | XP leaderboard among friends |  User |
 | GET | `/api/play/badges` | All badges with earned status |  User |
 | GET | `/api/play/xp-history` | User XP history |  User |
