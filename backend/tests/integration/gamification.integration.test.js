@@ -8,6 +8,9 @@ import BadgeDefinition from '../../models/badge.model.js';
 import GamificationProfile from '../../models/gamification.model.js';
 import { setupTestDB, teardownTestDB, clearTestDB } from '../setup/testSetup.js';
 
+// vuln-7: tests now give XP through the server-side function instead of the removed endpoint.
+import { processXPEvent } from '../../utils/gamificationEngine.js';
+
 describe('Gamification Integration Tests', () => {
     let adminToken;
     let userToken;
@@ -95,10 +98,8 @@ describe('Gamification Integration Tests', () => {
 
         it('should return newlyUnlocked badges array when syncing with eligible badges', async () => {
             // Give user enough XP to qualify for milestone badges
-            await request(app)
-                .post('/api/play/award-xp')
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ source: 'custom', amount: 200 });
+            // vuln-7: give XP server-side (the /award-xp endpoint was removed)
+            await processXPEvent(userId, 'custom', 200, 'Test setup XP');
 
             const res = await request(app)
                 .get('/api/play/profile?sync=true')
@@ -276,10 +277,9 @@ describe('Gamification Integration Tests', () => {
 
         it('should show earned=true for badges user has earned', async () => {
             // Give user 100 XP to earn milestone_100xp badge
-            await request(app)
-                .post('/api/play/award-xp')
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ source: 'custom', amount: 100 });
+            
+            // vuln-7: give XP server-side (the /award-xp endpoint was removed)
+            await processXPEvent(userId, 'custom', 100, 'Test setup XP');
 
             const res = await request(app)
                 .get('/api/play/badges')
@@ -347,10 +347,8 @@ describe('Gamification Integration Tests', () => {
         });
 
         it('should return xp history after earning XP', async () => {
-            await request(app)
-                .post('/api/play/award-xp')
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ source: 'complete_goal', description: 'Test goal' });
+            // vuln-7: give XP server-side (the /award-xp endpoint was removed)
+            await processXPEvent(userId, 'complete_goal', null, 'Test goal');
 
             const res = await request(app)
                 .get('/api/play/xp-history')
@@ -364,11 +362,10 @@ describe('Gamification Integration Tests', () => {
 
         it('should respect limit query param', async () => {
             // Award XP multiple times
+
+            // vuln-7: give XP server-side (the /award-xp endpoint was removed)
             for (let i = 0; i < 5; i++) {
-                await request(app)
-                    .post('/api/play/award-xp')
-                    .set('Authorization', `Bearer ${userToken}`)
-                    .send({ source: 'complete_goal' });
+                await processXPEvent(userId, 'complete_goal');
             }
 
             const res = await request(app)
@@ -446,10 +443,9 @@ describe('Gamification Integration Tests', () => {
 
         it('should return topUser when profiles exist', async () => {
             // Award XP to create a profile with data
-            await request(app)
-                .post('/api/play/award-xp')
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ source: 'complete_goal' });
+            
+            // vuln-7: give XP server-side (the /award-xp endpoint was removed)
+            await processXPEvent(userId, 'complete_goal');
 
             const res = await request(app)
                 .get('/api/play/admin/stats')
