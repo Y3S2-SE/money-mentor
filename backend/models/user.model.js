@@ -21,9 +21,22 @@ const userSchema = new mongoose.Schema(
             lowercase: true,
             match: [/^\S+@\S+$/, 'Please provide a valid email address']
         },
+        authProvider: {
+            type: String,
+            enum: ['local', 'google'],
+            default: 'local'
+        },
+        googleSub: {
+            type: String,
+            trim: true,
+            select: false
+        },
         password: {
             type: String,
-            required: [true, 'Password is required'],
+            required: [
+                function () { return this.authProvider !== 'google'; },
+                'Password is required'
+            ],
             minLength: [6, 'Password must be at least 6 characters'],
             select: false
         },
@@ -64,9 +77,14 @@ const userSchema = new mongoose.Schema(
     }
 );
 
+userSchema.index(
+    { googleSub: 1 },
+    { unique: true, partialFilterExpression: { googleSub: { $type: 'string' } } }
+);
+
 // Hash password before saving
 userSchema.pre('save', async function () {
-    if (!this.isModified('password')) return;
+    if (!this.isModified('password') || !this.password) return;
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(this.password, salt);
@@ -76,6 +94,7 @@ userSchema.pre('save', async function () {
 
 // Compare password method
 userSchema.methods.comparePassword = async function (candidatePassword) {
+    if (!this.password) return false;
     return await bcrypt.compare(candidatePassword, this.password);
 };
 

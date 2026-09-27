@@ -11,6 +11,13 @@ const authService = {
         return response.data;
     },
 
+    googleLogin: async (code) => {
+        const response = await api.post('/auth/google', { code }, {
+            headers: { 'X-Requested-With': 'XmlHttpRequest' }
+        });
+        return response.data;
+    },
+
     logout: async (session) => {
         await api.post('/auth/logout', null, { _authSession: session });
     },

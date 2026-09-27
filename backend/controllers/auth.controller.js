@@ -2,8 +2,10 @@
 
 import User from "../models/user.model.js";
 import jwt from 'jsonwebtoken';
+import { randomBytes } from 'node:crypto';
 import { processDailyLogin } from "../utils/gamificationEngine.js";
 import { logger } from "../utils/logger.js";
+import { GoogleAuthError, verifyGoogleCode } from '../services/googleAuth.service.js';
 
 // vuln-6: per-account login lockout
 import { isAccountLocked, recordFailedLogin, resetFailedLogins } from "../utils/loginLockout.js";
@@ -15,6 +17,115 @@ const generateToken = (userId, tokenVersion) => {
     return jwt.sign({ id: userId, tokenVersion }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRE || '15m'
     });
+};
+
+const googleEmailConflict = () => new GoogleAuthError(
+    'GOOGLE_ACCOUNT_LINK_REQUIRED',
+    409,
+    'An account with this email already exists. Please use its existing sign-in method.'
+);
+
+const googleCreationUnavailable = () => new GoogleAuthError(
+    'GOOGLE_AUTH_UNAVAILABLE',
+    503,
+    'Google sign-in is temporarily unavailable'
+);
+
+const findOrCreateGoogleUser = async (sub, email) => {
+    let user = await User.findOne({ googleSub: sub }).select('+tokenVersion');
+    if (user) return user;
+
+    if (await User.exists({ email })) {
+        // A concurrent request may have created this same Google account.
+        user = await User.findOne({ googleSub: sub }).select('+tokenVersion');
+        if (user) return user;
+        throw googleEmailConflict();
+    }
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+        try {
+            return await User.create({
+                username: `google_${randomBytes(8).toString('hex')}`,
+                email,
+                authProvider: 'google',
+                googleSub: sub,
+                role: 'user'
+            });
+        } catch (error) {
+            if (error?.code !== 11000) throw error;
+
+            // The unique googleSub index resolves simultaneous first sign-ins.
+            user = await User.findOne({ googleSub: sub }).select('+tokenVersion');
+            if (user) return user;
+
+            if (await User.exists({ email })) throw googleEmailConflict();
+
+            if (error.keyPattern?.username || error.keyValue?.username) {
+                continue;
+            }
+
+            throw googleCreationUnavailable();
+        }
+    }
+
+    throw googleCreationUnavailable();
+};
+
+// @desc    Exchange a Google popup authorization code for a MoneyMentor session
+// @route   POST /api/auth/google
+// @access  Public
+export const googleLogin = async (req, res) => {
+    try {
+        const { sub, email } = await verifyGoogleCode(
+            req.body.code,
+            req.googleRedirectUri
+        );
+
+        const user = await findOrCreateGoogleUser(sub, email);
+
+        // Update only lastLogin; retain the existing role and tokenVersion.
+        const activeUser = await User.findOneAndUpdate(
+            { _id: user._id, isActive: true },
+            { $set: { lastLogin: new Date() } },
+            { new: true }
+        ).select('+tokenVersion');
+
+        if (!activeUser) {
+            return res.status(403).json({
+                success: false,
+                code: 'GOOGLE_ACCOUNT_UNAVAILABLE',
+                message: 'Google sign-in is unavailable for this account'
+            });
+        }
+
+        const token = generateToken(
+            activeUser._id,
+            activeUser.tokenVersion ?? 0
+        );
+        const dailyLogin = await processDailyLogin(activeUser._id, { silent: true });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            data: { user: activeUser.toAuthJSON(), token, dailyLogin }
+        });
+    } catch (error) {
+        if (error instanceof GoogleAuthError) {
+            return res.status(error.status).json({
+                success: false,
+                code: error.code,
+                message: error.message
+            });
+        }
+
+        // Do not log provider errors, codes, tokens, or raw database error details.
+        logger.error('Google login failed unexpectedly');
+        return res.status(500).json({
+            success: false,
+            code: 'GOOGLE_AUTH_FAILED',
+            message: 'Google sign-in could not be completed'
+        });
+    }
 };
 
 // @desc    Register new user
@@ -77,6 +188,18 @@ export const login = async (req, res) => {
             logger.warn('security.auth.login_failed', {
                 email: String(email).trim().toLowerCase(),
                 reason: 'no_such_user',
+                ip: req.ip
+            });
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid email or password'
+            });
+        }
+
+        if (!user.password) {
+            logger.warn('security.auth.login_failed', {
+                userId: user._id.toString(),
+                reason: 'invalid_password',
                 ip: req.ip
             });
             return res.status(401).json({
@@ -249,6 +372,14 @@ export const changePassword = async (req, res) => {
                 success: false,
                 code: 'AUTH_SESSION_INVALID',
                 message: 'Session is no longer valid'
+            });
+        }
+
+        if (!user.password) {
+            return res.status(400).json({
+                success: false,
+                code: 'PASSWORD_CHANGE_UNAVAILABLE',
+                message: 'Password change is unavailable for this account'
             });
         }
         

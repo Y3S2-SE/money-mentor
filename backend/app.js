@@ -41,6 +41,30 @@ app.use(express.json({ limit: '50kb' }));
 app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 
 //app.use('/api', apiLimiter);
+app.post('/api/auth/google', authLimiter, (req, res, next) => {
+    const origin = req.get('Origin');
+
+    if (!origin || !allowedOrigins.includes(origin)) {
+        return res.status(403).json({
+            success: false,
+            code: 'GOOGLE_ORIGIN_INVALID',
+            message: 'Google sign-in request is not allowed'
+        });
+    }
+
+    if (req.get('X-Requested-With') !== 'XmlHttpRequest') {
+        return res.status(403).json({
+            success: false,
+            code: 'GOOGLE_REQUEST_INVALID',
+            message: 'Google sign-in request is not allowed'
+        });
+    }
+
+    // GIS popup code exchange uses the calling page's origin.
+    req.googleRedirectUri = origin;
+    next();
+});
+
 // vuln-6: login gets its own stricter per-IP limit (20 / 15 min), separate from registration
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth/register', authLimiter);
