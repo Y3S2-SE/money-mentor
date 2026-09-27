@@ -1,3 +1,5 @@
+// IT23218512 - hotfix/vuln-6
+
 import dotenv from 'dotenv';
 
 if (process.env.NODE_ENV !== 'test') {
@@ -21,7 +23,8 @@ import youtubeRoutes from './routes/youtube.route.js';
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import chatRoomRoutes from "./routes/chatRoom.route.js";
 import articleRoutes from './routes/article.route.js';
-import { apiLimiter, authLimiter } from './middleware/rateLimiter.js';
+// vuln-6: loginLimiter is a stricter limit for login only
+import { apiLimiter, authLimiter, loginLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
 
@@ -38,7 +41,8 @@ app.use(express.json({ limit: '50kb' }));
 app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 
 //app.use('/api', apiLimiter);
-app.use('/api/auth/login', authLimiter);
+// vuln-6: login gets its own stricter per-IP limit (20 / 15 min), separate from registration
+app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth/register', authLimiter);
 
 app.get('/health', (req, res) => {
