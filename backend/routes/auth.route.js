@@ -1,14 +1,15 @@
 import express from 'express';
 import { protect } from '../middleware/auth.middleware.js';
 import { validate } from '../middleware/validation.middleware.js';
-import { changePasswordRules, loginValidation, registerValidation, updateProfileRules } from '../validations/user.validation.js';
-import { changePassword, getProfile, login, logout, register, updateProfile } from '../controllers/auth.controller.js';
+import { changePasswordRules, googleCodeValidation, loginValidation, registerValidation, updateProfileRules } from '../validations/user.validation.js';
+import { changePassword, getProfile, googleLogin, login, logout, register, updateProfile } from '../controllers/auth.controller.js';
 
 const router = express.Router();
 
 // Public routes 
 router.post('/register', ...registerValidation, validate, register);
 router.post('/login', ...loginValidation, validate, login);
+router.post('/google', ...googleCodeValidation, validate, googleLogin);
 
 // Protected routes
 router.use(protect);
