@@ -1,4 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+// IT23218512 - hotfix/vuln-7
+
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, jest } from '@jest/globals';
 import request from 'supertest';
 import app from '../../app.js';
 import User from '../../models/user.model.js';
@@ -274,8 +276,24 @@ describe('Article API Integration Tests', () => {
             readTime = article.readTime; // Should be 2 (Math.ceil(210/200))
         });
 
+        // vuln-7: the server now measures reading time itself.
+        // openAndWait() opens the article (starting the server-side timer), then moves the clock forward so tests don't have to wait real minutes.
+        const openAndWait = async (seconds) => {
+            await request(app)
+                .get(`/api/articles/${articleId}`)
+                .set('Authorization', `Bearer ${userToken}`)
+                .expect(200);
+
+            const realNow = Date.now();
+            jest.spyOn(Date, 'now').mockReturnValue(realNow + seconds * 1000);
+        };
+
+        // Put the real clock back after each test
+        afterEach(() => jest.restoreAllMocks());
+
         it('should earn points after reading long enough', async () => {
             // minimumSeconds = floor(2 * 60 * 0.6) = 72 seconds
+            await openAndWait(80); // vuln-7: open the article, then 80s pass on the server
             const response = await request(app)
                 .post('/api/articles/complete')
                 .set('Authorization', `Bearer ${userToken}`)
@@ -287,6 +305,7 @@ describe('Article API Integration Tests', () => {
         });
 
         it('should reject if reading too fast', async () => {
+            await openAndWait(40); // vuln-7: server measures only 40s (needs 72s)
             const response = await request(app)
                 .post('/api/articles/complete')
                 .set('Authorization', `Bearer ${userToken}`)
@@ -297,6 +316,7 @@ describe('Article API Integration Tests', () => {
         });
 
         it('should reject duplicate completion', async () => {
+            await openAndWait(80); // vuln-7: first completion needs a real, long-enough read
             await request(app)
                 .post('/api/articles/complete')
                 .set('Authorization', `Bearer ${userToken}`)
@@ -309,6 +329,33 @@ describe('Article API Integration Tests', () => {
                 .expect(400);
 
             expect(response.body.message).toContain('already earned points');
+        });
+
+        // vuln-7 regression: a forged timeSpentSeconds must not earn points
+        it('should ignore a forged timeSpentSeconds and reject an instant completion', async () => {
+            await openAndWait(0); // opened just now - no real reading time
+
+            const response = await request(app)
+                .post('/api/articles/complete')
+                .set('Authorization', `Bearer ${userToken}`)
+                .send({ articleId: articleId.toString(), timeSpentSeconds: 9999 })
+                .expect(400);
+
+            expect(response.body.message).toContain('Reading too fast');
+            const article = await Article.findById(articleId);
+            expect(article.completions).toHaveLength(0); // no reward recorded
+        });
+
+        it('should reject completion when the article was never opened', async () => {
+            const response = await request(app)
+                .post('/api/articles/complete')
+                .set('Authorization', `Bearer ${userToken}`)
+                .send({ articleId: articleId.toString(), timeSpentSeconds: 9999 })
+                .expect(400);
+
+            expect(response.body.message).toBe('Please open the article before completing it.');
+            const article = await Article.findById(articleId);
+            expect(article.completions).toHaveLength(0);
         });
     });
 
