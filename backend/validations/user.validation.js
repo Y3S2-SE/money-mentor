@@ -22,7 +22,47 @@ export const registerValidation = [
 
     body('role')
         .not()
-        .exists().withMessage('Role cannot be set during registration')
+        .exists().withMessage('Role cannot be set during registration'),
+    body('authProvider')
+        .not().exists().withMessage('Authentication provider cannot be set during registration'),
+    body('googleSub')
+        .not().exists().withMessage('Google identity cannot be set during registration'),
+    body('tokenVersion')
+        .not().exists().withMessage('Token version cannot be set during registration')
+];
+
+// Google code exchange accepts only the authorization code in the body.
+export const googleCodeValidation = [
+    body()
+        .custom(value =>
+            value !== null &&
+            typeof value === 'object' &&
+            !Array.isArray(value) &&
+            Object.keys(value).every(key => key === 'code')
+        )
+        .withMessage('Only code is allowed'),
+    body('code')
+        .exists().withMessage('Code is required')
+        .bail()
+        .isString().withMessage('Code must be a string')
+        .bail()
+        .trim()
+        .notEmpty().withMessage('Code is required')
+        .isLength({ max: 4096 }).withMessage('Code is too long'),
+    body('role')
+        .not().exists().withMessage('Role cannot be supplied'),
+    body('authProvider')
+        .not().exists().withMessage('Authentication provider cannot be supplied'),
+    body('googleSub')
+        .not().exists().withMessage('Google identity cannot be supplied'),
+    body('tokenVersion')
+        .not().exists().withMessage('Token version cannot be supplied'),
+    body('email')
+        .not().exists().withMessage('Email cannot be supplied'),
+    body('username')
+        .not().exists().withMessage('Username cannot be supplied'),
+    body('password')
+        .not().exists().withMessage('Password cannot be supplied')
 ];
 
 // Login validation rules
