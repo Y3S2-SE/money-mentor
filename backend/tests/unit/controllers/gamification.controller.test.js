@@ -1,3 +1,5 @@
+// IT23218512 - hotfix/vuln-7
+
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import mongoose from 'mongoose';
 
@@ -37,12 +39,11 @@ jest.unstable_mockModule('../../../models/badge.model.js', () => ({
 
 const GamificationProfile = await import('../../../models/gamification.model.js');
 const BadgeDefinition = await import('../../../models/badge.model.js');
-const { syncBadgesForUser, processDailyLogin, processXPEvent, XP_REWARDS } = await import('../../../utils/gamificationEngine.js');
+const { syncBadgesForUser, processDailyLogin } = await import('../../../utils/gamificationEngine.js');
 const Group = await import('../../../models/group.model.js');
 const {
   getMyProfile,
   dailyLogin,
-  awardXP,
   getLeaderboard,
   getAllBadges,
   getXPHistory,
@@ -275,116 +276,10 @@ describe('Gamification Controller - dailyLogin', () => {
   });
 });
 
-// ── awardXP ───────────────────────────────────────────────────────
-describe('Gamification Controller - awardXP', () => {
-  it('should award XP successfully', async () => {
-    const mockResult = {
-      profile: { level: 2, levelProgress: 50, totalXP: 150, levelTitle: 'Novice' },
-      xpResult: { leveledUp: false },
-      newlyEarnedBadges: []
-    };
+// vuln-7: removed the awardXP unit tests.
+// The awardXP controller was deleted because it trusted the XP amount sent by the client.
+// The regression test in gamification.integration.test.js checks the endpoint stays gone.
 
-    processXPEvent.mockResolvedValue(mockResult);
-    const { req, res } = buildMocks({
-      body: { source: 'transaction', amount: 10, description: 'Test' }
-    });
-
-    await awardXP(req, res);
-
-    expect(processXPEvent).toHaveBeenCalledWith(mockUserId, 'transaction', 10, 'Test');
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      success: true,
-      message: 'XP awarded successfully'
-    }));
-  });
-
-  it('should indicate level up', async () => {
-    const mockResult = {
-      profile: { level: 3, levelProgress: 0, totalXP: 200, levelTitle: 'Intermediate' },
-      xpResult: { leveledUp: true },
-      newlyEarnedBadges: []
-    };
-
-    processXPEvent.mockResolvedValue(mockResult);
-    const { req, res } = buildMocks({
-      body: { source: 'article', amount: 50, description: '' }
-    });
-
-    await awardXP(req, res);
-
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      message: 'Level up! You are now level 3'
-    }));
-  });
-
-  it('should handle missing amount (uses null, falls back to XP_REWARDS)', async () => {
-    const mockResult = {
-      profile: { level: 1, totalXP: 10, levelProgress: 10, levelTitle: 'Beginner' },
-      xpResult: { leveledUp: false },
-      newlyEarnedBadges: []
-    };
-
-    processXPEvent.mockResolvedValue(mockResult);
-    const { req, res } = buildMocks({
-      body: { source: 'transaction' } // No amount
-    });
-
-    await awardXP(req, res);
-
-    expect(processXPEvent).toHaveBeenCalledWith(mockUserId, 'transaction', null, '');
-    expect(res.status).toHaveBeenCalledWith(200);
-  });
-
-  it('should use description from body', async () => {
-    const mockResult = {
-      profile: { level: 1, totalXP: 20, levelProgress: 20, levelTitle: 'Beginner' },
-      xpResult: { leveledUp: false },
-      newlyEarnedBadges: []
-    };
-
-    processXPEvent.mockResolvedValue(mockResult);
-    const { req, res } = buildMocks({
-      body: { source: 'transaction', amount: 20, description: 'Daily bonus' }
-    });
-
-    await awardXP(req, res);
-
-    expect(processXPEvent).toHaveBeenCalledWith(mockUserId, 'transaction', 20, 'Daily bonus');
-  });
-
-  it('should include newly earned badges in response', async () => {
-    const mockBadge = { key: 'first_login', name: 'First Login', description: 'Logged in', category: 'action' };
-    const mockResult = {
-      profile: { level: 1, totalXP: 5, levelProgress: 5, levelTitle: 'Beginner' },
-      xpResult: { leveledUp: false },
-      newlyEarnedBadges: [mockBadge]
-    };
-
-    processXPEvent.mockResolvedValue(mockResult);
-    const { req, res } = buildMocks({
-      body: { source: 'transaction', amount: 5 }
-    });
-
-    await awardXP(req, res);
-
-    const jsonArg = res.json.mock.calls[0][0];
-    expect(jsonArg.data.newlyEarnedBadges).toHaveLength(1);
-    expect(jsonArg.data.newlyEarnedBadges[0].key).toBe('first_login');
-  });
-
-  it('should handle service errors', async () => {
-    processXPEvent.mockRejectedValue(new Error('Service error'));
-    const { req, res } = buildMocks({
-      body: { source: 'transaction', amount: 10 }
-    });
-
-    await awardXP(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: false }));
-  });
-});
 
 // ── getLeaderboard ────────────────────────────────────────────────
 describe('Gamification Controller - getLeaderboard', () => {
