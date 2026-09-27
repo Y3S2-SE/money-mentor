@@ -1,7 +1,14 @@
+// IT23218512 - hotfix/vuln-6
+
 import User from "../models/user.model.js";
 import jwt from 'jsonwebtoken';
 import { processDailyLogin } from "../utils/gamificationEngine.js";
 import { logger } from "../utils/logger.js";
+
+// vuln-6: per-account login lockout
+import { isAccountLocked, recordFailedLogin, resetFailedLogins } from "../utils/loginLockout.js";
+
+const ACCOUNT_LOCKED_MESSAGE = 'Too many failed login attempts. Please try again in 15 minutes.';
 
 // Generate JWT token
 const generateToken = (userId, tokenVersion) => {
@@ -63,7 +70,8 @@ export const login = async (req, res) => {
         const { email, password } = req.body;
 
         // Find user by email include the password
-        const user = await User.findOne({ email }).select('+password +tokenVersion');
+        // vuln-6: also load the hidden lockout fields
+        const user = await User.findOne({ email }).select('+password +tokenVersion +failedLoginAttempts +lockUntil');
 
         if (!user) {
             logger.warn('security.auth.login_failed', {
@@ -90,6 +98,20 @@ export const login = async (req, res) => {
             });
         }
 
+        // vuln-6: refuse login while the account is locked, before the password is checked.
+        // Guesses during the lock (even a correct one) get nowhere.
+        if (isAccountLocked(user)) {
+            logger.warn('security.auth.login_failed', {
+                userId: user._id.toString(),
+                reason: 'account_locked',
+                ip: req.ip
+            });
+            return res.status(429).json({
+                success: false,
+                message: ACCOUNT_LOCKED_MESSAGE
+            });
+        }
+
         const isPasswordCorrect = await user.comparePassword(password);
 
         if (!isPasswordCorrect) {
@@ -98,12 +120,28 @@ export const login = async (req, res) => {
                 reason: 'invalid_password',
                 ip: req.ip
             });
+
+            // vuln-6: count the failure; the 5th in a row locks the account
+            const lockedNow = await recordFailedLogin(user._id);
+            if (lockedNow) {
+                logger.warn('security.auth.account_locked', {
+                    userId: user._id.toString(),
+                    ip: req.ip
+                });
+                return res.status(429).json({
+                    success: false,
+                    message: ACCOUNT_LOCKED_MESSAGE
+                });
+            }
+
             return res.status(401).json({
                 success: false,
                 message: 'Invalid email or password'
             });
         }
 
+        // vuln-6: correct password - clear the failure count and any expired lock
+        resetFailedLogins(user);
         // Update last login
         user.lastLogin = new Date();
         await user.save();
