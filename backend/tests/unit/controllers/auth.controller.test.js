@@ -256,6 +256,28 @@ describe('Auth Controller - login', () => {
     expect(res.json.mock.calls[0][0]).not.toHaveProperty('code');
   });
 
+  it('does not compare an absent Google password or disclose the provider', async () => {
+    const user = mockUserDoc({
+      authProvider: 'google',
+      password: undefined,
+      isActive: false
+    });
+    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+    const { req, res } = buildMocks({
+      body: { email: 'test@example.com', password: 'Test123!' }
+    });
+
+    await authController.login(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json.mock.calls[0][0]).toEqual({
+      success: false,
+      message: 'Invalid email or password'
+    });
+    expect(user.comparePassword).not.toHaveBeenCalled();
+    expect(jwt.sign).not.toHaveBeenCalled();
+  });
+
   it('should return 403 if account is inactive', async () => {
     const user = mockUserDoc({ isActive: false });
     User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
@@ -468,6 +490,28 @@ describe('Auth Controller - changePassword', () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json.mock.calls[0][0].code).toBe('AUTH_SESSION_INVALID');
+    expect(jwt.sign).not.toHaveBeenCalled();
+  });
+
+  it('rejects Google-only password change before comparison or rotation', async () => {
+    const user = mockUserDoc({
+      authProvider: 'google',
+      password: undefined,
+      tokenVersion: 3
+    });
+    User.findById.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+    const { req, res } = buildMocks({
+      body: { currentPassword: 'Test123!', newPassword: 'NewTest123!' },
+      user: { _id: mockUserId }
+    });
+
+    await authController.changePassword(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json.mock.calls[0][0].code).toBe('PASSWORD_CHANGE_UNAVAILABLE');
+    expect(user.comparePassword).not.toHaveBeenCalled();
+    expect(user.save).not.toHaveBeenCalled();
+    expect(user.tokenVersion).toBe(3);
     expect(jwt.sign).not.toHaveBeenCalled();
   });
 

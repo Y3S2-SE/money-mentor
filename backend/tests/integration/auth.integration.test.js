@@ -39,6 +39,9 @@ describe('Auth integration Tests', () => {
             expect(response.body.data.user).not.toHaveProperty('password');
             expect(response.body.data.user.role).toBe('user');
             expect(response.body.data.user).not.toHaveProperty('tokenVersion');
+
+            const stored = await User.findOne({ email: userData.email });
+            expect(stored.authProvider).toBe('local');
         });
 
         it.each(['admin', 'user'])(
@@ -66,6 +69,27 @@ describe('Auth integration Tests', () => {
             expect(await User.countDocuments()).toBe(0);
           }
         );
+
+        it.each([
+            ['authProvider', 'google'],
+            ['googleSub', 'client-supplied-sub'],
+            ['tokenVersion', 99]
+        ])('rejects client-supplied %s without creating a user', async (field, value) => {
+            const response = await request(app)
+                .post('/api/auth/register')
+                .send({
+                    username: 'roleuser',
+                    email: 'roleuser@example.com',
+                    password: 'Test123!',
+                    [field]: value
+                })
+                .expect(400);
+
+            expect(response.body.errors).toEqual(expect.arrayContaining([
+                expect.objectContaining({ field })
+            ]));
+            expect(await User.countDocuments()).toBe(0);
+        });
 
         it('should reject registration with duplicate email', async () => {
             const userData = {

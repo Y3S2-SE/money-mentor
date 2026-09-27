@@ -37,7 +37,21 @@ describe('User Model - Unit Tests', () => {
             });
 
             const authJSON = user.toAuthJSON();
+            expect(authJSON).not.toHaveProperty('password');
             expect(authJSON).not.toHaveProperty('tokenVersion');
+        });
+
+        it('does not expose Google identity or provider fields', () => {
+            const user = new User({
+                username: 'google_user',
+                email: 'google@example.com',
+                authProvider: 'google',
+                googleSub: 'google-sub-123'
+            });
+
+            expect(user.toAuthJSON()).not.toHaveProperty('googleSub');
+            expect(user.toAuthJSON()).not.toHaveProperty('authProvider');
+            expect(user.toAuthJSON()).not.toHaveProperty('tokenVersion');
         });
 
         it('should include lastLogin when set', () => {
@@ -137,6 +151,24 @@ describe('User Model - Unit Tests', () => {
 
     
     describe('default values', () => {
+        it('defaults new and legacy users to the local provider', () => {
+            const user = new User({
+                username: 'localuser',
+                email: 'local@example.com',
+                password: 'Test123!'
+            });
+            const legacy = User.hydrate({
+                _id: new mongoose.Types.ObjectId(),
+                username: 'legacyuser',
+                email: 'legacy@example.com',
+                password: 'stored-hash'
+            });
+
+            expect(user.authProvider).toBe('local');
+            expect(legacy.authProvider).toBe('local');
+            expect(legacy.toObject()).toHaveProperty('authProvider', 'local');
+        });
+
         it('should default role to user', () => {
             const user = new User({
                 username: 'testuser',
@@ -176,6 +208,37 @@ describe('User Model - Unit Tests', () => {
 
     
     describe('field assignments', () => {
+        it('requires a password for local accounts', () => {
+            const user = new User({
+                username: 'localuser',
+                email: 'local@example.com'
+            });
+
+            expect(user.validateSync().errors.password).toBeDefined();
+        });
+
+        it('allows a Google account without a password and compares safely', async () => {
+            const user = new User({
+                username: 'google_user',
+                email: 'google@example.com',
+                authProvider: 'google',
+                googleSub: 'google-sub-123'
+            });
+
+            await expect(user.validate()).resolves.toBeUndefined();
+            await expect(user.comparePassword('anything')).resolves.toBe(false);
+        });
+
+        it('declares a partial unique index and hides googleSub in ordinary queries', () => {
+            const index = User.schema.indexes().find(([fields]) => fields.googleSub === 1);
+
+            expect(index?.[1]).toMatchObject({
+                unique: true,
+                partialFilterExpression: { googleSub: { $type: 'string' } }
+            });
+            expect(User.schema.path('googleSub').options.select).toBe(false);
+        });
+
         it('should reject a negative tokenVersion', () => {
             const user = new User({
                 username: 'testuser',
