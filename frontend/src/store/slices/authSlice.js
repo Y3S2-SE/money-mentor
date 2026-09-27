@@ -2,19 +2,22 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import authService from '../../services/authService';
 import { addToast } from './toastSlice';
 
-// Get user from localStorage
-const user = JSON.parse(localStorage.getItem('user'));
-const token = localStorage.getItem('token');
-
 const initialState = {
-    user: user || null,
-    token: token || null,
+    user: null,
+    token: null,
+    sessionGeneration: 0,
+    authRequestId: null,
     isLoading: false,
     isSuccess: false,
     isError: false,
     message: '',
     dailyLoginReward: null,
     pendingBadges: []
+};
+
+const canStartAuth = (_, { getState }) => {
+    const { user, token } = getState().auth;
+    return !user && !token;
 };
 
 const dispatchSequential = (thunkAPI, toasts, delayBetween = 1500) => {
@@ -74,7 +77,8 @@ export const register = createAsyncThunk(
             const message = error.response?.data?.message || error.message || 'Registration failed';
             return thunkAPI.rejectWithValue(message);
         }
-    }
+    },
+    { condition: canStartAuth }
 );
 
 // Login user
@@ -124,23 +128,28 @@ export const login = createAsyncThunk(
             const message = error.response?.data?.message || error.message || 'Login failed';
             return thunkAPI.rejectWithValue(message);
         }
-    }
+    },
+    { condition: canStartAuth }
 );
 
 // Logout user 
 export const logout = createAsyncThunk(
     'auth/logout',
     async (_, thunkAPI) => {
+        const { token, sessionGeneration } = thunkAPI.getState().auth;
         try {
-            await authService.logout();
-            thunkAPI.dispatch(addToast({
-                type: 'info',
-                message: 'Logged out successfully',
-                subMessage: 'See you next time!'
-            }));
-        } catch (error) {
-            console.error('Logout error:', error);
+            if (token) {
+                await authService.logout({ token, generation: sessionGeneration });
+                thunkAPI.dispatch(addToast({
+                    type: 'info',
+                    message: 'Logged out successfully',
+                    subMessage: 'See you next time!'
+                }));
+            }
+        } catch {
+            // Clear local auth even when the token was expired or already revoked.
         }
+        return { token, sessionGeneration };
     }
 );
 
@@ -148,12 +157,13 @@ export const logout = createAsyncThunk(
 export const getProfile = createAsyncThunk(
     'auth/getProfile',
     async (_, thunkAPI) => {
+        const { token: sessionToken, sessionGeneration } = thunkAPI.getState().auth;
         try {
-            const response = await authService.getProfile();
-            return response.data;
+            const response = await authService.getProfile({ token: sessionToken, generation: sessionGeneration });
+            return { user: response.data, sessionToken, sessionGeneration };
         } catch (error) {
             const message = error.response?.data?.message || error.message || 'Failed to fetch profile';
-            return thunkAPI.rejectWithValue(message);
+            return thunkAPI.rejectWithValue(message, { sessionToken, sessionGeneration });
         }
     }
 );
@@ -162,12 +172,13 @@ export const getProfile = createAsyncThunk(
 export const updateProfile = createAsyncThunk(
     'auth/updateProfile',
     async (userData, thunkAPI) => {
+        const { token: sessionToken, sessionGeneration } = thunkAPI.getState().auth;
         try {
-            const response = await authService.updateProfile(userData);
-            return response.data;
+            const response = await authService.updateProfile(userData, { token: sessionToken, generation: sessionGeneration });
+            return { user: response.data, sessionToken, sessionGeneration };
         } catch (error) {
             const message = error.response?.data?.message || error.message || 'Failed to update profile';
-            return thunkAPI.rejectWithValue(message);
+            return thunkAPI.rejectWithValue(message, { sessionToken, sessionGeneration });
         }
     }
 );
@@ -176,12 +187,13 @@ export const updateProfile = createAsyncThunk(
 export const changePassword = createAsyncThunk(
     'auth/changePassword',
     async (passwordData, thunkAPI) => {
+        const { token: sessionToken, sessionGeneration } = thunkAPI.getState().auth;
         try {
-            const response = await authService.changePassword(passwordData);
-            return response.data;
+            const response = await authService.changePassword(passwordData, { token: sessionToken, generation: sessionGeneration });
+            return { ...response.data, sessionToken, sessionGeneration };
         } catch (error) {
             const message = error.response?.data?.message || error.message || 'Failed to chaneg password';
-            return thunkAPI.rejectWithValue(message);
+            return thunkAPI.rejectWithValue(message, { sessionToken, sessionGeneration });
         }
     }
 );
@@ -190,6 +202,18 @@ export const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
+        clearSession: (state) => {
+            state.sessionGeneration += 1;
+            state.authRequestId = null;
+            state.user = null;
+            state.token = null;
+            state.isLoading = false;
+            state.isSuccess = false;
+            state.isError = false;
+            state.message = '';
+            state.dailyLoginReward = null;
+            state.pendingBadges = [];
+        },
         reset: (state) => {
             state.isLoading = false;
             state.isSuccess = false;
@@ -214,10 +238,14 @@ export const authSlice = createSlice({
     extraReducers: (builder) => {
         builder
             // Register
-            .addCase(register.pending, (state) => {
+            .addCase(register.pending, (state, action) => {
                 state.isLoading = true;
+                state.authRequestId = action.meta.requestId;
             })
             .addCase(register.fulfilled, (state, action) => {
+                if (state.authRequestId !== action.meta.requestId) return;
+                state.authRequestId = null;
+                state.sessionGeneration += 1;
                 state.isLoading = false;
                 state.isSuccess = true;
                 state.user = action.payload.user;
@@ -233,17 +261,21 @@ export const authSlice = createSlice({
                 }
             })
             .addCase(register.rejected, (state, action) => {
+                if (state.authRequestId !== action.meta.requestId) return;
+                state.authRequestId = null;
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload;
-                state.user = null;
-                state.token = null;
             })
             // Login
-            .addCase(login.pending, (state) => {
+            .addCase(login.pending, (state, action) => {
                 state.isLoading = true;
+                state.authRequestId = action.meta.requestId;
             })
             .addCase(login.fulfilled, (state, action) => {
+                if (state.authRequestId !== action.meta.requestId) return;
+                state.authRequestId = null;
+                state.sessionGeneration += 1;
                 state.isLoading = false;
                 state.isSuccess = true;
                 state.user = action.payload.user;
@@ -259,14 +291,20 @@ export const authSlice = createSlice({
                 }
             })
             .addCase(login.rejected, (state, action) => {
+                if (state.authRequestId !== action.meta.requestId) return;
+                state.authRequestId = null;
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload;
-                state.user = null;
-                state.token = null;
             })
             // Logout
-            .addCase(logout.fulfilled, (state) => {
+            .addCase(logout.fulfilled, (state, action) => {
+                if (
+                    state.token !== action.payload.token ||
+                    state.sessionGeneration !== action.payload.sessionGeneration
+                ) return;
+                state.sessionGeneration += 1;
+                state.authRequestId = null;
                 state.user = null;
                 state.token = null;
                 state.isLoading = false;
@@ -281,10 +319,18 @@ export const authSlice = createSlice({
                 state.isLoading = true;
             })
             .addCase(getProfile.fulfilled, (state, action) => {
+                if (
+                    state.token !== action.payload.sessionToken ||
+                    state.sessionGeneration !== action.payload.sessionGeneration
+                ) return;
                 state.isLoading = false;
-                state.user = action.payload;
+                state.user = action.payload.user;
             })
             .addCase(getProfile.rejected, (state, action) => {
+                if (
+                    state.token !== action.meta.sessionToken ||
+                    state.sessionGeneration !== action.meta.sessionGeneration
+                ) return;
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload;
@@ -294,12 +340,20 @@ export const authSlice = createSlice({
                 state.isLoading = true;
             })
             .addCase(updateProfile.fulfilled, (state, action) => {
+                if (
+                    state.token !== action.payload.sessionToken ||
+                    state.sessionGeneration !== action.payload.sessionGeneration
+                ) return;
                 state.isLoading = false;
                 state.isSuccess = true;
-                state.user = action.payload;
+                state.user = action.payload.user;
                 state.message = 'Profile updated successfully';
             })
             .addCase(updateProfile.rejected, (state, action) => {
+                if (
+                    state.token !== action.meta.sessionToken ||
+                    state.sessionGeneration !== action.meta.sessionGeneration
+                ) return;
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload;
@@ -309,13 +363,23 @@ export const authSlice = createSlice({
                 state.isLoading = true;
             })
             .addCase(changePassword.fulfilled, (state, action) => {
+                if (
+                    state.token !== action.payload.sessionToken ||
+                    state.sessionGeneration !== action.payload.sessionGeneration
+                ) return;
                 state.isLoading = false;
+                state.authRequestId = null;
                 state.isSuccess = true;
                 state.user = action.payload.user;
                 state.token = action.payload.token;
+                state.sessionGeneration += 1;
                 state.message = 'Password changed successfully';
             })
             .addCase(changePassword.rejected, (state, action) => {
+                if (
+                    state.token !== action.meta.sessionToken ||
+                    state.sessionGeneration !== action.meta.sessionGeneration
+                ) return;
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload;
@@ -323,5 +387,5 @@ export const authSlice = createSlice({
     },
 });
 
-export const { reset, clearMessage, clearDailyLoginReward, clearPendingBadges, addPendingBadges } = authSlice.actions;
+export const { clearSession, reset, clearMessage, clearDailyLoginReward, clearPendingBadges, addPendingBadges } = authSlice.actions;
 export default authSlice.reducer;

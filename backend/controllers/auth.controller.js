@@ -209,6 +209,7 @@ export const changePassword = async (req, res) => {
         if (!user) {
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'Session is no longer valid'
             });
         }
@@ -261,6 +262,7 @@ export const changePassword = async (req, res) => {
         if (error.name === 'DocumentNotFoundError') {
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'Session changed while updating the password. Please sign in again.'
             });
         }
@@ -291,6 +293,7 @@ export const logout = async (req, res) => {
         if (result.matchedCount !== 1) {
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'Session is no longer valid'
             });
         }

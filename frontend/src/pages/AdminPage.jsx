@@ -5,7 +5,8 @@ import AdminCourseForm from '../components/admin/AdminCourseForm';
 import { getCourseById } from '../services/courseService';
 import AdminUserList from '../components/admin/AdminUserList';
 import { addToast } from '../store/slices/toastSlice';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from '../store/slices/authSlice';
 import AdminArticleList from '../components/admin/AdminArticleList';
 import AdminArticleForm from '../components/admin/AdminArticleForm';
 
@@ -14,7 +15,7 @@ const AdminPage = () => {
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('courses');
   const [showProfile, setShowProfile] = useState(false);
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user = useSelector((state) => state.auth.user);
   
   // Courses state
   const [courseView, setCourseView] = useState('list'); // 'list', 'create', 'edit'
@@ -74,10 +75,8 @@ const AdminPage = () => {
     setArticleView('list');
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.dispatchEvent(new Event('storage')); // trigger auth state update if app listens for it
+  const handleLogout = async () => {
+    await dispatch(logout());
     navigate('/', { replace: true });
   };
 

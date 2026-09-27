@@ -85,6 +85,7 @@ describe('Auth Middleware - protect', () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      code: 'AUTH_SESSION_INVALID',
       message: 'Session is no longer valid'
     }));
     expect(next).not.toHaveBeenCalled();
@@ -104,6 +105,7 @@ describe('Auth Middleware - protect', () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      code: 'AUTH_SESSION_INVALID',
       message: 'Session is no longer valid'
     }));
     expect(User.findById).not.toHaveBeenCalled();
@@ -117,6 +119,7 @@ describe('Auth Middleware - protect', () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      code: 'AUTH_SESSION_INVALID',
       message: 'Not authorized, no token provided'
     }));
     expect(next).not.toHaveBeenCalled();
@@ -135,6 +138,7 @@ describe('Auth Middleware - protect', () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      code: 'AUTH_SESSION_INVALID',
       message: 'Invalid token'
     }));
   });
@@ -152,8 +156,27 @@ describe('Auth Middleware - protect', () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      code: 'AUTH_SESSION_INVALID',
       message: 'Token Expired'
     }));
+  });
+
+  it('returns a session-invalid code for a not-yet-valid token', async () => {
+    const error = new Error('jwt not active');
+    error.name = 'NotBeforeError';
+    jwt.verify.mockImplementation(() => { throw error; });
+    const { req, res, next } = buildMocks({
+      headers: { authorization: 'Bearer future-token' }
+    });
+
+    await protect(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      code: 'AUTH_SESSION_INVALID',
+      message: 'Invalid token'
+    }));
+    expect(next).not.toHaveBeenCalled();
   });
 
   it('should return 401 when user is not found in DB', async () => {
@@ -168,6 +191,7 @@ describe('Auth Middleware - protect', () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      code: 'AUTH_SESSION_INVALID',
       message: 'User not found'
     }));
   });
@@ -184,6 +208,7 @@ describe('Auth Middleware - protect', () => {
     await protect(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json.mock.calls[0][0]).not.toHaveProperty('code');
   });
 
   it('should return 500 on unexpected error', async () => {

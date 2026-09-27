@@ -15,6 +15,7 @@ export const protect = async (req, res, next) => {
         if (!token) {
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'Not authorized, no token provided'
             });
         }
@@ -31,6 +32,7 @@ export const protect = async (req, res, next) => {
             });
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'Session is no longer valid'
             });
         }
@@ -47,6 +49,7 @@ export const protect = async (req, res, next) => {
             });
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'User not found'
             });
         }
@@ -63,6 +66,7 @@ export const protect = async (req, res, next) => {
             });
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'Session is no longer valid'
             });
         }
@@ -90,6 +94,7 @@ export const protect = async (req, res, next) => {
             });
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'Invalid token'
             });
         }
@@ -101,7 +106,15 @@ export const protect = async (req, res, next) => {
             });
             return res.status(401).json({
                 success: false,
+                code: 'AUTH_SESSION_INVALID',
                 message: 'Token Expired'
+            });
+        }
+        if (error.name === 'NotBeforeError') {
+            return res.status(401).json({
+                success: false,
+                code: 'AUTH_SESSION_INVALID',
+                message: 'Invalid token'
             });
         }
 
