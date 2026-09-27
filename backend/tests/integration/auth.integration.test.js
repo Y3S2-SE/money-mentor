@@ -1,4 +1,6 @@
-import { describe, it, expect, jest, beforeAll, afterAll, beforeEach } from '@jest/globals';
+// IT23218512 - hotfix/vuln-6
+
+import { describe, it, expect, jest, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
 import app from '../../app.js';
@@ -268,6 +270,71 @@ describe('Auth integration Tests', () => {
                 .expect(400);
 
             expect(response.body.success).toBe(false);
+        });
+
+        // vuln-6: per-account lockout, tested against the real API and database
+        describe('Login lockout (vuln-6)', () => {
+            const loginWith = (password) => request(app)
+                .post('/api/auth/login')
+                .send({ email: userData.email, password });
+
+            // Put the real clock back after tests that move it forward
+            afterEach(() => jest.restoreAllMocks());
+
+            it('should lock the account after 5 wrong passwords, even for the correct password', async () => {
+                for (let i = 0; i < 4; i++) {
+                    await loginWith('WrongPassword123!').expect(401);
+                }
+
+                const fifth = await loginWith('WrongPassword123!').expect(429);
+                expect(fifth.body.message).toBe('Too many failed login attempts. Please try again in 15 minutes.');
+
+                // Attack replay: the correct password is refused while locked, and no token is issued
+                const correct = await loginWith(userData.password).expect(429);
+                expect(correct.body).not.toHaveProperty('data.token');
+
+                const user = await User.findOne({ email: userData.email }).select('+lockUntil');
+                expect(user.lockUntil.getTime()).toBeGreaterThan(Date.now());
+            });
+
+            it('should allow login again after the 15-minute lock expires and reset the counter', async () => {
+                for (let i = 0; i < 5; i++) {
+                    await loginWith('WrongPassword123!');
+                }
+                await loginWith(userData.password).expect(429);
+
+                // Jump the server clock 15 minutes + 1 second ahead instead of waiting
+                const realNow = Date.now();
+                jest.spyOn(Date, 'now').mockReturnValue(realNow + 15 * 60 * 1000 + 1000);
+
+                await loginWith(userData.password).expect(200);
+
+                const user = await User.findOne({ email: userData.email }).select('+failedLoginAttempts +lockUntil');
+                expect(user.failedLoginAttempts).toBe(0);
+                expect(user.lockUntil).toBeNull();
+            });
+
+            it('should reset the failure count after a successful login', async () => {
+                for (let i = 0; i < 4; i++) {
+                    await loginWith('WrongPassword123!').expect(401);
+                }
+                await loginWith(userData.password).expect(200);
+
+                // A fresh set of 4 mistakes must not lock the account
+                for (let i = 0; i < 4; i++) {
+                    await loginWith('WrongPassword123!').expect(401);
+                }
+                await loginWith(userData.password).expect(200);
+            });
+
+            it('should count parallel wrong guesses so a burst cannot bypass the lock', async () => {
+                const responses = await Promise.all(
+                    Array.from({ length: 10 }, () => loginWith('WrongPassword123!'))
+                );
+
+                expect(responses.some((r) => r.status === 429)).toBe(true);
+                await loginWith(userData.password).expect(429);
+            });
         });
     });
 
